@@ -85,12 +85,27 @@
   .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 700; margin-top: 4px; }
   .kv span:first-child { color: var(--muted); }
   .hint { color: var(--copper); font-size: 12px; font-weight: 700; margin-top: 8px; min-height: 16px; }
-  input[type="text"] {
+  input[type="text"], input[type="email"] {
     width: 100%; box-sizing: border-box; font: inherit; font-weight: 700; font-size: 16px; color: var(--fg);
     background: rgba(255,255,255,0.08); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 8px;
     user-select: text; -webkit-user-select: text;
   }
   .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .segs { display: flex; gap: 6px; margin: 8px 0; }
+  .segs button { flex: 1; font-size: 13px; }
+  .segs button.on { background: var(--copper); color: #1d1000; border-color: transparent; }
+  .acctrow { display: flex; gap: 8px; margin-top: 8px; }
+  .acctrow button { flex: 1; min-width: 0; font-size: 13px; }
+  .acctrow button.on { background: var(--copper); color: #1d1000; border-color: transparent; }
+  .acctmsg { color: var(--copper); font-size: 12px; font-weight: 700; margin-top: 8px; min-height: 16px; }
+  .chk { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 700; }
+  .chk input { width: 18px; height: 18px; accent-color: var(--copper); }
+  .lbrow { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+  .lbrow .rk { width: 26px; text-align: right; color: var(--muted); }
+  .lbrow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lbrow .nm small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; }
+  .lbrow .vl { color: var(--copper); font-variant-numeric: tabular-nums; }
+  .lbrow.me { background: rgba(229,138,61,0.12); border-radius: 8px; padding-inline: 6px; }
   .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(4,8,8,0.62);
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .modal .card { background: var(--panel); border-radius: 20px; padding: 24px; width: min(340px, 100%); text-align: center; box-sizing: border-box; }
@@ -128,6 +143,7 @@
   <button data-tab="world">Dünya</button>
   <button data-tab="ach">Başarım<i id="achdot" hidden></i></button>
   <button data-tab="skill">Yetenek<i id="skdot" hidden></i></button>
+  <button data-tab="rank">Sıralama</button>
   <button data-tab="cafe">Kafe</button>
 </div>
 <div class="shop"><div class="wrap">
@@ -173,6 +189,18 @@
     </div>
     <div id="perks"></div>
   </div>
+  <div id="p-rank" hidden>
+    <div class="box">
+      <h4>Hesap<small id="acctstate"></small></h4>
+      <div id="acct"></div>
+    </div>
+    <div class="box">
+      <h4>Liderlik tablosu<small>İlk 20</small></h4>
+      <div class="segs"><button data-sort="net_worth" class="on">Net servet</button><button data-sort="customers">Müşteri</button></div>
+      <div id="lbbody"></div>
+      <p style="margin-top:8px">Kafe adı ve şehir herkese açık görünür. E-posta asla gösterilmez.</p>
+    </div>
+  </div>
   <div id="p-cafe" hidden>
     <div class="box">
       <h4>Kafe adı</h4>
@@ -196,6 +224,7 @@
 </div></div>
 <div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function () {
   function $(id) { return document.getElementById(id); }
@@ -273,7 +302,8 @@
   PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
   PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
   S.menu.espresso = 1;
-  function persist() { S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
+  var blockPersist = false;
+  function persist() { if (blockPersist) return; S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
 
   var customers = [], pops = [], lanes = [], seats = [], spawnAcc = 0, paused = false, speedUntil = 0, clock = 0, goalAcc = 0, achAcc = 0;
   for (var li = 0; li < 3; li++) lanes.push({ q: [], cur: null, t: 0 });
@@ -419,7 +449,7 @@
   ];
 
   /* ---------- Arayüz ---------- */
-  var TABS = ['inv', 'menu', 'price', 'world', 'ach', 'skill', 'cafe'];
+  var TABS = ['inv', 'menu', 'price', 'world', 'ach', 'skill', 'rank', 'cafe'];
   var tab = 'inv';
   var listEl = $('list'), speedBtn = $('speed'), modal = $('modal'), mcard = $('mcard');
 
@@ -1199,6 +1229,182 @@
     wctx.fillStyle = 'rgba(8,14,13,0.55)'; rr(wctx, 8, 8, 112, 20, 6); wctx.fill();
     wctx.fillStyle = '#fff'; wctx.font = '800 11px "Bricolage Grotesque", system-ui, sans-serif'; wctx.textAlign = 'left';
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
+  }
+
+  /* ---------- Bulut: Supabase (giriş, kayıt, liderlik tablosu) ---------- */
+  var SUPABASE_URL = 'https://jsweeupxworydfpihlgd.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_nHw_RRfLa839N-Vs3c0ftQ_av9-Exzh';   // herkese açık anahtar, RLS ile korunur
+  var sb = null, user = null, lbSort = 'net_worth', syncTimer = 0, syncBusy = false, syncAt = 0, syncErr = '';
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    }
+  } catch (e) { sb = null; }
+
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function getMeta() { try { return JSON.parse(localStorage.getItem('tycoon-sync-v1')) || null; } catch (e) { return null; } }
+  function setMeta(life) { try { localStorage.setItem('tycoon-sync-v1', JSON.stringify({ uid: user.id, life: life })); } catch (e) {} }
+  function summ(st) { return 'Sv. ' + (st.level || 1) + ' · ' + (st.life || 0) + ' müşteri · Gün ' + (st.day || 1); }
+  function acctMsg(t) { var el = $('acctmsg'); if (el) el.textContent = t; }
+
+  function renderAccount() {
+    var el = $('acct');
+    if (!sb) { $('acctstate').textContent = 'çevrimdışı'; el.innerHTML = '<p>Bulut bağlantısı yüklenemedi. Oyun yerel kayıtla çalışmaya devam eder.</p>'; return; }
+    if (!user) {
+      $('acctstate').textContent = 'giriş yok';
+      el.innerHTML = '<p>Giriş yaparsan ilerlemen bulutta saklanır ve başka cihazda devam edebilirsin. Sıralamaya girmek için de giriş gerekir.</p>' +
+        '<input type="email" id="lbemail" placeholder="E-posta adresin" autocomplete="email">' +
+        '<div class="acctrow"><button class="on" data-act="link">Giriş bağlantısı gönder</button><button data-act="guest">Misafir devam et</button></div>' +
+        '<div class="acctmsg" id="acctmsg"></div>';
+      return;
+    }
+    var who = user.is_anonymous ? 'Misafir' : (user.email || 'Giriş yapıldı');
+    $('acctstate').textContent = syncErr ? 'kayıt hatası' : (syncAt ? 'kaydedildi ' + new Date(syncAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'senkronize ediliyor');
+    el.innerHTML = '<div class="kv"><span>Hesap</span><span>' + esc(who) + '</span></div>' +
+      (user.is_anonymous ? '<p style="margin-top:6px">Misafir hesabı bu tarayıcıya bağlıdır. Çıkış yaparsan kaydına geri dönemezsin.</p>' : '') +
+      '<label class="chk"><input type="checkbox" id="showrank"' + (S.showRank === false ? '' : ' checked') + '> Sıralamada göster</label>' +
+      '<div class="acctrow"><button data-act="sync">Şimdi kaydet</button><button data-act="logout">Çıkış yap</button></div>' +
+      '<div class="acctmsg" id="acctmsg">' + esc(syncErr) + '</div>';
+  }
+
+  function decide(cloud) {
+    var meta = getMeta(), localLife = S.life, cloudLife = cloud.life || 0;
+    if (meta && meta.uid === user.id) {
+      var cloudChanged = cloudLife !== meta.life, localChanged = localLife !== meta.life;
+      if (!cloudChanged) return 'upload';
+      if (!localChanged) return 'download';
+      return 'ask';
+    }
+    if (cloudLife === localLife && (cloud.level || 1) === S.level && (cloud.day || 1) === S.day) return 'same';
+    if (localLife < 5) return 'download';
+    return 'ask';
+  }
+
+  function applyCloud(cloud) {
+    blockPersist = true;
+    try {
+      localStorage.setItem('tycoon-v3', JSON.stringify(cloud));
+      localStorage.setItem('tycoon-sync-v1', JSON.stringify({ uid: user.id, life: cloud.life || 0 }));
+    } catch (e) {}
+    location.reload();
+  }
+
+  function upload() {
+    if (!sb || !user || syncBusy) return;
+    syncBusy = true;
+    var st = JSON.parse(JSON.stringify(S));
+    var life = S.life;
+    var q = [sb.from('saves').upsert({ user_id: user.id, state: st })];
+    if (S.showRank === false) q.push(sb.from('leaderboard').delete().eq('user_id', user.id));
+    else q.push(sb.from('leaderboard').upsert({
+      user_id: user.id, cafe_name: (S.name || 'Kafe').slice(0, 14) || 'Kafe', city: CITIES[S.branch % CITIES.length],
+      net_worth: Math.min(1e15, Math.round(netWorth())), customers: S.life, level: S.level
+    }));
+    Promise.all(q.map(function (x) { return x.then(function (r) { return r; }); })).then(function (rs) {
+      syncBusy = false;
+      var bad = rs.filter(function (r) { return r.error; })[0];
+      if (bad) { syncErr = 'Kayıt başarısız: ' + bad.error.message; }
+      else { syncErr = ''; syncAt = Date.now(); setMeta(life); }
+      renderAccount();
+    }, function () { syncBusy = false; syncErr = 'Bağlantı hatası, tekrar denenecek.'; renderAccount(); });
+  }
+
+  function startSync() { if (!syncTimer) syncTimer = setInterval(upload, 30000); }
+
+  function askConflict(cloud) {
+    enqueue(function () {
+      showModal('<h2>Hangi kayıt kalsın?</h2><p>Bulutta ve bu cihazda farklı ilerleme var.</p>' +
+        '<div class="stats"><span>Bulut</span><span>' + esc(summ(cloud)) + '</span><span>Bu cihaz</span><span>' + esc(summ(S)) + '</span></div>' +
+        '<div class="row"><button data-act="cloud">Bulut kaydı</button><button class="on" data-act="local">Bu cihaz</button></div>',
+        { cloud: function () { applyCloud(cloud); }, local: function () { setMeta(-1); upload(); startSync(); } });
+    });
+  }
+
+  function afterLogin() {
+    if (!sb || !user) return;
+    sb.from('saves').select('state').eq('user_id', user.id).maybeSingle().then(function (r) {
+      if (r.error) { syncErr = 'Bulut kaydı okunamadı: ' + r.error.message; renderAccount(); return; }
+      var cloud = r.data && r.data.state;
+      if (!cloud) { upload(); startSync(); return; }
+      var d = decide(cloud);
+      if (d === 'download') applyCloud(cloud);
+      else if (d === 'ask') askConflict(cloud);
+      else { if (d === 'same') setMeta(S.life); upload(); startSync(); }
+    }, function () { syncErr = 'Bağlantı hatası.'; renderAccount(); });
+    renderAccount();
+  }
+
+  function renderBoard(rows) {
+    var el = $('lbbody');
+    if (!rows.length) { el.innerHTML = '<p>Henüz kimse yok. İlk sen ol.</p>'; return; }
+    var h = '';
+    rows.forEach(function (r, i) {
+      var val = lbSort === 'net_worth' ? '₺' + fmt(Number(r.net_worth)) : r.customers + ' müşteri';
+      h += '<div class="lbrow' + (user && r.user_id === user.id ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span>' +
+        '<span class="nm">' + esc(r.cafe_name) + '<small>' + esc(r.city) + ' · Sv. ' + esc(r.level) + '</small></span><span class="vl">' + esc(val) + '</span></div>';
+    });
+    el.innerHTML = h;
+  }
+  function loadBoard() {
+    var el = $('lbbody');
+    if (!sb) { el.innerHTML = '<p>Sıralama için bulut bağlantısı gerekir.</p>'; return; }
+    sb.from('leaderboard').select('user_id,cafe_name,city,net_worth,customers,level').order(lbSort, { ascending: false }).limit(20).then(function (r) {
+      if (r.error) { el.innerHTML = '<p>Sıralama yüklenemedi.</p>'; return; }
+      renderBoard(r.data || []);
+    }, function () { el.innerHTML = '<p>Sıralama yüklenemedi.</p>'; });
+  }
+
+  $('acct').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-act]') : null;
+    if (!b || !sb) return;
+    var act = b.getAttribute('data-act');
+    if (act === 'link') {
+      var em = ($('lbemail').value || '').trim();
+      if (!/^\S+@\S+\.\S+$/.test(em)) { acctMsg('Geçerli bir e-posta yaz.'); return; }
+      if (location.protocol === 'file:') { acctMsg('Giriş bağlantısı için oyunu http(s) adresinden aç (yerel dosya olmaz).'); return; }
+      acctMsg('Gönderiliyor...');
+      sb.auth.signInWithOtp({ email: em, options: { emailRedirectTo: location.origin + location.pathname } }).then(function (r) {
+        acctMsg(r.error ? 'Gönderilemedi: ' + r.error.message : 'Bağlantı gönderildi. E-postanı kontrol et ve bağlantıya dokun.');
+      }, function () { acctMsg('Bağlantı hatası.'); });
+    } else if (act === 'guest') {
+      acctMsg('Giriş yapılıyor...');
+      sb.auth.signInAnonymously().then(function (r) {
+        if (r.error) acctMsg('Misafir girişi kapalı veya başarısız: ' + r.error.message);
+      }, function () { acctMsg('Bağlantı hatası.'); });
+    } else if (act === 'logout') {
+      sb.auth.signOut().then(function () { user = null; clearInterval(syncTimer); syncTimer = 0; syncAt = 0; syncErr = ''; renderAccount(); });
+    } else if (act === 'sync') {
+      upload();
+    }
+  });
+  $('acct').addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'showrank') { S.showRank = e.target.checked; persist(); upload(); }
+  });
+  document.querySelector('.segs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-sort]') : null;
+    if (!b) return;
+    lbSort = b.getAttribute('data-sort');
+    var all = document.querySelectorAll('.segs button');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+    loadBoard();
+  });
+  $('tabs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-tab]') : null;
+    if (b && b.getAttribute('data-tab') === 'rank') { renderAccount(); loadBoard(); }
+  });
+  setInterval(function () { if (tab === 'rank' && !document.hidden) loadBoard(); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) upload(); });
+
+  renderAccount();
+  if (sb) {
+    sb.auth.onAuthStateChange(function (event, session) {
+      var had = !!user;
+      user = session ? session.user : null;
+      if (user && !had) setTimeout(afterLogin, 0);
+      else setTimeout(renderAccount, 0);
+    });
   }
 
   window.addEventListener('resize', layoutCanvases);

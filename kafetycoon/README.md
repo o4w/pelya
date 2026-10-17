@@ -14,7 +14,7 @@ Tek dosyadan oluşur (`index.html`), derleme veya kurulum gerektirmez.
   ```
   Sonra tarayıcıda `http://localhost:8000` adresini aç.
 
-Yazı tipleri Google Fonts'tan yüklenir. Çevrimdışıysan sistem yazı tipine düşer, oyun yine çalışır.
+Yazı tipleri Google Fonts'tan, Supabase istemcisi jsDelivr'den yüklenir. Çevrimdışıysan sistem yazı tipine düşer ve bulut özellikleri kapanır, oyun yerel kayıtla çalışmaya devam eder.
 
 ## Oyun döngüsü
 
@@ -101,6 +101,39 @@ Oyunu kapatınca kafe ve yatırımlar (en çok 3 saat, %30 hızla) çalışmaya 
 localStorage.removeItem('tycoon-v3'); location.reload();
 ```
 
+## Bulut kaydı ve liderlik tablosu (Supabase)
+
+Oyun, Supabase ile isteğe bağlı bulut kaydı ve liderlik tablosu sunar. Giriş yapılmazsa oyun eskisi gibi yerel kayıtla çalışır. **Sıralama** sekmesinden giriş yapılır.
+
+| Özellik | Nasıl çalışır |
+|---|---|
+| Giriş | E-posta ile giriş bağlantısı (magic link) veya misafir (anonim) hesap |
+| Bulut kaydı | `saves` tablosu, kullanıcı başına tek satır. Her 30 saniyede ve sayfa gizlenince otomatik yazılır |
+| Çakışma | Yeni cihaz boşsa bulut kaydı otomatik iner. İki tarafta da farklı ilerleme varsa "Hangi kayıt kalsın?" diye sorar |
+| Liderlik | `leaderboard` tablosu, ilk 20: net servet veya müşteri sayısı. Kafe adı ve şehir herkese açıktır, e-posta tabloda hiç yoktur |
+| Gizlilik | "Sıralamada göster" kutusu kapatılırsa satır silinir |
+
+### Supabase tabloları
+Şema `supabase/migrations/` altındadır (RLS açık):
+- `public.saves`: `user_id`, `state` (jsonb), `updated_at`. Kullanıcı yalnızca kendi satırını okur ve yazar.
+- `public.leaderboard`: `user_id`, `cafe_name`, `city`, `net_worth`, `customers`, `level`, `updated_at`. Herkes okur, yalnızca sahibi yazar. Ad en çok 14 karakter, değerler sınırlıdır.
+
+Güvenlik kuralları gerçek veritabanında denendi: başkasının satırı yazılamıyor, anonim kullanıcı kayıt okuyamıyor ve liderliğe yazamıyor, sınır dışı değerler reddediliyor.
+
+### Anahtarlar
+`index.html` içinde yalnızca **herkese açık** proje URL'si ve publishable anahtar bulunur (`SUPABASE_URL`, `SUPABASE_KEY`). Bu anahtar RLS ile korunur. **Service role anahtarını asla depoya koyma.**
+
+### Supabase panelinde yapılması gerekenler
+1. **Authentication → URL Configuration:** Site URL ve Redirect URLs listesine oyunun yayın adresini (ör. Vercel adresi) ekle. Eklenmezse giriş bağlantısı oyuna dönemez.
+2. **Authentication → Sign In / Providers:** Misafir girişini kullanmak istiyorsan "Allow anonymous sign-ins" seçeneğini aç. Kapalıysa oyun bunu kullanıcıya bildirir, e-posta ile giriş yine çalışır.
+3. **E-posta gönderimi:** Supabase'in yerleşik e-posta servisi saatlik gönderim sınırına sahiptir. Gerçek kullanıcılar için kendi SMTP sağlayıcını (Authentication → SMTP) bağla.
+4. Giriş bağlantısı `file://` ile açılan sayfada çalışmaz. Oyunu http(s) adresinden aç.
+
+### Bilinen sınırlamalar
+- **Hile:** Liderlik skorları istemciden yazılır, bu yüzden oyunu kurcalayan biri sahte skor gönderebilir. Prototip için kabul edilebilir. Ciddi bir yarışma için skorların sunucuda doğrulanması (Edge Function veya sunucu tarafı hesaplama) gerekir.
+- **Kafe adı denetimi yok:** Ad herkese göründüğü için uygunsuz isimler için bir filtre veya raporlama eklenmesi önerilir.
+- **Misafir hesabı** tarayıcıya bağlıdır. Çıkış yapılırsa o kayda geri dönülemez. Misafirden e-postaya dönüştürme henüz yok.
+
 ## Prototip notları
 
 - Reklam butonları (`Reklam`, `Reklam izle: x2`) **simülasyondur**, gerçek reklam SDK'sı yok.
@@ -112,8 +145,10 @@ localStorage.removeItem('tycoon-v3'); location.reload();
 
 ```
 kafetycoon/
-├── index.html   # Oyunun tamamı (HTML + CSS + JavaScript)
-└── README.md    # Bu dosya
+├── index.html                 # Oyunun tamamı (HTML + CSS + JavaScript)
+├── README.md                  # Bu dosya
+└── supabase/
+    └── migrations/            # Veritabanı şeması (tablolar, RLS, tetikleyiciler)
 ```
 
 ## Kodda ayar yapmak için
