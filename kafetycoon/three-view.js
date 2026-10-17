@@ -233,6 +233,30 @@ export function createView3D(canvas, bridge, options = {}) {
     }
     // kapı paspası
     box(g, 2.8, 0.04, 0.6, '#3b2a1e', 0, 0.03, D / 2 - 0.35);
+
+    // kafe sahibi (karakter sekmesindeki görünüm)
+    const AVc = bridge.AV, av = S.avatar;
+    if (AVc && av) {
+      const o = new THREE.Group();
+      const skin = AVc.skins[av.skin] || AVc.skins[0], hairC = AVc.hairs[av.hair] || AVc.hairs[0], shirt = (AVc.shirts[av.shirt] || AVc.shirts[0])[0];
+      add(o, G.torso, mat(shirt), 0, 0.95, 0);
+      add(o, new THREE.BoxGeometry(0.42, 0.5, 0.08), mat('#f4f1ea'), 0, 0.85, 0.24);
+      add(o, G.head, mat(skin), 0, 1.62, 0);
+      add(o, G.hair, mat(hairC), 0, 1.64, 0);
+      if (av.hstyle === 1) { add(o, new THREE.BoxGeometry(0.1, 0.5, 0.3), mat(hairC), -0.25, 1.45, -0.05); add(o, new THREE.BoxGeometry(0.1, 0.5, 0.3), mat(hairC), 0.25, 1.45, -0.05); }
+      if (av.hstyle === 2) add(o, new THREE.SphereGeometry(0.14, 8, 6), mat(hairC), 0, 1.95, 0);
+      add(o, G.leg, mat('#2b2b3a'), -0.1, 0.22, 0); add(o, G.leg, mat('#2b2b3a'), 0.1, 0.22, 0);
+      if (av.acc === 1) { for (const sx of [-0.1, 0.1]) { const t = add(o, new THREE.TorusGeometry(0.07, 0.014, 6, 12), mat('#2b2b3a'), sx, 1.65, 0.24); t.rotation.y = 0; } }
+      if (av.acc === 2) add(o, new THREE.CylinderGeometry(0.3, 0.3, 0.14, 12), mat('#c0572e'), 0, 1.3, 0);
+      if (av.acc === 3) { add(o, new THREE.TorusGeometry(0.27, 0.025, 6, 14, Math.PI), mat('#2b2b3a'), 0, 1.66, 0); add(o, new THREE.SphereGeometry(0.07, 6, 6), mat('#2b2b3a'), -0.27, 1.62, 0); add(o, new THREE.SphereGeometry(0.07, 6, 6), mat('#2b2b3a'), 0.27, 1.62, 0); }
+      if (av.hat === 1) { add(o, new THREE.CylinderGeometry(0.27, 0.28, 0.14, 12), mat('#e5634d'), 0, 1.9, 0); add(o, new THREE.BoxGeometry(0.3, 0.03, 0.22), mat('#e5634d'), 0, 1.84, 0.25); }
+      if (av.hat === 2) { add(o, new THREE.CylinderGeometry(0.24, 0.22, 0.3, 12), mat('#f4f1ea'), 0, 2.0, 0); add(o, new THREE.SphereGeometry(0.3, 10, 8), mat('#f4f1ea'), 0, 2.25, 0); }
+      if (av.hat === 3) { add(o, new THREE.CylinderGeometry(0.2, 0.2, 0.4, 12), mat('#1a1a22'), 0, 2.08, 0); add(o, new THREE.CylinderGeometry(0.34, 0.34, 0.04, 14), mat('#1a1a22'), 0, 1.9, 0); }
+      if (av.hat === 4) { add(o, new THREE.CylinderGeometry(0.26, 0.24, 0.22, 5), mat('#ffd23f'), 0, 1.98, 0); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; add(o, new THREE.ConeGeometry(0.06, 0.16, 5), mat('#ffd23f'), Math.cos(a) * 0.25, 2.17, Math.sin(a) * 0.25); } }
+      add(o, G.shadow, ghost('#000000', 0.25), 0, 0.012, 0).rotation.x = -Math.PI / 2;
+      o.position.set(wx(238), 0, wz(118));
+      g.add(o);
+    }
     return g;
   }
 
@@ -410,7 +434,7 @@ export function createView3D(canvas, bridge, options = {}) {
   /* ---------- Güncelleme ve çizim ---------- */
   function signatureCafe() {
     const S = bridge.S;
-    return [S.tab, S.bar, S.mach, S.cas, S.dec, S.room, S.name].join('|');
+    return [S.tab, S.bar, S.mach, S.cas, S.dec, S.room, S.name, JSON.stringify(S.avatar || {})].join('|');
   }
   function signatureCity() {
     const S = bridge.S;

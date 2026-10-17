@@ -110,6 +110,12 @@
   .lbrow .nm small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; }
   .lbrow .vl { color: var(--copper); font-variant-numeric: tabular-nums; }
   .lbrow.me { background: rgba(229,138,61,0.12); border-radius: 8px; padding-inline: 6px; }
+  .avrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .avrow button { font-size: 12px; padding: 6px 10px; line-height: 1.2; }
+  .avrow button small { display: block; opacity: 0.8; font-weight: 700; }
+  .avrow button.sw { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+  .avrow button.on { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .avrow button.locked { opacity: 0.55; }
   .grip { display: block; width: 100%; background: none; border: 0; border-radius: 0; padding: 6px 0 2px; cursor: pointer; }
   .grip span { display: block; width: 44px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.25); margin: 0 auto; }
   .nav { display: flex; background: #0c1514; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); flex-shrink: 0; }
@@ -154,6 +160,7 @@
       <div class="kv"><span>Kafe geliri</span><span id="hgelir"></span></div>
       <div class="kv"><span>Müşteri / kaçan</span><span id="hmus"></span></div>
       <div class="kv"><span>Toplam servis</span><span id="served"></span></div>
+      <div class="kv"><span>Unvan</span><span id="htitle"></span></div>
       <div class="goal" id="goal"></div>
     </div>
     <div class="item"><div class="info"><b>Zaman hızı</b><span>30 sn boyunca gün 2 kat hızlı akar.</span></div><button class="buy" id="speed">Reklam</button></div>
@@ -229,6 +236,56 @@
       <p id="cfp"></p>
       <div style="display:flex;margin-top:10px"><button id="cfbtn" style="flex:1;background:var(--copper);color:#1d1000;border-color:transparent">Franchise aç</button></div>
     </div>
+  </div>
+  <div id="p-mgr" hidden>
+    <div class="box">
+      <h4>Yöneticiler</h4>
+      <p>Kart topla, yöneticileri yükselt. Kartlar sandıklardan, çarktan ve kart paketinden gelir.</p>
+      <div class="acctrow"><button id="packbtn" class="on"></button></div>
+    </div>
+    <div id="mgrlist"></div>
+  </div>
+  <div id="p-wheel" hidden>
+    <div class="box">
+      <h4>Günlük çark<small id="wheelinfo"></small></h4>
+      <div style="display:flex;justify-content:center;margin:10px 0"><canvas id="wheelc" width="260" height="260" style="width:240px;height:240px;border-radius:50%;background:none"></canvas></div>
+      <div class="acctrow"><button class="on" id="spinfree">Ücretsiz çevir</button><button id="spinad">Reklamla çevir</button></div>
+      <p style="margin-top:8px">Ödüller: para, yönetici kartı, hız, deneyim ve sandık. Reklam butonu prototipte simüle edilir (günde 3 kez).</p>
+    </div>
+  </div>
+  <div id="p-chest" hidden>
+    <div class="box"><h4>Sandıklar</h4><p>VIP müşteriler, seviye atlama ve başarımlardan sandık düşer. İçinden para, yönetici kartı, deneyim ve bazen hız çıkar.</p></div>
+    <div id="chestlist"></div>
+  </div>
+  <div id="p-career" hidden>
+    <div class="box"><h4>Kariyer<small id="careerinc"></small></h4><p>Kafe dışında gelir kolları kur. Her biri 10 seviyeye kadar yükselir ve her gün pasif gelir getirir.</p></div>
+    <div id="bizlist"></div>
+  </div>
+  <div id="p-charity" hidden>
+    <div class="box">
+      <h4>Hayır<small id="charlv"></small></h4>
+      <p>Bağış yaptıkça hayırsever kademen yükselir. Her kademe kafene gelen müşteriyi %2 artırır.</p>
+      <div class="kv"><span>Toplam bağış</span><span id="chgiven"></span></div>
+      <div class="kv"><span>Müşteri bonusu</span><span id="chbonus"></span></div>
+      <div class="meter"><i id="chbar"></i></div>
+      <div class="kv"><span>Sonraki kademe</span><span id="chnext"></span></div>
+      <div class="acctrow" id="chbtns"></div>
+    </div>
+  </div>
+  <div id="p-cities" hidden>
+    <div class="box">
+      <h4>Şehirlerim<small id="citysum"></small></h4>
+      <div class="kv"><span>Aktif şube</span><span id="cityactive"></span></div>
+      <p style="margin-top:6px">Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır ve her gün pasif gelir getirir. Şubeleri yükselterek gelirini artırabilirsin.</p>
+    </div>
+    <div id="citylist"></div>
+  </div>
+  <div id="p-avatar" hidden>
+    <div class="box">
+      <h4>Karakter<small id="avtitle"></small></h4>
+      <div style="display:flex;justify-content:center;margin:6px 0"><canvas id="avc" width="200" height="200" style="width:200px;height:200px;border-radius:14px;background:#1d3834"></canvas></div>
+    </div>
+    <div id="avopts"></div>
   </div>
   <div id="p-settings" hidden>
     <div class="box">
@@ -329,6 +386,12 @@
   S.menu.espresso = 1;
   var SET_DEFAULTS = { sound: true, music: false, haptics: true };
   Object.keys(SET_DEFAULTS).forEach(function (k) { if (typeof S.settings[k] !== 'boolean') S.settings[k] = SET_DEFAULTS[k]; });
+  if (!S.chests) S.chests = { b: 0, s: 0, g: 0 };
+  if (!S.wheel) S.wheel = { day: '', ads: 0 };
+  if (!S.avatar) S.avatar = { skin: 0, hair: 0, hstyle: 0, shirt: 0, hat: 0, acc: 0 };
+  if (!S.charity) S.charity = { given: 0 };
+  if (!Array.isArray(S.branches)) S.branches = [];
+  ['mgr', 'biz', 'avOwn'].forEach(function (k) { if (!S[k]) S[k] = {}; });
   var blockPersist = false;
   function persist() { if (blockPersist) return; S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
 
@@ -365,21 +428,27 @@
     if (fs.length && Math.random() < 0.55) { var c = pickW(fs); if (Math.random() < demandOf(S.pmi[c.id])) o.f = c.id; }
     return o;
   }
-  function orderPrice(o) { var p = priceOf(PBY[o.d]); if (o.f) p += priceOf(PBY[o.f]); return p; }
+  function orderPrice(o) { var p = priceOf(PBY[o.d]); if (o.f) p += priceOf(PBY[o.f]) * (1 + 0.05 * mgrLv('cook')); return p; }
   function avgMult() { return wavg(drinks(), function (p) { return S.pmi[p.id]; }); }
   function demandAvg() { return wavg(drinks(), function (p) { return demandOf(S.pmi[p.id]); }); }
-  function bm() { return 1 + 0.25 * S.stars; }
+  function bm() { return (1 + 0.25 * S.stars) * (1 + 0.03 * mgrLv('acct')); }
   function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr; return t; }
   function prestMult() { return 1 + 0.5 * (1 - Math.exp(-prestige() / 100)); }
-  function passiveDaily() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc; return t; }
+  function passiveDaily() {
+    var t = 0, id;
+    for (id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc;
+    BIZ.forEach(function (b) { t += bizInc(b); });
+    S.branches.forEach(function (br) { t += branchInc(br); });
+    return t;
+  }
   function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].cost; return t; }
-  function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast)); }
-  function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience; }
+  function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast) * (1 - 0.04 * mgrLv('chef'))); }
+  function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience + 1.5 * mgrLv('host'); }
   function vipChance() { return 0.04 + 0.02 * S.perks.vip; }
   function menuCount() { return unlocked().length; }
   function popularity() {
     return (0.6 + 0.2 * S.rep) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
-      (1 + 0.04 * (menuCount() - 1)) * prestMult();
+      (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv());
   }
   function rush() { return 0.7 + 0.9 * Math.pow(Math.sin(Math.PI * Math.min(S.dayT, DAY_LEN) / DAY_LEN), 2); }
   function spawnRate() { return popularity() * rush() / 4.2; }
@@ -478,15 +547,15 @@
   /* ---------- Arayüz ---------- */
   var NAV = [
     { id: 'home', subs: [['home', 'Bugün']] },
-    { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat']] },
-    { id: 'world', subs: [['world', 'Varlıklar']] },
-    { id: 'rew', subs: [['ach', 'Başarım']] },
-    { id: 'me', subs: [['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
+    { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Yönetici']] },
+    { id: 'world', subs: [['world', 'Varlıklar'], ['career', 'Kariyer'], ['charity', 'Hayır'], ['cities', 'Şehirler']] },
+    { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['ach', 'Başarım']] },
+    { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
   ];
   var TABS = [];
   NAV.forEach(function (n) { n.subs.forEach(function (s) { TABS.push(s[0]); }); });
   var tab = 'home', mainTab = 'home', expanded = false;
-  var lastSub = { home: 'home', grow: 'inv', world: 'world', rew: 'ach', me: 'skill' };
+  var lastSub = { home: 'home', grow: 'inv', world: 'world', rew: 'wheel', me: 'avatar' };
   var listEl = $('list'), speedBtn = $('speed'), modal = $('modal'), mcard = $('mcard');
 
   var rows = [], menuRows = [], assetRows = [], achRows = [], priceSig = '';
@@ -568,10 +637,12 @@
 
   function refreshPanel() {
     var i;
+    if (refreshP2()) return;
     if (tab === 'home') {
       $('hgelir').textContent = '₺' + fmt(S.dayEarn + S.dayPassive);
       $('hmus').textContent = S.dayServed + ' / ' + S.dayLost;
       $('hevent').textContent = EVENTS[S.ev].n + ' · müşteri x' + EVENTS[S.ev].m;
+      $('htitle').textContent = title();
     } else if (tab === 'settings') {
       var cbs = $('p-settings').querySelectorAll('input[data-set]');
       for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
@@ -759,6 +830,7 @@
     for (var i = 0; i < ACH.length; i++) if (ACH[i].id === id) ac = ACH[i];
     if (!ac || !S.ach[id] || S.achc[id]) return;
     S.achc[id] = 1; S.money += ac.r; gainXp(ac.x);
+    giveChest(ac.r >= 5000 ? 'g' : 's');
     pops.push({ x: W / 2, y: 140, t: 0, text: '+₺' + fmt(ac.r), c: '#ffd23f' });
     sfx('win'); buzz(40); burst(W / 2, 140, 24, ['#ffd23f', '#6fd6a2', '#ff9ecd'], 120);
     persist(); refresh();
@@ -797,6 +869,8 @@
         '<div class="big">+' + gain + ' yıldız</div><p>Kalıcı gelir +%' + (gain * 25) + '</p>' +
         '<div class="row"><button data-act="no">Vazgeç</button><button class="on" data-act="yes">Aç</button></div>',
         { yes: function () {
+          // eski şube, otomatik yönetilen bir şube olarak kalır ve pasif gelir getirir
+          S.branches.push({ city: CITIES[S.branch % CITIES.length], name: S.name, income: Math.max(10, Math.round(estPerMin().rate * DAY_LEN / 60 * 0.5)), lv: 1 });
           S.stars += gain; S.branch++;
           S.money = 50 + 100 * S.stars; S.mach = 0; S.bar = 1; S.tab = 1; S.cas = 0; S.dec = 0; S.rep = 3; S.room = 0;
           S.menu = { espresso: 1 }; PRODUCTS.forEach(function (p) { S.pmi[p.id] = 1; });
@@ -822,6 +896,7 @@
     S.xp += n;
     while (S.xp >= need(S.level)) {
       S.xp -= need(S.level); S.level++; S.pts++;
+      if (S.level % 10 === 0) giveChest('g'); else if (S.level % 3 === 0) giveChest('s');
       S.money += 50 * S.level;
       pops.push({ x: W / 2, y: 100, t: 0, text: 'Seviye ' + S.level + '! +1 puan', c: '#ffd23f' });
       sfx('level'); buzz([40, 60, 40]);
@@ -899,7 +974,7 @@
     c.base = orderPrice(c.order);
     var pay = c.base * bm() * (c.vip ? 2.5 : 1);
     S.money += pay; S.dayEarn += pay; S.served++; S.dayServed++; S.runServed++; S.life++;
-    if (c.vip) S.vipServed++;
+    if (c.vip) { S.vipServed++; if (Math.random() < 0.15) giveChest('b'); }
     gainXp(c.vip ? 3 : 1);
     var am = avgMult();
     if (am > 1.5) S.rep = Math.max(1, S.rep - 0.01 * (am - 1.5));
@@ -998,6 +1073,7 @@
     updateParts(dt);
     if (paused) return;
     S.dayT += dt;
+    checkAudit();
     var pas = passiveDaily() / DAY_LEN * dt;
     S.money += pas; S.dayPassive += pas;
     spawnAcc += dt * spawnRate();
@@ -1173,6 +1249,7 @@
     for (i = 0; i < customers.length; i++) {
       items.push({ y: customers[i].state === 'eat' ? customers[i].y - 3 : customers[i].y, f: (function (cc) { return function () { drawCustomer(cc); }; })(customers[i]) });
     }
+    items.push({ y: 118, f: function () { drawOwner(ctx, 238, 118, 1, Math.sin(clock * 2) * 0.6); } });
     items.sort(function (a, b) { return a.y - b.y; });
     for (i = 0; i < items.length; i++) items[i].f();
     drawAtmosphere();
@@ -1306,6 +1383,415 @@
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
   }
 
+  /* ---------- Faz 2: yöneticiler, sandık, çark, denetim, karakter, kariyer, hayır, şubeler ---------- */
+  function todayKey() {
+    var d = new Date(), m = d.getMonth() + 1, x = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (x < 10 ? '0' : '') + x;
+  }
+
+  // Yöneticiler (kartla açılır ve yükselir)
+  var MGRS = [
+    { id: 'chef', n: 'Baristabaşı', d: 'Servis süresi -%4 / seviye' },
+    { id: 'host', n: 'Salon müdürü', d: 'Müşteri sabrı +1,5 sn / seviye' },
+    { id: 'acct', n: 'Muhasebeci', d: 'Kafe geliri +%3 / seviye' },
+    { id: 'mkt', n: 'Pazarlamacı', d: 'Gelen müşteri +%3 / seviye' },
+    { id: 'cook', n: 'Şef', d: 'Yiyecek geliri +%5 / seviye' },
+    { id: 'sec', n: 'Denetim uzmanı', d: 'Denetimde başarı şansı +%5 / seviye' }
+  ];
+  var MGR_NEED = [1, 2, 3, 4, 6, 8, 11, 15, 20, 28], MGR_MAX = 10;
+  function mgrLv(id) { return (S.mgr[id] && S.mgr[id].lv) || 0; }
+  function mgrCards(id) { return (S.mgr[id] && S.mgr[id].cards) || 0; }
+  function canUpMgr(m) { var lv = mgrLv(m.id); return lv < MGR_MAX && mgrCards(m.id) >= MGR_NEED[lv]; }
+  function packCost() { return Math.round(400 * Math.pow(1.35, S.packs || 0)); }
+  function addCard(id) { if (!S.mgr[id]) S.mgr[id] = { lv: 0, cards: 0 }; S.mgr[id].cards++; }
+  function randCard() { var id = MGRS[Math.floor(Math.random() * MGRS.length)].id; addCard(id); return id; }
+  function mgrName(id) { for (var i = 0; i < MGRS.length; i++) if (MGRS[i].id === id) return MGRS[i].n; return id; }
+  function rewardBase() { return Math.max(100, Math.round(estPerMin().rate * 0.75 + passiveDaily() / DAY_LEN * 40)); }
+
+  // Sandıklar
+  var CHEST = { b: { n: 'Bronz sandık', m: 2, cards: 1, xp: 10 }, s: { n: 'Gümüş sandık', m: 6, cards: 2, xp: 30 }, g: { n: 'Altın sandık', m: 15, cards: 4, xp: 80 } };
+  function chestCount() { return S.chests.b + S.chests.s + S.chests.g; }
+  function giveChest(k) {
+    S.chests[k]++;
+    pops.push({ x: W / 2, y: 110, t: 0, text: CHEST[k].n + ' kazandın!', c: '#ffd23f' });
+    persist();
+  }
+  function openChest(k) {
+    if (S.chests[k] < 1) return;
+    S.chests[k]--;
+    var c = CHEST[k], money = Math.round(rewardBase() * c.m), cards = [], i;
+    for (i = 0; i < c.cards; i++) cards.push(randCard());
+    S.money += money; gainXp(c.xp);
+    var boost = Math.random() < 0.35;
+    if (boost) speedUntil = Date.now() + 30000;
+    sfx('chest'); buzz([30, 40, 60]);
+    burst(W / 2, 140, 40, ['#ffd23f', '#6fd6a2', '#e58a3d', '#4cc9f0', '#ff9ecd'], 140);
+    persist();
+    var names = cards.map(mgrName).join(', ');
+    enqueue(function () {
+      showModal('<h2>' + c.n + '</h2><div class="big">+₺' + fmt(money) + '</div>' +
+        '<div class="stats"><span>Yönetici kartı</span><span>' + esc2(names) + '</span><span>Deneyim</span><span>+' + c.xp + '</span><span>Hız</span><span>' + (boost ? '30 sn x2' : '-') + '</span></div>' +
+        '<div class="row"><button data-act="ad">Reklam izle: para x2</button><button class="on" data-act="ok">Tamam</button></div>',
+        { ad: function () { S.money += money; persist(); sfx('coin'); } });
+    });
+  }
+  function esc2(t) { return String(t).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
+
+  // Günlük çark
+  var WHEEL = [
+    { t: 'm', k: 1, l: '₺', c: '#e5634d', w: 25 }, { t: 'c', l: 'Kart', c: '#4cc9f0', w: 20 },
+    { t: 'h', l: 'Hız', c: '#6fd6a2', w: 15 }, { t: 'x', l: 'XP', c: '#b388eb', w: 15 },
+    { t: 'm', k: 10, l: '₺₺₺', c: '#ffd23f', w: 5 }, { t: 'b', k: 'b', l: 'Sandık', c: '#e58a3d', w: 10 },
+    { t: 'm', k: 3, l: '₺₺', c: '#ff9ecd', w: 6 }, { t: 'b', k: 's', l: 'Gümüş', c: '#aeb4bd', w: 4 }
+  ];
+  var wheelAng = 0, wheelSpin = null;
+  function wheelReady() { return S.wheel.day !== todayKey(); }
+  function drawWheel(ang) {
+    var cw = $('wheelc'), x = cw.getContext('2d'), n = WHEEL.length, step = Math.PI * 2 / n, R = cw.width / 2 - 8, cx = cw.width / 2, cy = cw.height / 2;
+    x.clearRect(0, 0, cw.width, cw.height);
+    for (var i = 0; i < n; i++) {
+      var a0 = ang + i * step;
+      x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, R, a0, a0 + step); x.closePath();
+      x.fillStyle = WHEEL[i].c; x.fill(); x.strokeStyle = 'rgba(0,0,0,0.25)'; x.lineWidth = 2; x.stroke();
+      x.save(); x.translate(cx, cy); x.rotate(a0 + step / 2);
+      x.fillStyle = '#1b1500'; x.font = '800 15px system-ui, sans-serif'; x.textAlign = 'right'; x.fillText(WHEEL[i].l, R - 14, 5);
+      x.restore();
+    }
+    x.beginPath(); x.arc(cx, cy, 22, 0, 7); x.fillStyle = '#0f1a19'; x.fill();
+    x.beginPath(); x.moveTo(cx - 12, 2); x.lineTo(cx + 12, 2); x.lineTo(cx, 28); x.closePath(); x.fillStyle = '#f2efe9'; x.fill();
+  }
+  function spinWheel(free) {
+    if (wheelSpin) return;
+    if (free) { if (!wheelReady()) return; S.wheel.day = todayKey(); S.wheel.ads = 0; }
+    else { if (S.wheel.ads >= 3) return; S.wheel.ads++; }      // reklam simülasyonu
+    var tot = 0, i; WHEEL.forEach(function (s) { tot += s.w; });
+    var r = Math.random() * tot, idx = WHEEL.length - 1;
+    for (i = 0; i < WHEEL.length; i++) { r -= WHEEL[i].w; if (r <= 0) { idx = i; break; } }
+    var step = Math.PI * 2 / WHEEL.length, target = -Math.PI / 2 - (idx + 0.5) * step;
+    while (target < wheelAng + Math.PI * 6) target += Math.PI * 2;
+    wheelSpin = { from: wheelAng, to: target, t0: performance.now(), dur: 3200, idx: idx, seg: -99 };
+    persist(); refresh();
+  }
+  function wheelTick(now) {
+    if (!wheelSpin) return;
+    var w = wheelSpin, p = Math.min(1, (now - w.t0) / w.dur), e = 1 - Math.pow(1 - p, 3);
+    wheelAng = w.from + (w.to - w.from) * e;
+    var seg = Math.floor((wheelAng + Math.PI / 2) / (Math.PI * 2 / WHEEL.length));
+    if (seg !== w.seg) { w.seg = seg; sfx('tick'); }
+    if (tab === 'wheel') drawWheel(wheelAng);
+    if (p >= 1) {
+      wheelSpin = null;
+      wheelAng = ((wheelAng % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      applyPrize(WHEEL[w.idx]);
+      refresh();
+    }
+  }
+  function applyPrize(res) {
+    var text = '', base = rewardBase();
+    if (res.t === 'm') { var m = Math.round(base * res.k); S.money += m; text = '+₺' + fmt(m); }
+    else if (res.t === 'c') { var id = randCard(); text = mgrName(id) + ' kartı'; }
+    else if (res.t === 'h') { speedUntil = Date.now() + 30000; text = '30 sn x2 hız'; }
+    else if (res.t === 'x') { var xp = 25 + S.level * 3; gainXp(xp); text = '+' + xp + ' deneyim'; }
+    else { giveChest(res.k); text = CHEST[res.k].n; }
+    sfx('win'); buzz([30, 30, 60]);
+    burst(W / 2, 140, 30, ['#ffd23f', '#6fd6a2', '#ff9ecd', '#4cc9f0'], 130);
+    persist();
+    enqueue(function () { showModal('<h2>Çark sonucu</h2><div class="big">' + esc2(text) + '</div><div class="row"><button class="on" data-act="ok">Harika</button></div>', {}); });
+  }
+
+  // Denetim olayı
+  var auditOpen = false;
+  function auditChance() { return Math.min(0.95, 0.3 + 0.1 * (S.rep - 1) + 0.03 * S.dec + 0.05 * mgrLv('sec') + 0.02 * S.bar); }
+  function checkAudit() {
+    if (S.day < 3 || S.auditDay === S.day || S.dayT < DAY_LEN * 0.45 || auditOpen) return;
+    S.auditDay = S.day;
+    if (Math.random() > 0.55) return;
+    auditOpen = true; paused = true; sfx('audit'); buzz([60, 40, 60]);
+    var base = rewardBase(), win = base * 4, fine = Math.max(50, Math.min(Math.round(S.money * 0.08), base * 6)), delay = Math.round(fine * 0.4), ch = auditChance();
+    function done() { auditOpen = false; paused = false; persist(); }
+    enqueue(function () {
+      showModal('<h2>Belediye denetimi!</h2><p>Müfettişler kapıda. Hazırlığın ne durumda?</p>' +
+        '<div class="stats"><span>Başarı şansı</span><span>%' + Math.round(ch * 100) + '</span><span>Başarırsan</span><span>+₺' + fmt(win) + '</span><span>Başaramazsan</span><span>-₺' + fmt(fine) + '</span><span>Erteleme ücreti</span><span>₺' + fmt(delay) + '</span></div>' +
+        '<p>İtibar, dekor, barista ve Denetim uzmanı şansını artırır.</p>' +
+        '<div class="row"><button data-act="delay"' + (S.money < delay ? ' disabled' : '') + '>Ertele</button><button class="on" data-act="go">Denetime gir</button></div>',
+        {
+          delay: function () { S.money -= delay; done(); },
+          go: function () {
+            if (Math.random() < ch) {
+              S.money += win; gainXp(20); if (Math.random() < 0.5) giveChest('b');
+              sfx('win'); burst(W / 2, 140, 30, ['#ffd23f', '#6fd6a2'], 120);
+              done();
+              enqueue(function () { showModal('<h2>Denetimi geçtin!</h2><div class="big">+₺' + fmt(win) + '</div><div class="row"><button class="on" data-act="ok">Süper</button></div>', {}); });
+            } else {
+              S.money = Math.max(0, S.money - fine); S.rep = Math.max(1, S.rep - 0.15);
+              sfx('error'); buzz(120);
+              done();
+              enqueue(function () { showModal('<h2>Ceza yedin</h2><div class="big">-₺' + fmt(fine) + '</div><p>İtibarın biraz düştü. Hazırlığını artır.</p><div class="row"><button class="on" data-act="ok">Tamam</button></div>', {}); });
+            }
+          }
+        });
+    });
+  }
+
+  // Karakter (kafe sahibi) ve unvanlar
+  var AV = {
+    skins: ['#f1c9a5', '#d9a273', '#a8744f', '#7a4a2f'],
+    hairs: ['#2b1d14', '#5a3a22', '#c9a24d', '#1a1a1a', '#8a3b2a'],
+    hstyles: ['Kısa', 'Uzun', 'Topuz'],
+    shirts: [['#e5634d', 0], ['#4cc9f0', 0], ['#ffd23f', 0], ['#7bd389', 0], ['#b388eb', 0], ['#ff9ecd', 0], ['#f4f1ea', 0], ['#2b2b3a', 20000], ['#c9a24d', 60000]],
+    hats: [['Yok', 0], ['Kasket', 500], ['Şef şapkası', 2000], ['Silindir', 10000], ['Taç', 100000]],
+    accs: [['Yok', 0], ['Gözlük', 800], ['Atkı', 1500], ['Kulaklık', 6000]]
+  };
+  var TITLES = [[1, 'Çırak'], [3, 'Barista'], [6, 'Usta barista'], [10, 'Kafe sahibi'], [15, 'Girişimci'], [20, 'Patron'], [30, 'İş insanı'], [40, 'Mogul'], [60, 'Kahve baronu']];
+  function title() { var t = TITLES[0][1]; TITLES.forEach(function (x) { if (S.level >= x[0]) t = x[1]; }); return t; }
+  function avOwned(cat, i, price) { return price === 0 || !!S.avOwn[cat + i]; }
+
+  function drawOwner(c, x, y, s, bob) {
+    var a = S.avatar, skin = AV.skins[a.skin] || AV.skins[0], hair = AV.hairs[a.hair] || AV.hairs[0], shirt = (AV.shirts[a.shirt] || AV.shirts[0])[0];
+    c.save(); c.translate(x, y); c.scale(s, s);
+    c.fillStyle = 'rgba(0,0,0,0.22)'; c.beginPath(); c.ellipse(0, 1, 8, 3, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#2b2b3a'; c.fillRect(-5, -7, 3.5, 7); c.fillRect(1.5, -7, 3.5, 7);
+    c.fillStyle = shirt; rr(c, -6.5, -19 + bob, 13, 13, 4); c.fill();
+    c.fillStyle = '#f4f1ea'; c.fillRect(-4, -15 + bob, 8, 9);                  // önlük
+    c.fillStyle = skin; c.beginPath(); c.arc(0, -24 + bob, 5.5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = hair; c.beginPath(); c.arc(0, -25.5 + bob, 5.7, Math.PI, 0); c.fill();
+    if (a.hstyle === 1) { c.fillRect(-6, -26 + bob, 2.4, 10); c.fillRect(3.6, -26 + bob, 2.4, 10); }
+    if (a.hstyle === 2) { c.beginPath(); c.arc(0, -32 + bob, 3, 0, Math.PI * 2); c.fill(); }
+    c.fillStyle = '#2b1d14'; c.fillRect(-2.6, -24 + bob, 1.4, 1.4); c.fillRect(1.2, -24 + bob, 1.4, 1.4);
+    if (a.acc === 1) { c.strokeStyle = '#2b2b3a'; c.lineWidth = 0.8; c.beginPath(); c.arc(-2.6, -23.5 + bob, 2.2, 0, 7); c.moveTo(4.8, -23.5 + bob); c.arc(2.6, -23.5 + bob, 2.2, 0, 7); c.moveTo(-0.4, -23.5 + bob); c.lineTo(0.4, -23.5 + bob); c.stroke(); }
+    if (a.acc === 2) { c.fillStyle = '#c0572e'; c.fillRect(-6.5, -19.5 + bob, 13, 3); }
+    if (a.acc === 3) { c.strokeStyle = '#2b2b3a'; c.lineWidth = 1.3; c.beginPath(); c.arc(0, -24.5 + bob, 6.6, Math.PI, 0); c.stroke(); c.fillStyle = '#2b2b3a'; c.beginPath(); c.arc(-6.6, -24 + bob, 2, 0, 7); c.arc(6.6, -24 + bob, 2, 0, 7); c.fill(); }
+    if (a.hat === 1) { c.fillStyle = '#e5634d'; c.beginPath(); c.arc(0, -26.5 + bob, 6, Math.PI, 0); c.fill(); c.fillRect(0, -27 + bob, 9, 2); }
+    if (a.hat === 2) { c.fillStyle = '#f4f1ea'; c.fillRect(-5, -37 + bob, 10, 8); c.beginPath(); c.arc(-3, -37 + bob, 4, 0, 7); c.arc(3, -37 + bob, 4, 0, 7); c.arc(0, -40 + bob, 4.5, 0, 7); c.fill(); }
+    if (a.hat === 3) { c.fillStyle = '#1a1a22'; c.fillRect(-5, -38 + bob, 10, 9); c.fillRect(-8, -30 + bob, 16, 2); }
+    if (a.hat === 4) { c.fillStyle = '#ffd23f'; c.beginPath(); c.moveTo(-5.5, -29 + bob); c.lineTo(-5.5, -35 + bob); c.lineTo(-2.7, -31.5 + bob); c.lineTo(0, -36 + bob); c.lineTo(2.7, -31.5 + bob); c.lineTo(5.5, -35 + bob); c.lineTo(5.5, -29 + bob); c.closePath(); c.fill(); }
+    c.restore();
+  }
+
+  // Kariyer (yan işler)
+  var BIZ = [
+    { id: 'whole', n: 'Toptan kahve', d: 'Kahveni market ve ofislere toptan sat.', cost: 3000, inc: 60, req: 3 },
+    { id: 'deliv', n: 'Online sipariş', d: 'Uygulamadan paket servis.', cost: 12000, inc: 220, req: 6 },
+    { id: 'cater', n: 'Catering', d: 'Etkinlik ve toplantılara servis.', cost: 50000, inc: 900, req: 10 },
+    { id: 'brand', n: 'Kahve markası', d: 'Paketli ürünlerin mağazalarda.', cost: 250000, inc: 4200, req: 15 }
+  ];
+  var BIZ_MAX = 10;
+  function bizLv(b) { return S.biz[b.id] || 0; }
+  function bizInc(b) { return b.inc * bizLv(b); }
+  function bizCost(b) { return Math.round(b.cost * Math.pow(1.7, bizLv(b))); }
+
+  // Hayır
+  var CHARITY_TIERS = [1000, 10000, 100000, 1e6, 1e7, 1e8];
+  function charityLv() { var n = 0; CHARITY_TIERS.forEach(function (t) { if (S.charity.given >= t) n++; }); return n; }
+  function donate(f) {
+    var amt = Math.floor(S.money * f);
+    if (amt < 100) { sfx('error'); return; }
+    var before = charityLv();
+    S.money -= amt; S.charity.given += amt;
+    gainXp(Math.min(60, Math.ceil(amt / Math.max(1, rewardBase()))));
+    sfx('win'); buzz(40);
+    burst(W / 2, 140, 22, ['#ff9ecd', '#ffd23f', '#ffffff'], 110);
+    pops.push({ x: W / 2, y: 130, t: 0, text: 'Bağış: ₺' + fmt(amt), c: '#ff9ecd' });
+    if (charityLv() > before) pops.push({ x: W / 2, y: 100, t: 0, text: 'Hayırsever kademe ' + charityLv() + '!', c: '#ffd23f' });
+    persist();
+  }
+
+  // Şubeler
+  function branchInc(br) { return br.income * (1 + 0.5 * (br.lv - 1)); }
+  function branchCost(br) { return Math.round(br.income * 10 * br.lv); }
+
+  /* ---- Arayüz: bir kez kurulur, sonra yalnızca güncellenir ---- */
+  var mgrRows = [], chestRows = [], bizRows = [], citySig = '', avBtns = [];
+  (function buildP2() {
+    var h = '', i;
+    MGRS.forEach(function (m) { h += '<div class="item"><div class="info"><b>' + m.n + '<em></em></b><span>' + m.d + '</span><div class="meter"><i></i></div></div><button class="buy" data-id="' + m.id + '"></button></div>'; });
+    $('mgrlist').innerHTML = h;
+    var els = $('mgrlist').querySelectorAll('.item');
+    for (i = 0; i < els.length; i++) mgrRows.push({ lv: els[i].querySelector('em'), bar: els[i].querySelector('.meter i'), b: els[i].querySelector('button') });
+
+    h = '';
+    ['b', 's', 'g'].forEach(function (k) { h += '<div class="item"><div class="info"><b>' + CHEST[k].n + '<em></em></b><span>Para x' + CHEST[k].m + ', ' + CHEST[k].cards + ' kart, deneyim</span></div><button class="buy" data-k="' + k + '">Aç</button></div>'; });
+    $('chestlist').innerHTML = h;
+    els = $('chestlist').querySelectorAll('.item');
+    for (i = 0; i < els.length; i++) chestRows.push({ n: els[i].querySelector('em'), b: els[i].querySelector('button') });
+
+    h = '';
+    BIZ.forEach(function (b) { h += '<div class="item"><div class="info"><b>' + b.n + '<em></em></b><span>' + b.d + '</span></div><button class="buy" data-id="' + b.id + '"></button></div>'; });
+    $('bizlist').innerHTML = h;
+    els = $('bizlist').querySelectorAll('.item');
+    for (i = 0; i < els.length; i++) bizRows.push({ lv: els[i].querySelector('em'), d: els[i].querySelector('span'), b: els[i].querySelector('button') });
+
+    $('chbtns').innerHTML = '<button data-f="0.05">Bakiyenin %5\'i</button><button data-f="0.15">%15\'i</button><button data-f="0.4">%40\'ı</button>';
+
+    h = '';
+    function row(label, cat, list, kind) {
+      h += '<div class="box"><h4>' + label + '</h4><div class="avrow">';
+      list.forEach(function (it, idx) {
+        if (kind === 'sw') h += '<button class="sw" data-cat="' + cat + '" data-i="' + idx + '" style="background:' + (Array.isArray(it) ? it[0] : it) + '" aria-label="' + label + ' ' + (idx + 1) + '"></button>';
+        else h += '<button data-cat="' + cat + '" data-i="' + idx + '">' + (Array.isArray(it) ? it[0] : it) + '<small></small></button>';
+      });
+      h += '</div></div>';
+    }
+    row('Ten', 'skin', AV.skins, 'sw'); row('Saç rengi', 'hair', AV.hairs, 'sw'); row('Saç stili', 'hstyle', AV.hstyles, 'tx');
+    row('Gömlek', 'shirt', AV.shirts, 'sw'); row('Şapka', 'hat', AV.hats, 'tx'); row('Aksesuar', 'acc', AV.accs, 'tx');
+    $('avopts').innerHTML = h;
+    avBtns = [].slice.call($('avopts').querySelectorAll('button[data-cat]'));
+  })();
+
+  function avPrice(cat, i) {
+    if (cat === 'shirt') return AV.shirts[i][1];
+    if (cat === 'hat') return AV.hats[i][1];
+    if (cat === 'acc') return AV.accs[i][1];
+    return 0;
+  }
+
+  function refreshP2() {
+    var i;
+    if (tab === 'mgr') {
+      $('packbtn').innerHTML = 'Kart paketi al · ₺' + fmt(packCost());
+      $('packbtn').disabled = S.money < packCost();
+      MGRS.forEach(function (m, k) {
+        var r = mgrRows[k], lv = mgrLv(m.id), cards = mgrCards(m.id), need = lv < MGR_MAX ? MGR_NEED[lv] : 0;
+        r.lv.textContent = 'Sv. ' + lv + '/' + MGR_MAX;
+        r.bar.style.width = (need ? Math.min(100, cards / need * 100) : 100) + '%';
+        if (lv >= MGR_MAX) { r.b.textContent = 'Maks'; r.b.disabled = true; }
+        else { r.b.innerHTML = (lv ? 'Yükselt' : 'Aç') + '<small>' + cards + '/' + need + ' kart</small>'; r.b.disabled = cards < need; }
+      });
+      return true;
+    }
+    if (tab === 'chest') {
+      ['b', 's', 'g'].forEach(function (k, j) { chestRows[j].n.textContent = 'x' + S.chests[k]; chestRows[j].b.disabled = S.chests[k] < 1; });
+      return true;
+    }
+    if (tab === 'wheel') {
+      $('wheelinfo').textContent = wheelReady() ? 'ücretsiz çevirme hazır' : 'yarın tekrar gel';
+      $('spinfree').disabled = !wheelReady() || !!wheelSpin;
+      $('spinad').textContent = 'Reklamla çevir (' + Math.max(0, 3 - S.wheel.ads) + ')';
+      $('spinad').disabled = S.wheel.ads >= 3 || !!wheelSpin;
+      if (!wheelSpin) drawWheel(wheelAng);
+      return true;
+    }
+    if (tab === 'career') {
+      $('careerinc').textContent = '₺' + fmt(BIZ.reduce(function (t, b) { return t + bizInc(b); }, 0)) + ' / gün';
+      BIZ.forEach(function (b, k) {
+        var r = bizRows[k], lv = bizLv(b);
+        r.lv.textContent = 'Sv. ' + lv + '/' + BIZ_MAX;
+        r.d.textContent = b.d + ' · ₺' + fmt(b.inc * Math.max(1, lv)) + '/gün' + (lv ? '' : ' (1. seviyede)');
+        if (lv >= BIZ_MAX) { r.b.textContent = 'Maks'; r.b.disabled = true; }
+        else if (!lv && S.level < b.req) { r.b.textContent = 'Seviye ' + b.req; r.b.disabled = true; }
+        else { r.b.innerHTML = (lv ? 'Yükselt' : 'Kur') + '<small>₺' + fmt(bizCost(b)) + '</small>'; r.b.disabled = S.money < bizCost(b); }
+      });
+      return true;
+    }
+    if (tab === 'charity') {
+      var lvC = charityLv(), nxt = null;
+      for (i = 0; i < CHARITY_TIERS.length; i++) if (S.charity.given < CHARITY_TIERS[i]) { nxt = CHARITY_TIERS[i]; break; }
+      var prev = lvC ? CHARITY_TIERS[lvC - 1] : 0;
+      $('charlv').textContent = 'kademe ' + lvC + '/' + CHARITY_TIERS.length;
+      $('chgiven').textContent = '₺' + fmt(S.charity.given);
+      $('chbonus').textContent = '+%' + (lvC * 2);
+      $('chbar').style.width = (nxt ? Math.min(100, (S.charity.given - prev) / (nxt - prev) * 100) : 100) + '%';
+      $('chnext').textContent = nxt ? '₺' + fmt(nxt) : 'tamam';
+      [].forEach.call($('chbtns').querySelectorAll('button'), function (b) { b.disabled = Math.floor(S.money * parseFloat(b.getAttribute('data-f'))) < 100; });
+      return true;
+    }
+    if (tab === 'cities') {
+      var est = estPerMin().rate * DAY_LEN / 60;
+      $('citysum').textContent = (1 + S.branches.length) + ' şube';
+      $('cityactive').textContent = CITIES[S.branch % CITIES.length] + ' · ~₺' + fmt(est) + '/gün';
+      var sig = S.branches.length + '|' + S.branches.map(function (b) { return b.lv; }).join(',');
+      if (sig !== citySig) {
+        citySig = sig;
+        var hh = '';
+        S.branches.forEach(function (br, k) { hh += '<div class="item"><div class="info"><b>' + esc2(br.city) + '<em></em></b><span></span></div><button class="buy" data-i="' + k + '"></button></div>'; });
+        $('citylist').innerHTML = hh || '<div class="box"><p>Henüz otomatik şuben yok. Franchise açınca ilk şuben burada görünür (Ben > Kafe).</p></div>';
+      }
+      var cr = $('citylist').querySelectorAll('.item');
+      S.branches.forEach(function (br, k) {
+        if (!cr[k]) return;
+        cr[k].querySelector('em').textContent = 'Sv. ' + br.lv + '/10';
+        cr[k].querySelector('span').textContent = br.name + ' · ₺' + fmt(branchInc(br)) + '/gün';
+        var bt = cr[k].querySelector('button');
+        if (br.lv >= 10) { bt.textContent = 'Maks'; bt.disabled = true; }
+        else { bt.innerHTML = 'Yükselt<small>₺' + fmt(branchCost(br)) + '</small>'; bt.disabled = S.money < branchCost(br); }
+      });
+      return true;
+    }
+    if (tab === 'avatar') {
+      $('avtitle').textContent = title();
+      avBtns.forEach(function (b) {
+        var cat = b.getAttribute('data-cat'), idx = parseInt(b.getAttribute('data-i'), 10), price = avPrice(cat, idx), owned = avOwned(cat, idx, price);
+        b.classList.toggle('on', S.avatar[cat] === idx);
+        b.classList.toggle('locked', !owned);
+        var sm = b.querySelector('small');
+        if (sm) sm.textContent = owned ? '' : '₺' + fmt(price);
+        else b.title = owned ? '' : '₺' + fmt(price);
+      });
+      var ac = $('avc').getContext('2d');
+      ac.clearRect(0, 0, 200, 200);
+      drawOwner(ac, 100, 178, 4.2, Math.sin(clock * 2) * 0.6);
+      return true;
+    }
+    return false;
+  }
+
+  $('packbtn').addEventListener('click', function () {
+    var c = packCost();
+    if (S.money < c) return;
+    S.money -= c; S.packs = (S.packs || 0) + 1;
+    var id = randCard();
+    sfx('chest'); buzz(40); burst(W / 2, 140, 20, ['#4cc9f0', '#ffd23f'], 100);
+    persist(); refresh();
+    pops.push({ x: W / 2, y: 120, t: 0, text: mgrName(id) + ' kartı', c: '#4cc9f0' });
+  });
+  $('mgrlist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-id]') : null;
+    if (!b || b.disabled) return;
+    var m = null; MGRS.forEach(function (x) { if (x.id === b.getAttribute('data-id')) m = x; });
+    if (!m || !canUpMgr(m)) return;
+    var lv = mgrLv(m.id);
+    S.mgr[m.id].cards -= MGR_NEED[lv]; S.mgr[m.id].lv = lv + 1;
+    bought(); persist(); refresh();
+  });
+  $('chestlist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-k]') : null;
+    if (b && !b.disabled) { openChest(b.getAttribute('data-k')); refresh(); }
+  });
+  $('spinfree').addEventListener('click', function () { spinWheel(true); });
+  $('spinad').addEventListener('click', function () { spinWheel(false); });
+  $('bizlist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-id]') : null;
+    if (!b || b.disabled) return;
+    var biz = null; BIZ.forEach(function (x) { if (x.id === b.getAttribute('data-id')) biz = x; });
+    if (!biz || bizLv(biz) >= BIZ_MAX || S.money < bizCost(biz)) return;
+    if (!bizLv(biz) && S.level < biz.req) return;
+    S.money -= bizCost(biz); S.biz[biz.id] = bizLv(biz) + 1;
+    bought(); persist(); refresh();
+  });
+  $('chbtns').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-f]') : null;
+    if (b && !b.disabled) { donate(parseFloat(b.getAttribute('data-f'))); refresh(); }
+  });
+  $('citylist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-i]') : null;
+    if (!b || b.disabled) return;
+    var br = S.branches[parseInt(b.getAttribute('data-i'), 10)];
+    if (!br || br.lv >= 10 || S.money < branchCost(br)) return;
+    S.money -= branchCost(br); br.lv++;
+    bought(); persist(); refresh();
+  });
+  $('avopts').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-cat]') : null;
+    if (!b) return;
+    var cat = b.getAttribute('data-cat'), idx = parseInt(b.getAttribute('data-i'), 10), price = avPrice(cat, idx);
+    if (!avOwned(cat, idx, price)) {
+      if (S.money < price) { sfx('error'); return; }
+      S.money -= price; S.avOwn[cat + idx] = 1; bought();
+    } else sfx('tick');
+    S.avatar[cat] = idx;
+    persist(); refresh();
+  });
+
   /* ---------- Ses, titreşim, parçacıklar, atmosfer ---------- */
   var shownMoney = S.money;
   var audio = { ctx: null, master: null, musicT: 0, lastCoin: 0 };
@@ -1432,7 +1918,8 @@
     ITEMS.forEach(function (it) { if (!maxed(it) && S.level >= it.req() && S.money >= it.cost()) d.grow = true; });
     PRODUCTS.forEach(function (p) { if (!S.menu[p.id] && S.level >= p.req && S.money >= p.cost) d.grow = true; });
     ASSETS.forEach(function (a) { if (!S.assets[a.id] && S.level >= a.req && S.money >= a.cost) d.world = true; });
-    d.rew = claimable() > 0;
+    MGRS.forEach(function (m) { if (canUpMgr(m)) d.grow = true; });
+    d.rew = claimable() > 0 || wheelReady() || chestCount() > 0;
     d.me = S.pts > 0;
     ['grow', 'world', 'rew', 'me'].forEach(function (k) {
       var el = document.querySelector('#nav [data-main="' + k + '"] i');
@@ -1479,7 +1966,7 @@
     import('./three-view.js').then(function (m) {
       var bridge = {
         S: S, customers: customers, lanes: lanes, ROOMS: ROOMS, LANES_X: LANES_X, tablePos: tablePos,
-        getH: function () { return H; }, clock: function () { return clock; }, dayLen: DAY_LEN
+        getH: function () { return H; }, clock: function () { return clock; }, dayLen: DAY_LEN, AV: AV
       };
       v3 = m.createView3D(cv3, bridge);
       v3on = true; v3busy = false;
@@ -1671,6 +2158,7 @@
     var dt = Math.min(0.05, (now - prev) / 1000);
     prev = now;
     update(dt);
+    wheelTick(now);
     if (v3on && v3) { try { v3.update(dt, mainTab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
     else if (mainTab === 'world') drawWorld(); else draw();
     uiAcc += dt; saveAcc += dt;
