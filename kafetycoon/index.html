@@ -432,16 +432,16 @@
   function avgMult() { return wavg(drinks(), function (p) { return S.pmi[p.id]; }); }
   function demandAvg() { return wavg(drinks(), function (p) { return demandOf(S.pmi[p.id]); }); }
   function bm() { return (1 + 0.25 * S.stars) * (1 + 0.03 * mgrLv('acct')); }
-  function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr; return t; }
+  function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr * (1 + 0.3 * (aLv(ABY[id]) - 1)); return t; }
   function prestMult() { return 1 + 0.5 * (1 - Math.exp(-prestige() / 100)); }
   function passiveDaily() {
     var t = 0, id;
-    for (id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc;
+    for (id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc * aMult(aLv(ABY[id]));
     BIZ.forEach(function (b) { t += bizInc(b); });
     S.branches.forEach(function (br) { t += branchInc(br); });
     return t;
   }
-  function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].cost; return t; }
+  function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += aValue(ABY[id]); return t; }
   function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast) * (1 - 0.04 * mgrLv('chef'))); }
   function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience + 1.5 * mgrLv('host'); }
   function vipChance() { return 0.04 + 0.02 * S.perks.vip; }
@@ -691,9 +691,10 @@
       $('wpas').textContent = '₺' + fmt(passiveDaily()) + ' / gün';
       $('wpm').textContent = 'x' + prestMult().toFixed(2);
       for (i = 0; i < ASSETS.length; i++) {
-        var a = ASSETS[i], ar = assetRows[i], has = !!S.assets[a.id];
-        ar.lv.textContent = has ? 'Sahipsin' : '';
-        if (has) { ar.b.textContent = 'Sahipsin'; ar.b.disabled = true; ar.el.classList.add('done'); }
+        var a = ASSETS[i], ar = assetRows[i], has = !!S.assets[a.id], alv = aLv(a);
+        ar.lv.textContent = has ? 'Sv. ' + alv + '/5 · ' + ASSET_LV_NAMES[a.cat][alv - 1] : '';
+        ar.el.querySelector('span').textContent = '+₺' + fmt(a.inc * aMult(Math.max(1, alv))) + '/gün · prestij +' + Math.round(a.pr * (1 + 0.3 * (Math.max(1, alv) - 1)));
+        if (has) { ar.b.textContent = 'Yönet'; ar.b.disabled = false; ar.el.classList.add('done'); }
         else if (S.level < a.req) { ar.b.innerHTML = 'Seviye ' + a.req; ar.b.disabled = true; }
         else { ar.b.innerHTML = '₺' + fmt(a.cost); ar.b.disabled = S.money < a.cost; }
       }
@@ -818,7 +819,8 @@
     var b = e.target.closest ? e.target.closest('button.buy') : null;
     if (!b || b.disabled) return;
     var a = ABY[b.getAttribute('data-id')];
-    if (S.assets[a.id] || S.level < a.req || S.money < a.cost) return;
+    if (S.assets[a.id]) { openAsset(a.id); return; }
+    if (S.level < a.req || S.money < a.cost) return;
     S.money -= a.cost; S.assets[a.id] = 1;
     bought();
     persist(); refresh();
@@ -1375,6 +1377,10 @@
       wctx.beginPath(); wctx.ellipse(150, 44, 14, 7, 0, 0, Math.PI * 2); wctx.stroke(); wctx.setLineDash([]);
     }
     // kafe binası
+    WSLOTS.forEach(function (sl) {
+      var lvl = aLv(ABY[sl.id]);
+      for (var q = 1; q < lvl; q++) star(wctx, sl.x + (q - lvl / 2) * 9, sl.base - sl.h - 8, 4);
+    });
     box(250, 214, 22, 30, '#e58a3d', 'flat');
     wctx.fillStyle = '#2b1608'; wctx.font = '800 6px system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.fillText('KAFE', 250, 192);
     // üst yazı
@@ -1382,6 +1388,104 @@
     wctx.fillStyle = '#fff'; wctx.font = '800 11px "Bricolage Grotesque", system-ui, sans-serif'; wctx.textAlign = 'left';
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
   }
+
+  /* ---------- Faz 3: varlık seviyeleri, yönetim penceresi, haritadan seçme ---------- */
+  var ASSET_LV_NAMES = {
+    'Konut': ['Boş', 'Döşenmiş', 'Lüks', 'Premium', 'Efsane'],
+    'Araç': ['Standart', 'Bakımlı', 'Modifiye', 'Spor paket', 'Efsane'],
+    'Yatırım': ['Kuruldu', 'Yenilendi', 'Genişledi', 'Modernleşti', 'Efsane']
+  };
+  var ASSET_ACT = { 'Konut': 'Döşe', 'Araç': 'Modifiye et', 'Yatırım': 'Yenile' };
+  function aLv(a) { var v = S.assets[a.id]; return v ? (typeof v === 'number' ? Math.min(5, v) : 1) : 0; }
+  function aMult(lv) { return 1 + 0.6 * (lv - 1); }
+  function aUpCost(a) { return Math.round(a.cost * 0.6 * aLv(a)); }
+  function aValue(a) { var lv = aLv(a); return lv ? a.cost + a.cost * 0.6 * (lv - 1) * lv / 2 : 0; }
+  function aSell(a) { return Math.round(aValue(a) * 0.5); }
+
+  // haritadaki tıklanabilir bölgeler (2B şehir ekranı ile aynı konumlar)
+  var WSLOTS = [
+    { id: 'studio', x: 34, base: 106, w: 28, h: 26 }, { id: 'flat', x: 88, base: 106, w: 34, h: 42 },
+    { id: 'house', x: 148, base: 106, w: 42, h: 32 }, { id: 'villa', x: 222, base: 106, w: 58, h: 40 },
+    { id: 'mansion', x: 312, base: 106, w: 72, h: 56 }, { id: 'land', x: 34, base: 214, w: 40, h: 22 },
+    { id: 'office', x: 96, base: 214, w: 34, h: 84 }, { id: 'mall', x: 188, base: 214, w: 96, h: 46 },
+    { id: 'yacht', x: 310, base: 215, w: 70, h: 40 }
+  ];
+  var CARDEFS = [
+    { id: 'scooter', len: 14, sp: 52, dir: 1, y: 134, off: 20 }, { id: 'hatch', len: 24, sp: 38, dir: -1, y: 121, off: 90 },
+    { id: 'sedan', len: 28, sp: 46, dir: 1, y: 135, off: 160 }, { id: 'sport', len: 28, sp: 90, dir: -1, y: 122, off: 40 }
+  ];
+  function worldHit(x, y) {
+    var i, sl, cd;
+    for (i = 0; i < CARDEFS.length; i++) {
+      cd = CARDEFS[i];
+      if (!S.assets[cd.id]) continue;
+      if (Math.abs(x - roadX(cd.sp, cd.dir, cd.off)) <= cd.len / 2 + 5 && Math.abs(y - cd.y) <= 12) return cd.id;
+    }
+    var hx = S.assets.heli ? 150 + Math.sin(clock * 0.6) * 80 : 150, hy = 44;
+    if (Math.abs(x - hx) <= 24 && Math.abs(y - hy) <= 14) return 'heli';
+    for (i = 0; i < WSLOTS.length; i++) {
+      sl = WSLOTS[i];
+      if (x >= sl.x - sl.w / 2 - 3 && x <= sl.x + sl.w / 2 + 3 && y >= sl.base - sl.h - 12 && y <= sl.base + 4) return sl.id;
+    }
+    if (y >= 110 && y <= 142) return 'road';
+    return null;
+  }
+  function openAsset(id) {
+    if (id === 'road') {                                   // yola dokununca satın alınabilecek en ucuz araç
+      var cheap = null;
+      ASSETS.forEach(function (a) { if (a.cat === 'Araç' && !S.assets[a.id] && (!cheap || a.cost < cheap.cost)) cheap = a; });
+      if (!cheap) return;
+      id = cheap.id;
+    }
+    var a = ABY[id]; if (!a) return;
+    var lv = aLv(a), names = ASSET_LV_NAMES[a.cat];
+    sfx('tick');
+    if (!lv) {
+      var can = S.level >= a.req && S.money >= a.cost;
+      enqueue(function () {
+        showModal('<h2>' + a.n + '</h2><p>' + a.cat + ' · henüz sahip değilsin</p>' +
+          '<div class="stats"><span>Fiyat</span><span>₺' + fmt(a.cost) + '</span><span>Günlük gelir</span><span>+₺' + fmt(a.inc) + '</span><span>Prestij</span><span>+' + a.pr + '</span><span>Gereken seviye</span><span>' + a.req + '</span></div>' +
+          '<div class="row"><button data-act="close">Kapat</button><button class="on" data-act="buy"' + (can ? '' : ' disabled') + '>Satın al</button></div>',
+          { buy: function () {
+            if (S.assets[a.id] || S.level < a.req || S.money < a.cost) return;
+            S.money -= a.cost; S.assets[a.id] = 1; bought(); persist(); refresh(); openAsset(a.id);
+          } });
+      });
+      return;
+    }
+    var upc = aUpCost(a), maxed = lv >= 5, sell = aSell(a);
+    var nextInc = maxed ? 0 : a.inc * aMult(lv + 1) - a.inc * aMult(lv);
+    enqueue(function () {
+      showModal('<h2>' + a.n + '</h2><p>' + names[lv - 1] + ' · seviye ' + lv + '/5</p>' +
+        '<div class="stats"><span>Günlük gelir</span><span>₺' + fmt(a.inc * aMult(lv)) + '</span><span>Prestij</span><span>+' + Math.round(a.pr * (1 + 0.3 * (lv - 1))) + '</span>' +
+        '<span>Değeri</span><span>₺' + fmt(aValue(a)) + '</span>' + (maxed ? '' : '<span>' + ASSET_ACT[a.cat] + ' (+gelir)</span><span>₺' + fmt(upc) + ' (+₺' + fmt(nextInc) + ')</span>') + '</div>' +
+        '<div class="row"><button data-act="sell">Sat ₺' + fmt(sell) + '</button><button class="on" data-act="up"' + (maxed || S.money < upc ? ' disabled' : '') + '>' + (maxed ? 'Maksimum' : ASSET_ACT[a.cat]) + '</button></div>' +
+        '<div class="row"><button data-act="close">Kapat</button></div>',
+        {
+          up: function () {
+            if (lv >= 5 || S.money < upc) return;
+            S.money -= upc; S.assets[a.id] = lv + 1; bought(); persist(); refresh(); openAsset(a.id);
+          },
+          sell: function () {
+            enqueue(function () {
+              showModal('<h2>Satılsın mı?</h2><p>' + a.n + ' satılır ve gelirini kaybedersin.</p><div class="big">+₺' + fmt(sell) + '</div>' +
+                '<div class="row"><button data-act="no">Vazgeç</button><button class="on" data-act="yes">Sat</button></div>',
+                { yes: function () { if (!S.assets[a.id]) return; delete S.assets[a.id]; S.money += sell; sfx('coin'); persist(); refresh(); } });
+            });
+          }
+        });
+    });
+  }
+  wv.addEventListener('click', function (e) {
+    var r = wv.getBoundingClientRect();
+    var id = worldHit((e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * WH);
+    if (id) openAsset(id);
+  });
+  $('cv3').addEventListener('click', function (e) {
+    if (!v3 || mainTab !== 'world') return;
+    var id = v3.pick(e.clientX, e.clientY);
+    if (id) openAsset(id);
+  });
 
   /* ---------- Faz 2: yöneticiler, sandık, çark, denetim, karakter, kariyer, hayır, şubeler ---------- */
   function todayKey() {

@@ -264,7 +264,7 @@ export function createView3D(canvas, bridge, options = {}) {
   const CITY_Z = (y) => (y - 125) / U;
   const CITY_X = (x) => (x - 180) / U;
 
-  function building(parent, texList, xPx, basePx, wPx, hPx, color, roof) {
+  function building(parent, texList, xPx, basePx, wPx, hPx, color, roof, id, lv) {
     const w = wPx / U, h = hPx / U, d = Math.max(1.4, w * 0.85);
     const x = CITY_X(xPx), z = CITY_Z(basePx) - d / 2;
     const rows = Math.max(1, Math.floor(h / 0.7)), cols = Math.max(1, Math.floor(w / 0.6));
@@ -278,6 +278,7 @@ export function createView3D(canvas, bridge, options = {}) {
     const front = new THREE.MeshLambertMaterial({ map: winTex });
     const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, side, side, front, side]);
     body.position.set(x, h / 2, z);
+    if (id) body.userData.assetId = id;
     parent.add(body);
     if (roof === 'gable') {
       const r = new THREE.Mesh(new THREE.CylinderGeometry(0, d * 0.78, 0.6, 4), mat('#9b4a3a'));
@@ -287,14 +288,22 @@ export function createView3D(canvas, bridge, options = {}) {
     } else {
       add(parent, new THREE.BoxGeometry(w + 0.1, 0.12, d + 0.1), mat('#40454f'), x, h + 0.06, z);
     }
+    // seviye yıldızları (döşeme/yenileme seviyesi)
+    const stars = Math.max(0, (lv || 1) - 1);
+    for (let j = 0; j < stars; j++) add(parent, new THREE.OctahedronGeometry(0.16), mat('#ffd23f'), x + (j - (stars - 1) / 2) * 0.4, h + (roof === 'gable' ? 1.0 : 0.6), z);
     return body;
   }
-  function slotBox(parent, xPx, basePx, wPx, hPx) {
+  function slotBox(parent, xPx, basePx, wPx, hPx, id) {
     const w = wPx / U, h = hPx / U, d = Math.max(1.4, w * 0.85);
     const e = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
       new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
     e.position.set(CITY_X(xPx), h / 2, CITY_Z(basePx) - d / 2);
     parent.add(e);
+    if (id) {   // dokunma için görünmez kutu
+      const pk = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false }));
+      pk.position.copy(e.position); pk.userData.assetId = id;
+      parent.add(pk);
+    }
   }
 
   function buildCity() {
@@ -329,7 +338,20 @@ export function createView3D(canvas, bridge, options = {}) {
       ['mansion', 312, 106, 72, 56, '#d6c7a8', 'gable'], ['land', 34, 214, 40, 10, '#c7b183', 'flat'],
       ['office', 96, 214, 34, 84, '#6b8fb3', 'flat'], ['mall', 188, 214, 96, 46, '#b69fd0', 'flat'],
     ];
-    def.forEach(([id, x, base, w, h, col, roof]) => { if (has[id]) building(g, T, x, base, w, h, col, roof); else slotBox(g, x, base, w, h); });
+    def.forEach(([id, x, base, w, h, col, roof]) => { if (has[id]) building(g, T, x, base, w, h, col, roof, id, has[id]); else slotBox(g, x, base, w, h, id); });
+    // yola dokununca araç seçimi için görünmez şerit
+    const roadPick = new THREE.Mesh(new THREE.PlaneGeometry(26, 1.4), new THREE.MeshBasicMaterial({ visible: false }));
+    roadPick.rotation.x = -Math.PI / 2; roadPick.position.set(0, 0.06, 0.05); roadPick.userData.assetId = 'road';
+    g.add(roadPick);
+    if (!has.yacht) slotBox(g, 310, 215, 70, 24, 'yacht');
+    if (!has.heli) {
+      const hp = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.0, 1.4), new THREE.MeshBasicMaterial({ visible: false }));
+      hp.position.set(0, 3.2, -3.2); hp.userData.assetId = 'heli';
+      g.add(hp);
+      const ring = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2.4, 1.0, 1.4)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
+      ring.position.copy(hp.position);
+      g.add(ring);
+    }
     building(g, T, 250, 214, 22, 30, '#e58a3d', 'flat');   // senin kafen
 
     // arabalar
@@ -347,6 +369,7 @@ export function createView3D(canvas, bridge, options = {}) {
       box(car, L * 0.5, Hh * 0.7, 0.5, '#bfe6ff', 0, Hh + 0.3, 0);
       box(car, L * 0.8, 0.12, 0.62, '#1a1a22', 0, 0.06, 0);
       car.position.y = 0.02;
+      car.children.forEach((ch) => { ch.userData.assetId = c.id; });
       g.add(car);
       dyn.cars.push({ car, def: c });
     });
@@ -358,6 +381,7 @@ export function createView3D(canvas, bridge, options = {}) {
       box(hel, 1.2, 0.12, 0.12, '#d4443a', -1.2, 0.1, 0);
       const rotor = box(hel, 2.6, 0.04, 0.14, '#222', 0, 0.55, 0);
       hel.position.set(0, 3.2, -3.2);
+      hel.children.forEach((ch) => { ch.userData.assetId = 'heli'; });
       g.add(hel);
       dyn.heli = { hel, rotor };
     }
@@ -369,6 +393,7 @@ export function createView3D(canvas, bridge, options = {}) {
       box(y, 1.4, 0.55, 0.8, '#dff1f6', -0.1, 0.8, 0);
       box(y, 0.9, 0.22, 0.82, '#5a8bb0', -0.1, 0.85, 0);
       y.position.set(CITY_X(310) + 0.3, 0.1, CITY_Z(207));
+      y.children.forEach((ch) => { ch.userData.assetId = 'yacht'; });
       g.add(y);
       dyn.yacht = y;
     }
@@ -438,7 +463,7 @@ export function createView3D(canvas, bridge, options = {}) {
   }
   function signatureCity() {
     const S = bridge.S;
-    return Object.keys(S.assets || {}).filter((k) => S.assets[k]).sort().join(',');
+    return Object.keys(S.assets || {}).filter((k) => S.assets[k]).sort().map((k) => k + ':' + S.assets[k]).join(',');
   }
 
   function update(dt, wantMode) {
@@ -516,6 +541,21 @@ export function createView3D(canvas, bridge, options = {}) {
     renderer.render(scene, camera);
   }
 
+  // Ekrandaki bir noktadaki varlığı bulur (şehir görünümünde dokunma için)
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function pick(clientX, clientY) {
+    if (mode !== 'city' || !cityGroup) return null;
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObject(cityGroup, true);
+    for (const h of hits) {
+      let o = h.object;
+      while (o) { if (o.userData && o.userData.assetId) return o.userData.assetId; o = o.parent; }
+    }
+    return null;
+  }
+
   function resize(w, h) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
@@ -532,7 +572,7 @@ export function createView3D(canvas, bridge, options = {}) {
   }
 
   return {
-    update, resize, dispose, camera, renderer, scene,
+    update, resize, dispose, pick, camera, renderer, scene,
     setMode(m) { mode = m; cafeSig = citySig = ''; },
     setAutoCamera(v) { autoCamera = !!v; },
   };
