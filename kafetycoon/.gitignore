@@ -1,0 +1,7 @@
+# Test ekran görüntüleri depoya girmesin (simgeler icon-*.png hariç)
+/[a-z]-*.png
+/mock-*.png
+/g3d-*.png
+/demo-*.png
+/tab-*.png
+/shot*.png
