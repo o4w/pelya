@@ -6,6 +6,10 @@
 <title>Köşe Kafe Tycoon</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@500;700&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1a19">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   /* Kafe tycoon: üstte sahne (kafe veya şehir), altta sekmeli yönetim paneli. */
   :root {
@@ -213,7 +217,7 @@
     </div>
     <div class="box">
       <h4>Liderlik tablosu<small>İlk 20</small></h4>
-      <div class="segs"><button data-sort="net_worth" class="on">Net servet</button><button data-sort="customers">Müşteri</button></div>
+      <div class="segs"><button data-sort="net_worth" class="on">Net servet</button><button data-sort="customers">Müşteri</button><button data-sort="week">Bu hafta</button></div>
       <div id="lbbody"></div>
       <p style="margin-top:8px">Kafe adı ve şehir herkese açık görünür. E-posta asla gösterilmez.</p>
     </div>
@@ -287,12 +291,38 @@
     </div>
     <div id="avopts"></div>
   </div>
+  <div id="p-event" hidden>
+    <div class="box"><h4 id="wevname"></h4><p id="wevdesc"></p><div class="kv"><span>Etkinlik bitimine</span><span id="wevleft"></span></div></div>
+    <div class="box">
+      <h4>Haftalık hedef<small id="wgoalinfo"></small></h4>
+      <p>Bu hafta yeterince müşteri ağırla: para, deneyim ve altın sandık kazan.</p>
+      <div class="meter"><i id="wgbar"></i></div>
+      <div class="kv"><span>Bu haftaki kafe geliri</span><span id="wgearn"></span></div>
+      <div class="acctrow"><button id="wclaim" class="on">Ödülü al</button></div>
+    </div>
+    <div class="box"><h4>Haftalık sıralama</h4><p>Sıralamayı Ben &gt; Sıralama &gt; Bu hafta bölümünde görebilirsin. Sıralamaya girmek için e-postayla giriş yapmalısın, misafirler giremez.</p></div>
+  </div>
   <div id="p-settings" hidden>
     <div class="box">
       <h4>Ses ve his</h4>
       <label class="chk"><input type="checkbox" data-set="sound"> Ses efektleri</label>
       <label class="chk"><input type="checkbox" data-set="music"> Hafif müzik</label>
       <label class="chk"><input type="checkbox" data-set="haptics"> Titreşim (telefonda)</label>
+    </div>
+    <div class="box">
+      <h4>Bildirimler</h4>
+      <label class="chk"><input type="checkbox" data-set="notif"> Tarayıcı bildirimleri</label>
+      <p style="margin-top:6px">Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterir. Uygulama tamamen kapalıyken bildirim gelmez.</p>
+    </div>
+    <div class="box">
+      <h4>Gizlilik</h4>
+      <label class="chk"><input type="checkbox" data-set="telemetry"> Anonim kullanım verisi gönder</label>
+      <p style="margin-top:6px">Kimlik içermez: ad, e-posta ve kayıt içeriği toplanmaz. Yalnızca hangi adımların yapıldığı sayılır.</p>
+    </div>
+    <div class="box">
+      <h4>Premium (simülasyon)</h4>
+      <p>Prototip: gerçek ödeme yoktur. Premium açıkken reklam bekleme süresi atlanır ve kafe gelirin %25 artar.</p>
+      <div class="acctrow"><button id="prembtn"></button></div>
     </div>
   </div>
   <p class="note">Reklam butonları prototipte simüle edilir.</p>
@@ -384,13 +414,15 @@
   PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
   PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
   S.menu.espresso = 1;
-  var SET_DEFAULTS = { sound: true, music: false, haptics: true };
+  var SET_DEFAULTS = { sound: true, music: false, haptics: true, telemetry: true, notif: false, telNotice: false };
   Object.keys(SET_DEFAULTS).forEach(function (k) { if (typeof S.settings[k] !== 'boolean') S.settings[k] = SET_DEFAULTS[k]; });
   if (!S.chests) S.chests = { b: 0, s: 0, g: 0 };
   if (!S.wheel) S.wheel = { day: '', ads: 0 };
   if (!S.avatar) S.avatar = { skin: 0, hair: 0, hstyle: 0, shirt: 0, hat: 0, acc: 0 };
   if (!S.charity) S.charity = { given: 0 };
   if (!Array.isArray(S.branches)) S.branches = [];
+  if (!S.week) S.week = { id: '', served: 0, earn: 0, claimed: false };
+  S.premium = !!S.premium;
   ['mgr', 'biz', 'avOwn'].forEach(function (k) { if (!S[k]) S[k] = {}; });
   var blockPersist = false;
   function persist() { if (blockPersist) return; S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
@@ -425,13 +457,17 @@
   }
   function makeOrder() {
     var o = { d: pickW(drinks()).id, f: null }, fs = foods();
-    if (fs.length && Math.random() < 0.55) { var c = pickW(fs); if (Math.random() < demandOf(S.pmi[c.id])) o.f = c.id; }
+    if (fs.length && Math.random() < (wev() === 'sweet' ? 0.7 : 0.55)) { var c = pickW(fs); if (Math.random() < demandOf(S.pmi[c.id])) o.f = c.id; }
     return o;
   }
-  function orderPrice(o) { var p = priceOf(PBY[o.d]); if (o.f) p += priceOf(PBY[o.f]) * (1 + 0.05 * mgrLv('cook')); return p; }
+  function orderPrice(o) {
+    var p = priceOf(PBY[o.d]) * (wev() === 'coffee' ? 1.25 : 1);
+    if (o.f) p += priceOf(PBY[o.f]) * (1 + 0.05 * mgrLv('cook')) * (wev() === 'sweet' ? 1.4 : 1);
+    return p;
+  }
   function avgMult() { return wavg(drinks(), function (p) { return S.pmi[p.id]; }); }
   function demandAvg() { return wavg(drinks(), function (p) { return demandOf(S.pmi[p.id]); }); }
-  function bm() { return (1 + 0.25 * S.stars) * (1 + 0.03 * mgrLv('acct')); }
+  function bm() { return (1 + 0.25 * S.stars) * (1 + 0.03 * mgrLv('acct')) * (S.premium ? 1.25 : 1); }
   function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr * (1 + 0.3 * (aLv(ABY[id]) - 1)); return t; }
   function prestMult() { return 1 + 0.5 * (1 - Math.exp(-prestige() / 100)); }
   function passiveDaily() {
@@ -444,15 +480,15 @@
   function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += aValue(ABY[id]); return t; }
   function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast) * (1 - 0.04 * mgrLv('chef'))); }
   function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience + 1.5 * mgrLv('host'); }
-  function vipChance() { return 0.04 + 0.02 * S.perks.vip; }
+  function vipChance() { return (0.04 + 0.02 * S.perks.vip) * (wev() === 'vip' ? 2 : 1); }
   function menuCount() { return unlocked().length; }
   function popularity() {
     return (0.6 + 0.2 * S.rep) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
-      (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv());
+      (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv()) * (wev() === 'rush' ? 1.2 : 1);
   }
   function rush() { return 0.7 + 0.9 * Math.pow(Math.sin(Math.PI * Math.min(S.dayT, DAY_LEN) / DAY_LEN), 2); }
   function spawnRate() { return popularity() * rush() / 4.2; }
-  function tipOf(base, vip) { return Math.max(1, Math.round(base * 0.25 * (1 + 0.15 * S.dec) * (1 + 0.1 * S.perks.tip) * (vip ? 3 : 1) * bm())); }
+  function tipOf(base, vip) { return Math.max(1, Math.round(base * 0.25 * (1 + 0.15 * S.dec) * (1 + 0.1 * S.perks.tip) * (vip ? 3 : 1) * bm() * (wev() === 'tips' ? 2 : 1))); }
   function avgRev() {
     var d = wavg(drinks(), priceOf), fs = foods(), f = fs.length ? wavg(fs, priceOf) : 0;
     return (d + 0.55 * f) * bm() + 0.8 * Math.max(1, d * 0.25 * bm());
@@ -549,7 +585,7 @@
     { id: 'home', subs: [['home', 'Bugün']] },
     { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Yönetici']] },
     { id: 'world', subs: [['world', 'Varlıklar'], ['career', 'Kariyer'], ['charity', 'Hayır'], ['cities', 'Şehirler']] },
-    { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['ach', 'Başarım']] },
+    { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
     { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
   ];
   var TABS = [];
@@ -618,7 +654,7 @@
     updateDots();
     var left = Math.max(0, speedUntil - Date.now());
     speedBtn.disabled = left > 0;
-    speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : 'Reklam';
+    speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : (S.premium ? 'Başlat' : 'Reklam');
   }
 
   function buildPriceList() {
@@ -646,6 +682,7 @@
     } else if (tab === 'settings') {
       var cbs = $('p-settings').querySelectorAll('input[data-set]');
       for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
+      $('prembtn').textContent = S.premium ? 'Premium aktif (kapat)' : 'Premium\'u dene';
     } else if (tab === 'inv') {
       for (i = 0; i < ITEMS.length; i++) {
         var it = ITEMS[i], r = rows[i];
@@ -771,6 +808,7 @@
     var nb = $('nav').querySelectorAll('button');
     for (var i = 0; i < nb.length; i++) nb[i].classList.toggle('on', nb[i].getAttribute('data-main') === mainTab);
     TABS.forEach(function (x) { var el = $('p-' + x); if (el) el.hidden = x !== t; });
+    if (!telSeen[t]) { telSeen[t] = 1; track('tab_view', { t: t }); }
     applyViews();
     layoutCanvases();
     refresh();
@@ -846,7 +884,7 @@
   });
   $('cname').value = S.name;
   $('cname').addEventListener('input', function (e) { S.name = e.target.value.slice(0, 14); persist(); refreshHud(); });
-  speedBtn.addEventListener('click', function () { speedUntil = Date.now() + 30000; });   // reklam simülasyonu
+  speedBtn.addEventListener('click', function () { watchAd('speed', function () { speedUntil = Date.now() + 30000; }); });   // reklam simülasyonu
 
   var queueFns = [];
   function showModal(html, handlers) {
@@ -873,6 +911,7 @@
         { yes: function () {
           // eski şube, otomatik yönetilen bir şube olarak kalır ve pasif gelir getirir
           S.branches.push({ city: CITIES[S.branch % CITIES.length], name: S.name, income: Math.max(10, Math.round(estPerMin().rate * DAY_LEN / 60 * 0.5)), lv: 1 });
+          track('franchise', { n: S.branch + 1 });
           S.stars += gain; S.branch++;
           S.money = 50 + 100 * S.stars; S.mach = 0; S.bar = 1; S.tab = 1; S.cas = 0; S.dec = 0; S.rep = 3; S.room = 0;
           S.menu = { espresso: 1 }; PRODUCTS.forEach(function (p) { S.pmi[p.id] = 1; });
@@ -901,7 +940,7 @@
       if (S.level % 10 === 0) giveChest('g'); else if (S.level % 3 === 0) giveChest('s');
       S.money += 50 * S.level;
       pops.push({ x: W / 2, y: 100, t: 0, text: 'Seviye ' + S.level + '! +1 puan', c: '#ffd23f' });
-      sfx('level'); buzz([40, 60, 40]);
+      sfx('level'); buzz([40, 60, 40]); track('level_up', { level: S.level });
       burst(W / 2, 120, 36, ['#ffd23f', '#6fd6a2', '#e58a3d', '#4cc9f0', '#ff9ecd'], 140);
     }
   }
@@ -910,6 +949,7 @@
     paused = true;
     gainXp(10);
     S.daysTotal++;
+    track('day_end', { day: S.day, level: S.level, earn: Math.round(S.dayEarn), lost: S.dayLost });
     var extra = '';
     if (S.goalI >= GOALS.length && S.dyn && S.dyn.kind === 'earn' && S.dayEarn >= S.dyn.target) {
       S.money += S.dyn.r; gainXp(40); extra = '<span>Hedef ödülü</span><span>+₺' + fmt(S.dyn.r) + '</span>';
@@ -938,7 +978,7 @@
     enqueue(function () {
       showModal('<h2>Hoş geldin!</h2><p>Sen yokken kafe ve yatırımların çalıştı.</p><div class="big">+₺' + fmt(amt) + '</div>' +
         '<div class="row"><button data-act="ad">Reklam izle: x2</button><button class="on" data-act="ok">Topla</button></div>',
-        { ad: function () { S.money += amt * 2; persist(); }, ok: function () { S.money += amt; persist(); } });
+        { ad: function () { watchAd('offline', function () { S.money += amt * 2; persist(); }); }, ok: function () { S.money += amt; persist(); } });
     });
   }
   document.addEventListener('visibilitychange', function () { if (document.hidden) persist(); else offlineCheck(); });
@@ -976,6 +1016,7 @@
     c.base = orderPrice(c.order);
     var pay = c.base * bm() * (c.vip ? 2.5 : 1);
     S.money += pay; S.dayEarn += pay; S.served++; S.dayServed++; S.runServed++; S.life++;
+    S.week.served++; S.week.earn += pay;
     if (c.vip) { S.vipServed++; if (Math.random() < 0.15) giveChest('b'); }
     gainXp(c.vip ? 3 : 1);
     var am = avgMult();
@@ -1024,7 +1065,7 @@
         c.eat -= dt;
         if (c.eat <= 0) {
           var tip = tipOf(c.base, c.vip);
-          S.money += tip; S.dayEarn += tip; S.rep = Math.min(5, S.rep + 0.015);
+          S.money += tip; S.dayEarn += tip; S.week.earn += tip; S.rep = Math.min(5, S.rep + 0.015);
           pops.push({ x: c.x, y: c.y - 26, t: 0, text: '+₺' + tip, c: '#6fd6a2' });
           if (c.seat) c.seat.who = null;
           c.seat = null; c.cup = false;
@@ -1082,7 +1123,7 @@
     while (spawnAcc >= 1) { spawnAcc -= 1; spawn(); }
     updateCustomers(dt);
     goalAcc += dt; achAcc += dt;
-    if (goalAcc > 0.4) { goalAcc = 0; checkGoal(); }
+    if (goalAcc > 0.4) { goalAcc = 0; ensureWeek(); checkGoal(); }
     if (achAcc > 1) { achAcc = 0; checkAch(); }
     if (S.dayT >= DAY_LEN) { S.dayT = DAY_LEN; endDay(); }
   }
@@ -1389,6 +1430,126 @@
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
   }
 
+  /* ---------- Faz 4: haftalık etkinlik, reklam simülasyonu, premium, ölçüm, bildirim, PWA ---------- */
+  function weekId(d) {
+    d = d || new Date();
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    var y = t.getUTCFullYear(), w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7);
+    return y + '-W' + (w < 10 ? '0' : '') + w;
+  }
+  var W_EVENTS = [
+    { id: 'coffee', n: 'Kahve haftası', d: 'İçecek gelirin %25 artar.' },
+    { id: 'sweet', n: 'Tatlı festivali', d: 'Yiyecek gelirin %40 artar ve müşteriler daha çok yiyecek alır.' },
+    { id: 'rush', n: 'Yoğun hafta', d: 'Kafene gelen müşteri %20 artar.' },
+    { id: 'tips', n: 'Cömert müşteriler', d: 'Bahşişler iki katına çıkar.' },
+    { id: 'vip', n: 'VIP haftası', d: 'VIP müşteri şansı iki katına çıkar.' }
+  ];
+  function wevIdx() { var m = /W(\d+)/.exec(weekId()); return (parseInt(m[1], 10) || 0) % W_EVENTS.length; }
+  function wev() { return W_EVENTS[wevIdx()].id; }
+  function ensureWeek() { var id = weekId(); if (S.week.id !== id) S.week = { id: id, served: 0, earn: 0, claimed: false }; }
+  function weekGoal() { return 100 + 15 * S.level; }
+  function weekClaimable() { return S.week.id !== '' && !S.week.claimed && S.week.served >= weekGoal(); }
+  function daysLeftInWeek() { var d = new Date().getDay() || 7; return 8 - d; }
+
+  // Reklam simülasyonu (gerçek reklam yok). Premium'da bekleme olmadan verilir.
+  function watchAd(placement, cb) {
+    track('ad_sim', { p: placement });
+    if (S.premium) { cb(); return; }
+    enqueue(function () {
+      var n = 3;
+      showModal('<h2>Reklam</h2><p>Prototip: gerçek reklam yok, bu bir simülasyondur.</p><div class="big" id="adcnt">3</div>', {});
+      var t = setInterval(function () {
+        n--;
+        var el = $('adcnt'); if (el) el.textContent = n;
+        if (n <= 0) { clearInterval(t); modal.hidden = true; cb(); nextModal(); }
+      }, 1000);
+    });
+  }
+
+  // Anonim ölçüm (kimlik yok, yalnızca cihazda üretilen rastgele bir kimlik)
+  var TEL_VERSION = 'p4';
+  var telQ = [], telSeen = {};
+  function anonId() {
+    try {
+      var id = localStorage.getItem('tycoon-anon');
+      if (id) return id;
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+      localStorage.setItem('tycoon-anon', id);
+      return id;
+    } catch (e) { return null; }
+  }
+  function track(name, props) {
+    if (!S.settings.telemetry || telQ.length > 100) return;
+    telQ.push({ name: String(name).replace(/[^a-z0-9_]/g, '_').slice(0, 40), props: props || {} });
+  }
+  function telFlush() {
+    if (!sb || !S.settings.telemetry || !S.settings.telNotice || !telQ.length) return;
+    var id = anonId(); if (!id) return;
+    var batch = telQ.splice(0, 50).map(function (x) { return { anon_id: id, name: x.name, props: x.props, app_version: TEL_VERSION }; });
+    sb.from('app_events').insert(batch).then(function () {}, function () {});
+  }
+  setInterval(telFlush, 20000);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) telFlush(); });
+  window.addEventListener('error', function (e) { track('error', { m: String(e.message || '').slice(0, 80) }); });
+  window.addEventListener('unhandledrejection', function () { track('error', { m: 'promise' }); });
+  function telInit() {
+    if (!S.settings.telNotice) {
+      enqueue(function () {
+        showModal('<h2>Anonim ölçüm</h2><p>Oyunu geliştirmek için kimlik içermeyen kullanım verisi toplanır (hangi gün, hangi adımda bırakıldığı gibi). Ad, e-posta ya da kayıt içeriği toplanmaz. İstediğin zaman Ben &gt; Ayarlar bölümünden kapatabilirsin.</p>' +
+          '<div class="row"><button data-act="off">Kapat</button><button class="on" data-act="ok">Tamam</button></div>',
+          {
+            off: function () { S.settings.telemetry = false; S.settings.telNotice = true; telQ.length = 0; persist(); },
+            ok: function () { S.settings.telNotice = true; persist(); }
+          });
+      });
+    }
+    track('session_start', { lv: S.level, day: S.day, w: Math.round(window.innerWidth / 100) * 100 });
+  }
+
+  // Bildirimler: yalnızca tarayıcı arka plandayken çalışır (uygulama tamamen kapalıyken push yok)
+  var swReg = null, notifT = 0;
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').then(function (r) { swReg = r; }).catch(function () {});
+  }
+  function notifEnable(box) {
+    if (!('Notification' in window)) { box.checked = false; S.settings.notif = false; persist(); return; }
+    Notification.requestPermission().then(function (p) { if (p !== 'granted') { box.checked = false; S.settings.notif = false; persist(); } });
+  }
+  function notifyReady() {
+    if (!S.settings.notif || !('Notification' in window) || Notification.permission !== 'granted') return;
+    var today = todayKey();
+    if (S.notifDay === today) return;
+    S.notifDay = today; persist();
+    var body = (wheelReady() ? 'Günlük çark hazır. ' : '') + (chestCount() ? 'Açılmamış sandıkların var. ' : '') + 'Kafen seni bekliyor.';
+    try {
+      if (swReg && swReg.showNotification) swReg.showNotification('Köşe Kafe', { body: body, icon: 'icon-192.png', tag: 'kafe' });
+      else new Notification('Köşe Kafe', { body: body });
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', function () {
+    clearTimeout(notifT);
+    if (document.hidden && S.settings.notif) notifT = setTimeout(notifyReady, 20 * 60 * 1000);
+  });
+
+  $('prembtn').addEventListener('click', function () {
+    S.premium = !S.premium;
+    track('premium', { on: S.premium });
+    sfx(S.premium ? 'level' : 'tick'); persist(); refresh();
+  });
+  $('wclaim').addEventListener('click', function () {
+    if (!weekClaimable()) return;
+    S.week.claimed = true;
+    var m = rewardBase() * 10;
+    S.money += m; gainXp(60); giveChest('g');
+    sfx('win'); buzz([30, 30, 60]);
+    burst(W / 2, 140, 40, ['#ffd23f', '#6fd6a2', '#ff9ecd', '#4cc9f0'], 140);
+    persist(); refresh();
+    enqueue(function () { showModal('<h2>Haftalık hedef tamam!</h2><div class="big">+₺' + fmt(m) + '</div><p>Altın sandık da kazandın.</p><div class="row"><button class="on" data-act="ok">Harika</button></div>', {}); });
+  });
+
   /* ---------- Faz 3: varlık seviyeleri, yönetim penceresi, haritadan seçme ---------- */
   var ASSET_LV_NAMES = {
     'Konut': ['Boş', 'Döşenmiş', 'Lüks', 'Premium', 'Efsane'],
@@ -1523,6 +1684,7 @@
   function openChest(k) {
     if (S.chests[k] < 1) return;
     S.chests[k]--;
+    track('chest_open', { k: k });
     var c = CHEST[k], money = Math.round(rewardBase() * c.m), cards = [], i;
     for (i = 0; i < c.cards; i++) cards.push(randCard());
     S.money += money; gainXp(c.xp);
@@ -1536,7 +1698,7 @@
       showModal('<h2>' + c.n + '</h2><div class="big">+₺' + fmt(money) + '</div>' +
         '<div class="stats"><span>Yönetici kartı</span><span>' + esc2(names) + '</span><span>Deneyim</span><span>+' + c.xp + '</span><span>Hız</span><span>' + (boost ? '30 sn x2' : '-') + '</span></div>' +
         '<div class="row"><button data-act="ad">Reklam izle: para x2</button><button class="on" data-act="ok">Tamam</button></div>',
-        { ad: function () { S.money += money; persist(); sfx('coin'); } });
+        { ad: function () { watchAd('chest', function () { S.money += money; persist(); sfx('coin'); }); } });
     });
   }
   function esc2(t) { return String(t).replace(/[&<>"']/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]; }); }
@@ -1566,6 +1728,7 @@
   }
   function spinWheel(free) {
     if (wheelSpin) return;
+    track('wheel_spin', { free: !!free });
     if (free) { if (!wheelReady()) return; S.wheel.day = todayKey(); S.wheel.ads = 0; }
     else { if (S.wheel.ads >= 3) return; S.wheel.ads++; }      // reklam simülasyonu
     var tot = 0, i; WHEEL.forEach(function (s) { tot += s.w; });
@@ -1619,14 +1782,16 @@
         '<p>İtibar, dekor, barista ve Denetim uzmanı şansını artırır.</p>' +
         '<div class="row"><button data-act="delay"' + (S.money < delay ? ' disabled' : '') + '>Ertele</button><button class="on" data-act="go">Denetime gir</button></div>',
         {
-          delay: function () { S.money -= delay; done(); },
+          delay: function () { S.money -= delay; track('audit', { r: 'delay' }); done(); },
           go: function () {
             if (Math.random() < ch) {
+              track('audit', { r: 'pass' });
               S.money += win; gainXp(20); if (Math.random() < 0.5) giveChest('b');
               sfx('win'); burst(W / 2, 140, 30, ['#ffd23f', '#6fd6a2'], 120);
               done();
               enqueue(function () { showModal('<h2>Denetimi geçtin!</h2><div class="big">+₺' + fmt(win) + '</div><div class="row"><button class="on" data-act="ok">Süper</button></div>', {}); });
             } else {
+              track('audit', { r: 'fail' });
               S.money = Math.max(0, S.money - fine); S.rep = Math.max(1, S.rep - 0.15);
               sfx('error'); buzz(120);
               done();
@@ -1751,6 +1916,18 @@
 
   function refreshP2() {
     var i;
+    if (tab === 'event') {
+      var we = W_EVENTS[wevIdx()], goal = weekGoal();
+      $('wevname').textContent = we.n;
+      $('wevdesc').textContent = we.d;
+      $('wevleft').textContent = daysLeftInWeek() + ' gün';
+      $('wgoalinfo').textContent = Math.min(S.week.served, goal) + ' / ' + goal + ' müşteri';
+      $('wgbar').style.width = Math.min(100, S.week.served / goal * 100) + '%';
+      $('wgearn').textContent = '₺' + fmt(S.week.earn);
+      $('wclaim').disabled = !weekClaimable();
+      $('wclaim').textContent = S.week.claimed ? 'Ödül alındı' : 'Ödülü al';
+      return true;
+    }
     if (tab === 'mgr') {
       $('packbtn').innerHTML = 'Kart paketi al · ₺' + fmt(packCost());
       $('packbtn').disabled = S.money < packCost();
@@ -1862,7 +2039,10 @@
     if (b && !b.disabled) { openChest(b.getAttribute('data-k')); refresh(); }
   });
   $('spinfree').addEventListener('click', function () { spinWheel(true); });
-  $('spinad').addEventListener('click', function () { spinWheel(false); });
+  $('spinad').addEventListener('click', function () {
+    if (S.wheel.ads >= 3 || wheelSpin) return;
+    watchAd('wheel', function () { spinWheel(false); });
+  });
   $('bizlist').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-id]') : null;
     if (!b || b.disabled) return;
@@ -1963,6 +2143,8 @@
     if (!k) return;
     S.settings[k] = e.target.checked;
     persist();
+    if (k === 'notif' && e.target.checked) notifEnable(e.target);
+    if (k === 'telemetry' && !e.target.checked) telQ.length = 0;
     if (k === 'music') applyMusic();
     if (k === 'sound' && e.target.checked) sfx('buy');
     if (k === 'haptics' && e.target.checked) buzz(30);
@@ -1991,7 +2173,7 @@
     }
     ctx.globalAlpha = 1;
   }
-  function bought() { sfx('buy'); buzz(25); burst(W / 2, 150, 18, ['#ffd23f', '#6fd6a2', '#e58a3d'], 100); }
+  function bought() { track('purchase', { t: tab }); sfx('buy'); buzz(25); burst(W / 2, 150, 18, ['#ffd23f', '#6fd6a2', '#e58a3d'], 100); }
 
   function drawAtmosphere() {
     var t = Math.min(S.dayT, DAY_LEN) / DAY_LEN, a = 0, col = '11,16,48';
@@ -2023,7 +2205,7 @@
     PRODUCTS.forEach(function (p) { if (!S.menu[p.id] && S.level >= p.req && S.money >= p.cost) d.grow = true; });
     ASSETS.forEach(function (a) { if (!S.assets[a.id] && S.level >= a.req && S.money >= a.cost) d.world = true; });
     MGRS.forEach(function (m) { if (canUpMgr(m)) d.grow = true; });
-    d.rew = claimable() > 0 || wheelReady() || chestCount() > 0;
+    d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable();
     d.me = S.pts > 0;
     ['grow', 'world', 'rew', 'me'].forEach(function (k) {
       var el = document.querySelector('#nav [data-main="' + k + '"] i');
@@ -2111,7 +2293,7 @@
     var who = user.is_anonymous ? 'Misafir' : (user.email || 'Giriş yapıldı');
     $('acctstate').textContent = syncErr ? 'kayıt hatası' : (syncAt ? 'kaydedildi ' + new Date(syncAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'senkronize ediliyor');
     el.innerHTML = '<div class="kv"><span>Hesap</span><span>' + esc(who) + '</span></div>' +
-      (user.is_anonymous ? '<p style="margin-top:6px">Misafir hesabı bu tarayıcıya bağlıdır. Çıkış yaparsan kaydına geri dönemezsin.</p>' : '') +
+      (user.is_anonymous ? '<p style="margin-top:6px">Misafir hesabı bu tarayıcıya bağlıdır. Çıkış yaparsan kaydına geri dönemezsin. Misafirler sıralamaya giremez, sıralama için e-postayla giriş yap.</p>' : '') +
       '<label class="chk"><input type="checkbox" id="showrank"' + (S.showRank === false ? '' : ' checked') + '> Sıralamada göster</label>' +
       '<div class="acctrow"><button data-act="sync">Şimdi kaydet</button><button data-act="logout">Çıkış yap</button></div>' +
       '<div class="acctmsg" id="acctmsg">' + esc(syncErr) + '</div>';
@@ -2145,11 +2327,20 @@
     var st = JSON.parse(JSON.stringify(S));
     var life = S.life;
     var q = [sb.from('saves').upsert({ user_id: user.id, state: st })];
-    if (S.showRank === false) q.push(sb.from('leaderboard').delete().eq('user_id', user.id));
-    else q.push(sb.from('leaderboard').upsert({
-      user_id: user.id, cafe_name: (S.name || 'Kafe').slice(0, 14) || 'Kafe', city: CITIES[S.branch % CITIES.length],
-      net_worth: Math.min(1e15, Math.round(netWorth())), customers: S.life, level: S.level
-    }));
+    var cafe = (S.name || 'Kafe').slice(0, 14) || 'Kafe', city = CITIES[S.branch % CITIES.length];
+    if (S.showRank === false) {
+      q.push(sb.from('leaderboard').delete().eq('user_id', user.id));
+      q.push(sb.from('season_scores').delete().eq('user_id', user.id));
+    } else if (!user.is_anonymous) {      // misafirler sıralamaya yazamaz (veritabanı kuralı)
+      q.push(sb.from('leaderboard').upsert({
+        user_id: user.id, cafe_name: cafe, city: city,
+        net_worth: Math.min(1e15, Math.round(netWorth())), customers: S.life, level: S.level
+      }));
+      q.push(sb.from('season_scores').upsert({
+        season: S.week.id, user_id: user.id, cafe_name: cafe, city: city,
+        score: Math.min(1e15, Math.round(S.week.earn)), level: S.level
+      }));
+    }
     Promise.all(q.map(function (x) { return x.then(function (r) { return r; }); })).then(function (rs) {
       syncBusy = false;
       var bad = rs.filter(function (r) { return r.error; })[0];
@@ -2189,7 +2380,7 @@
     if (!rows.length) { el.innerHTML = '<p>Henüz kimse yok. İlk sen ol.</p>'; return; }
     var h = '';
     rows.forEach(function (r, i) {
-      var val = lbSort === 'net_worth' ? '₺' + fmt(Number(r.net_worth)) : r.customers + ' müşteri';
+      var val = lbSort === 'net_worth' ? '₺' + fmt(Number(r.net_worth)) : lbSort === 'week' ? '₺' + fmt(Number(r.score)) : r.customers + ' müşteri';
       h += '<div class="lbrow' + (user && r.user_id === user.id ? ' me' : '') + '"><span class="rk">' + (i + 1) + '</span>' +
         '<span class="nm">' + esc(r.cafe_name) + '<small>' + esc(r.city) + ' · Sv. ' + esc(r.level) + '</small></span><span class="vl">' + esc(val) + '</span></div>';
     });
@@ -2198,7 +2389,10 @@
   function loadBoard() {
     var el = $('lbbody');
     if (!sb) { el.innerHTML = '<p>Sıralama için bulut bağlantısı gerekir.</p>'; return; }
-    sb.from('leaderboard').select('user_id,cafe_name,city,net_worth,customers,level').order(lbSort, { ascending: false }).limit(20).then(function (r) {
+    var qy = lbSort === 'week'
+      ? sb.from('season_scores').select('user_id,cafe_name,city,score,level').eq('season', S.week.id).order('score', { ascending: false }).limit(20)
+      : sb.from('leaderboard').select('user_id,cafe_name,city,net_worth,customers,level').order(lbSort, { ascending: false }).limit(20);
+    qy.then(function (r) {
       if (r.error) { el.innerHTML = '<p>Sıralama yüklenemedi.</p>'; return; }
       renderBoard(r.data || []);
     }, function () { el.innerHTML = '<p>Sıralama yüklenemedi.</p>'; });
@@ -2274,8 +2468,10 @@
     requestAnimationFrame(frame);
   }
 
+  ensureWeek();
   setTab('home');
   offlineCheck();
+  telInit();
   requestAnimationFrame(frame);
 })();
 </script>

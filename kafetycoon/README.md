@@ -1,157 +1,165 @@
 # Köşe Kafe Tycoon
 
-Tarayıcıda oynanan, mobil öncelikli bir kafe tycoon oyunu. Müşterileri ağırla, kafeni büyüt, kazandığın parayı şehirde harca.
+Tarayıcıda oynanan, mobil öncelikli bir kafe tycoon oyunu. Müşterileri ağırla, kafeni büyüt, kazandığın parayı şehirde harca. Oyun yüklenebilir uygulama (PWA) olarak da çalışır.
 
-Tek dosyadan oluşur (`index.html`), derleme veya kurulum gerektirmez.
+Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir.
 
 ## Çalıştırma
 
-- **En kolayı:** `index.html` dosyasına çift tıkla, tarayıcıda açılır.
-- **Yerel sunucuyla:**
+- **Yerelde:**
   ```bash
   cd kafetycoon
   python3 -m http.server 8000
   ```
   Sonra tarayıcıda `http://localhost:8000` adresini aç.
+- **Yayın:** Klasörü olduğu gibi bir statik sunucuya koyabilirsin (Vercel için Root Directory: `kafetycoon`).
+- `index.html` dosyasına çift tıklayarak da açılır, ama **3B görünüm, e-posta girişi ve çevrimdışı önbellek `file://` ile çalışmaz.** Bunlar için http(s) gerekir.
 
-Yazı tipleri Google Fonts'tan, Supabase istemcisi jsDelivr'den yüklenir. Çevrimdışıysan sistem yazı tipine düşer ve bulut özellikleri kapanır, oyun yerel kayıtla çalışmaya devam eder.
+## Ekranlar
+
+Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile panel arasındaki tutamaçla paneli büyütüp sahneyi küçültebilirsin. Kırmızı noktalar yapılabilecek bir şey olduğunu gösterir.
+
+| Ana sekme | Alt sekmeler |
+|---|---|
+| **Kafe** | Bugün (gelir, müşteri, hedef, unvan, zaman hızı) |
+| **Büyüt** | Yatırım, Menü, Fiyat, Yönetici |
+| **Dünya** | Varlıklar, Kariyer, Hayır, Şehirler |
+| **Ödüller** | Çark, Sandık, Etkinlik, Başarım |
+| **Ben** | Karakter, Yetenek, Sıralama, Ayarlar, Kafe |
 
 ## Oyun döngüsü
 
 ```
 Müşteri gelir → kuyruğa girer → barista sipariş hazırlar → masaya oturur → bahşiş bırakır
         ↓
-   Para kazanılır → menüye, mekana, kafeye harcanır → seviye atlanır
+   Para kazanılır → menüye, mekana, yöneticilere harcanır → seviye atlanır → sandık ve kart düşer
         ↓
-   Fazla para Dünya'da varlığa yatırılır → pasif gelir + prestij → kafeye daha çok müşteri
+   Fazla para Dünya'da varlığa, işe ve hayra yatırılır → pasif gelir + prestij → kafeye daha çok müşteri
         ↓
-   Her şey maksimuma gelince franchise: yeni şehirde yeniden başla, kalıcı bonus kazan
+   Her şey maksimuma gelince franchise: yeni şehirde başla, eski şuben otomatik çalışmaya devam eder
 ```
 
 ## Sistemler
 
 ### Kafe (sahne)
-- Yukarıdan görünen kafede müşteriler yürür, kuyruğa girer, oturur ve çıkar.
-- Kuyruk 5 kişiyi aşarsa müşteri gelmeden gider, beklemekten sıkılan müşteri itibar düşürür.
-- Masa yoksa müşteri paket alıp çıkar.
-- Her gün 90 saniye sürer, ortasında yoğun saat vardır.
-- Günlük olaylar: Normal gün, Yağmurlu gün, Hafta sonu, Festival, Öğrenci haftası.
-- VIP müşteriler 2,5 kat öder ama sabırsızdır.
+- Yukarıdan görünen kafede müşteriler yürür, kuyruğa girer, oturur ve çıkar. Kuyruk dolarsa müşteri gelmeden gider, beklemekten sıkılan müşteri itibar düşürür. Masa yoksa paket alıp çıkar.
+- Her gün 90 saniye sürer, ortasında yoğun saat vardır. Gün içinde ışık değişir (sabah sıcak, akşam karanlık).
+- Günlük olaylar: Normal gün, Yağmurlu gün (yağmur yağar), Hafta sonu, Festival (bayraklar asılır), Öğrenci haftası.
+- VIP müşteriler 2,5 kat öder ama sabırsızdır, bazen sandık düşürür.
+- Sahnede kafe sahibi (senin karakterin) tezgahın yanında durur.
 
-### Yatırım sekmesi
-| Kalem | Seviye | Etkisi |
-|---|---|---|
-| Masa | 15'e kadar (mekana bağlı) | Oturma kapasitesi, bahşiş |
-| Mekan genişletme | 4 mekan | Köşe kafe (6 masa), Geniş salon (9), Teras katı (12), Büyük kafe (15) |
-| Barista | 3 | Paralel sipariş hattı |
-| Espresso makinesi | 7 | Servis hızı, içecek kalitesi |
-| Pasta vitrini | 4 | Yiyecek satışı, yiyecek kalitesi |
-| Dekor | 6 | Müşteri sayısı, bahşiş |
+### Büyüt
+- **Yatırım:** Masa (15'e kadar), Mekan genişletme (4 mekan: Köşe kafe 6 masa → Geniş salon 9 → Teras katı 12 → Büyük kafe 15), Barista (3), Espresso makinesi (7), Pasta vitrini (4), Dekor (6). Gelişmiş yatırımlar oyuncu seviyesi ister.
+- **Menü:** 5 içecek ve 5 yiyecek. Yiyecekler için vitrin gerekir. Menü çeşitlendikçe müşteri artar.
+- **Fiyat:** Her ürünün fiyatı ayarlanır (adil fiyatın %50'si ile %300'ü). Ucuz satmak müşteriyi artırır, pahalı satmak azaltır ve çok pahalıda itibar düşer. Servis kapasitesi doluysa fiyat artırmak kazancı yükseltir.
+- **Yönetici:** 6 yönetici (Baristabaşı, Salon müdürü, Muhasebeci, Pazarlamacı, Şef, Denetim uzmanı). Kart toplanır, her biri 10 seviyeye kadar yükselir. Kartlar sandıktan, çarktan ve kart paketinden (para karşılığı) gelir.
 
-Gelişmiş yatırımlar belirli oyuncu seviyesi ister.
+### Dünya
+- **Varlıklar:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. **Haritadaki her yere dokunarak** yönetim penceresini açabilirsin (2B ve 3B). Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
+- **Kariyer:** 4 yan iş (Toptan kahve, Online sipariş, Catering, Kahve markası), 10 seviyeye kadar, günlük pasif gelir.
+- **Hayır:** Bağış yaptıkça hayırsever kademe yükselir, her kademe müşteriyi %2 artırır.
+- **Şehirler:** Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır, günlük pasif gelir getirir ve yükseltilebilir.
+- Prestij, kafene gelen müşteriyi artırır (en fazla +%50).
 
-### Menü sekmesi
-- 5 içecek: Espresso, Türk kahvesi, Latte, Soğuk kahve, Matcha latte.
-- 5 yiyecek: Kurabiye, Brownie, Cheesecake, Sandviç, Kahvaltı tabağı (vitrin gerekir).
-- Menü çeşitlendikçe gelen müşteri sayısı artar.
+### Ödüller
+- **Çark:** Günde bir ücretsiz çevirme (para, kart, hız, deneyim, sandık). Reklamla günde 3 ek çevirme.
+- **Sandık:** Bronz, gümüş ve altın. VIP müşteri, seviye atlama, başarım ve denetimden düşer. İçinden para, yönetici kartı, deneyim ve bazen hız çıkar.
+- **Etkinlik:** Haftalık etkinlik herkes için aynıdır (Kahve haftası, Tatlı festivali, Yoğun hafta, Cömert müşteriler, VIP haftası) ve gelire etki eder. Haftalık müşteri hedefine ulaşınca para, deneyim ve altın sandık verir.
+- **Başarım:** 22 başarım, ödül manuel toplanır.
 
-### Fiyat sekmesi
-- Her ürünün fiyatı oyuncu tarafından ayarlanır (adil fiyatın %50'si ile %300'ü arası).
-- Ucuz satmak müşteri sayısını artırır, pahalı satmak azaltır. Çok pahalı satmak itibarı düşürür.
-- Servis kapasitesi doluysa fiyat artırmak kazancı yükseltir. Müşteri kaçıyorsa fiyat düşürmek daha iyidir.
+### Ben
+- **Karakter:** Ten, saç, gömlek, şapka ve aksesuar özelleştirme. Bazı parçalar paralıdır. Seviyeye göre unvan (Çırak → Kahve baronu). Karakter 2B ve 3B sahnede görünür.
+- **Yetenek:** Seviye atlayınca puan kazanılır, 5 yetenek 10 seviyeye kadar.
+- **Sıralama:** Hesap ve liderlik tablosu (aşağıya bak).
+- **Ayarlar:** Ses, müzik, titreşim, bildirim, anonim ölçüm, premium (simülasyon).
+- **Kafe:** Kafe adı (tabelada görünür), şube bilgisi ve **franchise**: tüm yatırımlar maksimum olunca yeni şehirde yeniden başlarsın. Seviye, yetenek, başarım, varlıklar, karakter ve kafe adın kalır. Her marka yıldızı kalıcı +%25 gelir verir.
 
-### Dünya sekmesi (parayı harcama)
-Şehir haritasında 14 varlık satın alınır. Her biri günlük pasif gelir ve prestij verir.
+### Denetim olayı
+Bazı günlerde belediye denetimi gelir. "Denetime gir" ya da "Ertele" diye seçersin. Başarı şansı itibar, dekor, barista sayısı ve Denetim uzmanına bağlıdır, pencerede açıkça yazar. Geçersen para ve bazen sandık, geçemezsen ceza ve küçük itibar kaybı vardır.
 
-| Kategori | Varlıklar |
-|---|---|
-| Konut | Stüdyo daire, 2+1 daire, Müstakil ev, Villa, Malikâne |
-| Araç | Scooter, Hatchback, Sedan, Spor araba, Helikopter |
-| Yatırım | Arsa, İş hanı, Marina ve yat, AVM payı |
-
-- Prestij, kafeye gelen müşteriyi artırır (en fazla +%50).
-- Araçlar haritadaki yolda dolaşır, helikopter havada uçar.
-
-### Seviye ve yetenekler
-- Müşteri ağırlamak, hedefler ve başarımlar deneyim verir.
-- Her seviye atlayışında para ve 1 yetenek puanı kazanılır.
-- 5 yetenek, her biri 10 seviyeli: Hızlı eller, Güler yüz, Müşteri mıknatısı, Bahşiş ustası, VIP kulübü.
-
-### Hedefler ve başarımlar
-- İlk 8 hedef sırayla gelir, sonrasında seviyeye göre otomatik yeni hedefler üretilir.
-- 22 başarım (müşteri, seviye, itibar, menü, mekan, varlık, net servet, franchise, gün sayısı). Ödül manuel toplanır.
-
-### Franchise
-- Tüm yatırımlar maksimum olunca yeni şehirde şube açılır.
-- Sıfırlanır: kafe yatırımları, menü, para, itibar, mekan.
-- Kalır: seviye, yetenekler, başarımlar, Dünya'daki varlıklar, kafe adı.
-- Her marka yıldızı kalıcı +%25 gelir verir.
-
-### Kafe adı
-Kafe sekmesinden 14 karaktere kadar ad girilir, sahnedeki tabelada görünür.
+### Ses, titreşim ve efektler
+Ses efektleri ve hafif müzik koddan üretilir (dosya yok). Titreşim yalnızca telefonda ve dokunduktan sonra çalışır. Parçacık efektleri, akıcı para sayacı, yağmur ve gün içi ışık vardır. Hepsi Ayarlar'dan kapatılabilir.
 
 ### Çevrimdışı kazanç
 Oyunu kapatınca kafe ve yatırımlar (en çok 3 saat, %30 hızla) çalışmaya devam eder. Dönünce toplanır.
 
-## Kayıt
-
-İlerleme tarayıcının `localStorage` alanında `tycoon-v3` anahtarıyla saklanır. Tarayıcı verisini silerseniz kayıt gider. Sıfırdan başlamak için:
-
-```js
-localStorage.removeItem('tycoon-v3'); location.reload();
-```
-
 ## 3B görünüm (Three.js)
 
-Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer, yine basınca 2B'ye döner. Kafe sekmelerinde 3B kafe, **Dünya** sekmesinde 3B şehir görünür.
+Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer. Kafe sekmelerinde 3B kafe, Dünya sekmesinde 3B şehir görünür.
 
-- 3B görünüm yalnızca düğmeye basınca yüklenir. Kapatınca kaynaklar temizlenir.
-- Müşteriler, baristalar, masalar, araçlar, helikopter ve yat oyun durumuyla birlikte hareket eder. 3B kod oyunu değiştirmez, yalnızca okur.
-- **Ayrı demo:** `3d-demo.html` sayfasında sahneyi serbestçe döndürüp yakınlaştırabilirsin (mekan büyüklüğünü değiştirme ve şehir görünümü dahil).
-- ES modülleri `file://` ile çalışmaz. 3B için oyunu http(s) üzerinden aç (yerelde `python3 -m http.server`). Dosya olarak açılırsa düğme "http(s) gerekli" der, oyun 2B çalışır.
+- 3B görünüm yalnızca düğmeye basınca yüklenir, kapatınca kaynaklar temizlenir. 3B kod oyunu değiştirmez, yalnızca okur.
+- **Ayrı demo:** `3d-demo.html` sayfasında sahneyi serbestçe döndürüp yakınlaştırabilirsin.
 - WebGL desteklenmeyen cihazda düğme "3B açılamadı" der ve oyun 2B devam eder.
 
-**Güvenlik:** Three.js CDN'den değil, depodaki sabit sürümden (`vendor/three`, 0.170.0) yüklenir. Paketin bütünlüğü npm kaydıyla doğrulanmış, dosya özetleri `vendor/VENDOR.md` içinde. Dışarıdan model, doku veya betik çekilmez, her şey kodla çizilir. Projeye özel kurallar `.claude/skills/threejs/SKILL.md` içindedir.
+**Güvenlik:** Three.js CDN'den değil, depodaki sabit sürümden (`vendor/three`, 0.170.0) yüklenir. Paketin bütünlüğü npm kaydıyla doğrulanmış, dosya özetleri `vendor/VENDOR.md` içinde. Dışarıdan model, doku veya betik çekilmez. Projeye özel kurallar `.claude/skills/threejs/SKILL.md` içindedir.
 
-## Bulut kaydı ve liderlik tablosu (Supabase)
-
-Oyun, Supabase ile isteğe bağlı bulut kaydı ve liderlik tablosu sunar. Giriş yapılmazsa oyun eskisi gibi yerel kayıtla çalışır. **Sıralama** sekmesinden giriş yapılır.
+## Hesap, bulut kaydı ve sıralama (Supabase)
 
 | Özellik | Nasıl çalışır |
 |---|---|
 | Giriş | E-posta ile giriş bağlantısı (magic link) veya misafir (anonim) hesap |
-| Bulut kaydı | `saves` tablosu, kullanıcı başına tek satır. Her 30 saniyede ve sayfa gizlenince otomatik yazılır |
-| Çakışma | Yeni cihaz boşsa bulut kaydı otomatik iner. İki tarafta da farklı ilerleme varsa "Hangi kayıt kalsın?" diye sorar |
-| Liderlik | `leaderboard` tablosu, ilk 20: net servet veya müşteri sayısı. Kafe adı ve şehir herkese açıktır, e-posta tabloda hiç yoktur |
-| Gizlilik | "Sıralamada göster" kutusu kapatılırsa satır silinir |
+| Bulut kaydı | `saves` tablosu, kullanıcı başına tek satır. Her 30 saniyede ve sayfa gizlenince yazılır |
+| Çakışma | Yeni cihaz boşsa bulut kaydı iner. İki tarafta da farklı ilerleme varsa "Hangi kayıt kalsın?" diye sorar |
+| Liderlik | `leaderboard`: net servet ve müşteri sayısı, ilk 20 |
+| Haftalık sıralama | `season_scores`: o haftaki kafe geliri, ilk 20 |
+| Gizlilik | Kafe adı ve şehir herkese açıktır, e-posta tabloda yoktur. "Sıralamada göster" kapatılırsa satırlar silinir |
+| **Misafirler** | Bulut kaydı saklayabilir ama **sıralamalara yazamaz** (veritabanı kuralı) |
 
-### Supabase tabloları
-Şema `supabase/migrations/` altındadır (RLS açık):
-- `public.saves`: `user_id`, `state` (jsonb), `updated_at`. Kullanıcı yalnızca kendi satırını okur ve yazar.
-- `public.leaderboard`: `user_id`, `cafe_name`, `city`, `net_worth`, `customers`, `level`, `updated_at`. Herkes okur, yalnızca sahibi yazar. Ad en çok 14 karakter, değerler sınırlıdır.
+### Tablolar ve güvenlik
+Şema `supabase/migrations/` altındadır, tüm tablolarda RLS açıktır:
+- `saves`: yalnızca sahibi okur ve yazar.
+- `leaderboard`, `season_scores`: herkes okur, yalnızca e-postayla giriş yapmış sahibi yazar. Ad en çok 14 karakter, değerler sınırlıdır.
+- `app_events`: anonim ölçüm. İstemci yalnızca ekleyebilir, **kimse okuyamaz** (yalnızca proje sahibi panelden/SQL ile).
 
-Güvenlik kuralları gerçek veritabanında denendi: başkasının satırı yazılamıyor, anonim kullanıcı kayıt okuyamıyor ve liderliğe yazamıyor, sınır dışı değerler reddediliyor.
+Güvenlik kuralları gerçek veritabanında denendi: başkasının satırı yazılamıyor, misafir sıralamaya yazamıyor, anonim kullanıcı kayıt ve ölçüm okuyamıyor, sınır dışı değerler reddediliyor.
 
-### Anahtarlar
-`index.html` içinde yalnızca **herkese açık** proje URL'si ve publishable anahtar bulunur (`SUPABASE_URL`, `SUPABASE_KEY`). Bu anahtar RLS ile korunur. **Service role anahtarını asla depoya koyma.**
+`index.html` içinde yalnızca **herkese açık** proje URL'si ve publishable anahtar bulunur. **Service role anahtarını asla depoya koyma.**
 
 ### Supabase panelinde yapılması gerekenler
-1. **Authentication → URL Configuration:** Site URL ve Redirect URLs listesine oyunun yayın adresini (ör. Vercel adresi) ekle. Eklenmezse giriş bağlantısı oyuna dönemez.
-2. **Authentication → Sign In / Providers:** Misafir girişini kullanmak istiyorsan "Allow anonymous sign-ins" seçeneğini aç. Kapalıysa oyun bunu kullanıcıya bildirir, e-posta ile giriş yine çalışır.
-3. **E-posta gönderimi:** Supabase'in yerleşik e-posta servisi saatlik gönderim sınırına sahiptir. Gerçek kullanıcılar için kendi SMTP sağlayıcını (Authentication → SMTP) bağla.
-4. Giriş bağlantısı `file://` ile açılan sayfada çalışmaz. Oyunu http(s) adresinden aç.
+1. **Authentication → URL Configuration:** Site URL ve Redirect URLs listesine oyunun yayın adresini ekle.
+2. **Authentication → Sign In / Providers:** Misafir girişi için "Allow anonymous sign-ins" seçeneğini aç.
+3. **E-posta:** Yerleşik e-posta servisi saatlik gönderimle sınırlıdır. Gerçek kullanıcılar için kendi SMTP sağlayıcını bağla (Authentication → SMTP).
 
 ### Bilinen sınırlamalar
-- **Hile:** Liderlik skorları istemciden yazılır, bu yüzden oyunu kurcalayan biri sahte skor gönderebilir. Prototip için kabul edilebilir. Ciddi bir yarışma için skorların sunucuda doğrulanması (Edge Function veya sunucu tarafı hesaplama) gerekir.
-- **Kafe adı denetimi yok:** Ad herkese göründüğü için uygunsuz isimler için bir filtre veya raporlama eklenmesi önerilir.
-- **Misafir hesabı** tarayıcıya bağlıdır. Çıkış yapılırsa o kayda geri dönülemez. Misafirden e-postaya dönüştürme henüz yok.
+- **Hile:** Skorlar istemciden yazıldığı için oyunu kurcalayan biri sahte skor gönderebilir. Ciddi bir yarışma için skorların sunucuda doğrulanması gerekir.
+- **Kafe adı denetimi yok:** Ad herkese göründüğü için uygunsuz isimlere karşı filtre önerilir.
+- **Misafir hesabı** tarayıcıya bağlıdır. Çıkış yapılırsa o kayda geri dönülemez, e-postaya dönüştürme yoktur.
+
+## Anonim ölçüm
+
+Oyun, geliştirmek için kimlik içermeyen kullanım olaylarını `app_events` tablosuna gönderir: `session_start`, `tab_view`, `purchase`, `level_up`, `day_end`, `chest_open`, `wheel_spin`, `audit`, `franchise`, `ad_sim`, `premium`, `error`. Ad, e-posta ve kayıt içeriği gönderilmez. Her cihaz rastgele bir `anon_id` kullanır.
+
+- İlk açılışta kısa bir bildirim gösterilir, **Ben > Ayarlar > Gizlilik** bölümünden kapatılabilir. Kapalıyken hiçbir olay gönderilmez.
+- Okuma yalnızca proje sahibine açıktır. Örnek sorgular:
+
+```sql
+-- Oyuncular hangi günde bırakıyor? (her cihaz için ulaşılan en son gün)
+select max_day, count(*) from (
+  select anon_id, max((props->>'day')::int) as max_day from app_events where name = 'day_end' group by anon_id
+) t group by max_day order by max_day;
+
+-- En çok hangi sekmeler açılıyor?
+select props->>'t' as sekme, count(*) from app_events where name = 'tab_view' group by 1 order by 2 desc;
+
+-- Reklam yerleşimleri
+select props->>'p' as yer, count(*) from app_events where name = 'ad_sim' group by 1 order by 2 desc;
+```
+
+## Para kazanma (simülasyon)
+
+Reklam ve ödeme **gerçek değildir**, prototip içindir:
+- Reklam butonları (zaman hızı, çevrimdışı kazancı katlama, sandık ödülünü katlama, çark ek çevirme) 3 saniyelik bir "reklam simülasyonu" gösterir.
+- **Premium (simülasyon):** Açıkken reklam beklemesi atlanır ve kafe geliri %25 artar. Gerçek ödeme yoktur.
+
+## PWA ve bildirimler
+
+- `manifest.webmanifest`, `sw.js` ve simgeler sayesinde oyun ana ekrana eklenebilir ve çevrimdışı açılabilir. Sayfa istekleri önce ağdan denenir, çevrimdışıysa önbellekten gelir. **Yeni sürümde `sw.js` içindeki `CACHE` adını artır.**
+- **Bildirimler (isteğe bağlı):** Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterilir. **Uygulama tamamen kapalıyken bildirim gelmez.** Bunun için sunucudan push bildirimi gerekir (VAPID anahtarı, abonelik tablosu, zamanlanmış bir Edge Function). E-posta hatırlatması da bir e-posta sağlayıcısı gerektirir. İkisi de henüz kurulmadı.
 
 ## Prototip notları
 
-- Reklam butonları (`Reklam`, `Reklam izle: x2`) **simülasyondur**, gerçek reklam SDK'sı yok.
-- Ses yok.
-- Grafikler tamamen kodla çizilir (Canvas), harici görsel dosyası yoktur.
 - Ekonomi sayıları ilk denemedir, oynanış testine göre ayarlanmalıdır.
+- Grafikler tamamen kodla çizilir (Canvas ve Three.js), harici görsel dosyası yoktur.
 
 ## Dosya yapısı
 
@@ -160,6 +168,9 @@ kafetycoon/
 ├── index.html                 # Oyunun tamamı (HTML + CSS + JavaScript)
 ├── three-view.js              # 3B kafe ve şehir görünümü (Three.js modülü)
 ├── 3d-demo.html               # Serbestçe gezilebilen ayrı 3B demo
+├── manifest.webmanifest       # PWA bildirimi
+├── sw.js                      # Servis çalışanı (çevrimdışı önbellek, bildirim tıklaması)
+├── icon.svg, icon-192.png, icon-512.png
 ├── README.md                  # Bu dosya
 ├── vendor/
 │   ├── VENDOR.md              # Three.js sürümü, bütünlük ve özet değerleri
@@ -177,10 +188,15 @@ Sayıları `index.html` içindeki `<script>` bölümünde bulabilirsin:
 | Ne | Nerede |
 |---|---|
 | Ürünler ve fiyatları | `PRODUCTS` |
-| Varlıklar (fiyat, gelir, prestij, seviye) | `ASSETS` |
+| Varlıklar (fiyat, gelir, prestij, seviye) | `ASSETS`, seviye çarpanı `aMult()` |
+| Kariyer işleri | `BIZ` |
+| Yöneticiler ve kart ihtiyacı | `MGRS`, `MGR_NEED` |
+| Çark dilimleri | `WHEEL` |
+| Sandık içerikleri | `CHEST` |
 | Mekanlar ve masa sayıları | `ROOMS` |
-| Masa fiyatları ve seviye şartları | `TAB_COST`, `TAB_REQ` |
+| Haftalık etkinlikler | `W_EVENTS` |
 | Başarımlar | `ACH` |
+| Karakter parçaları ve fiyatları | `AV` |
 | Yetenekler | `PERKS` |
 | Günlük olaylar | `EVENTS` |
 | Gün süresi | `DAY_LEN` |
@@ -188,9 +204,9 @@ Sayıları `index.html` içindeki `<script>` bölümünde bulabilirsin:
 
 ## Yol haritası
 
-- [ ] Ses efektleri ve müzik
-- [ ] Dünya'da varlık satma ve yükseltme (ev döşeme, araç modifiye)
-- [ ] Rastgele olaylar (vergi, kriz, fırsat teklifi)
-- [ ] Birden fazla şehirdeki şubeleri aynı anda yönetme
-- [ ] Gerçek reklam entegrasyonu (Unity'ye ya da uygulama sarmalayıcıya taşındığında)
-- [ ] Gerçek sprite ve görseller (SpriteCook, CellCog gibi bir eklentiyle)
+- [ ] Gerçek push bildirimi (VAPID + Supabase Edge Function + zamanlama) ve e-posta hatırlatması
+- [ ] Skorların sunucuda doğrulanması (hile önleme)
+- [ ] Kafe adı filtresi / raporlama
+- [ ] Gerçek reklam ve ödeme entegrasyonu (uygulama sarmalayıcıya taşındığında)
+- [ ] Gerçek sprite ve görseller
+- [ ] Misafir hesabını e-postaya dönüştürme
