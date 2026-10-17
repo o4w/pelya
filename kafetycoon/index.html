@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Köşe Kafe Tycoon</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@500;700&display=swap">
+<style>
+  /* Kafe tycoon: üstte sahne (kafe veya şehir), altta sekmeli yönetim paneli. */
+  :root {
+    --bg: #0f1a19;
+    --card: #182b29;
+    --line: rgba(255,255,255,0.08);
+    --fg: #f2efe9;
+    --muted: #93aaa6;
+    --copper: #e58a3d;
+    --good: #6fd6a2;
+    --bad: #ff7a66;
+    --gold: #ffd23f;
+    --panel: rgba(8, 14, 13, 0.94);
+    --display: "Bricolage Grotesque", "Arial Rounded MT Bold", system-ui, sans-serif;
+    --body: "DM Sans", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body);
+    display: flex; flex-direction: column; overflow: hidden;
+    user-select: none; -webkit-user-select: none;
+  }
+  .wrap {
+    width: 100%; max-width: 480px; margin-inline: auto; box-sizing: border-box;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .hud { padding-block: 10px 6px; }
+  .row1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .money { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .money small { color: var(--copper); font-size: 19px; margin-right: 2px; }
+  .cafename { color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
+  .day { color: var(--muted); font-weight: 700; font-size: 13px; text-align: right; }
+  .day em { font-style: normal; color: var(--copper); }
+  .daybar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); margin: 6px 0 0 auto; overflow: hidden; width: 120px; }
+  .daybar i { display: block; height: 100%; width: 0; background: var(--copper); border-radius: 3px; }
+  .row2 { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .row2 b { color: var(--fg); }
+  .lvl { display: flex; align-items: center; gap: 6px; }
+  .xpbar { width: 56px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .xpbar i { display: block; height: 100%; width: 0; background: var(--good); }
+  .goal { color: var(--good); font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .scene { padding-block: 0; display: flex; justify-content: center; }
+  canvas { display: block; border-radius: 14px; background: #1d3834; }
+  .tabs { display: flex; gap: 6px; padding-block: 10px 8px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: 0 0 auto; font-size: 13px; padding: 9px 13px; position: relative; }
+  .tabs button.on { background: var(--copper); color: #1d1000; border-color: transparent; }
+  .tabs button i { position: absolute; top: 4px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+  button {
+    font: inherit; font-weight: 700; color: var(--fg); cursor: pointer;
+    background: rgba(255,255,255,0.1); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px;
+  }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .shop { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; padding-bottom: 24px; }
+  .item { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+  .item.done { border-color: var(--good); }
+  .item .info { flex: 1; min-width: 0; }
+  .item b { display: block; font-family: var(--display); font-weight: 600; font-size: 16px; }
+  .item b em { font-style: normal; color: var(--copper); font-size: 12px; margin-left: 6px; font-family: var(--body); font-weight: 700; }
+  .item span { color: var(--muted); font-size: 12px; line-height: 1.35; display: block; }
+  .item button.buy { min-width: 92px; background: var(--copper); color: #1d1000; border-color: transparent; line-height: 1.2; font-size: 14px; }
+  .item button.buy:disabled { background: rgba(255,255,255,0.1); color: var(--fg); }
+  .item button.buy.claim { background: var(--good); }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
+  .box h4 { font-family: var(--display); font-weight: 600; font-size: 16px; margin: 0 0 4px; display: flex; justify-content: space-between; gap: 8px; }
+  .box h4 small { font-family: var(--body); font-size: 12px; color: var(--muted); font-weight: 700; }
+  .box p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+  h5 { font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+  .stepper { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+  .stepper button { width: 48px; font-size: 20px; padding: 4px 0; }
+  .stepper .val { flex: 1; text-align: center; font-family: var(--display); font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .stepper .val small { display: block; font-family: var(--body); font-size: 11px; color: var(--muted); font-weight: 700; }
+  .meter { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; margin: 6px 0 2px; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--good); transition: width 0.15s; }
+  .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 700; margin-top: 4px; }
+  .kv span:first-child { color: var(--muted); }
+  .hint { color: var(--copper); font-size: 12px; font-weight: 700; margin-top: 8px; min-height: 16px; }
+  input[type="text"] {
+    width: 100%; box-sizing: border-box; font: inherit; font-weight: 700; font-size: 16px; color: var(--fg);
+    background: rgba(255,255,255,0.08); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 8px;
+    user-select: text; -webkit-user-select: text;
+  }
+  .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(4,8,8,0.62);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .modal .card { background: var(--panel); border-radius: 20px; padding: 24px; width: min(340px, 100%); text-align: center; box-sizing: border-box; }
+  .modal h2 { font-family: var(--display); font-weight: 800; font-size: 28px; margin: 0 0 8px; color: var(--copper); }
+  .modal p { margin: 0 0 6px; color: var(--muted); line-height: 1.45; }
+  .modal .big { font-family: var(--display); font-weight: 800; font-size: 38px; color: var(--fg); margin: 6px 0 12px; }
+  .modal .stats { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; text-align: left; margin: 10px 0 16px; font-weight: 700; }
+  .modal .stats span:nth-child(odd) { color: var(--muted); }
+  .modal .stats span:nth-child(even) { text-align: right; }
+  .modal .row { display: flex; gap: 8px; margin-top: 12px; }
+  .modal .row > button { flex: 1; min-width: 0; }
+  .modal button.on { background: var(--copper); color: #1d1000; border-color: transparent; }
+</style>
+
+<style>[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="hud wrap">
+  <div class="row1">
+    <div><div class="money"><small>₺</small><span id="money">0</span></div><div class="cafename" id="cname-hud"></div></div>
+    <div class="day"><span id="day"></span><div class="daybar"><i id="daybar"></i></div></div>
+  </div>
+  <div class="row2">
+    <span>İtibar <b id="rep"></b></span>
+    <span>Servis <b id="served"></b></span>
+    <span class="lvl">Sv. <b id="lvl"></b><span class="xpbar"><i id="xpbar"></i></span></span>
+  </div>
+  <div class="goal" id="goal"></div>
+</div>
+<div class="scene wrap"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas></div>
+<div class="tabs wrap" id="tabs">
+  <button data-tab="inv" class="on">Yatırım</button>
+  <button data-tab="menu">Menü</button>
+  <button data-tab="price">Fiyat</button>
+  <button data-tab="world">Dünya</button>
+  <button data-tab="ach">Başarım<i id="achdot" hidden></i></button>
+  <button data-tab="skill">Yetenek<i id="skdot" hidden></i></button>
+  <button data-tab="cafe">Kafe</button>
+</div>
+<div class="shop"><div class="wrap">
+  <div id="p-inv">
+    <div id="list"></div>
+    <div class="item"><div class="info"><b>Zaman hızı</b><span>30 sn boyunca gün 2 kat hızlı akar.</span></div><button class="buy" id="speed">Reklam</button></div>
+  </div>
+  <div id="p-menu" hidden>
+    <div class="box"><h4>Menü<small id="menucount"></small></h4><p>Yeni ürünler müşteri çeşitliliğini ve sepet tutarını artırır. Yiyecekler için pasta vitrini gerekir.</p></div>
+    <div id="menulist"></div>
+  </div>
+  <div id="p-price" hidden>
+    <div class="box">
+      <h4>Fiyat politikası</h4>
+      <p>Ucuz satarsan müşteri artar, pahalı satarsan kaçar. Adil fiyat; makine, vitrin, dekor ve itibara göre belirlenir.</p>
+      <div class="kv"><span>Müşteri talebi (ortalama)</span><span id="pdem"></span></div>
+      <div class="meter"><i id="pdembar"></i></div>
+      <div class="kv"><span>Tahmini gelir</span><span id="pest"></span></div>
+      <div class="hint" id="phint"></div>
+    </div>
+    <div id="pricelist"></div>
+  </div>
+  <div id="p-world" hidden>
+    <div class="box">
+      <h4>Şehirdeki servetin<small id="wprest"></small></h4>
+      <div class="kv"><span>Net servet</span><span id="wnet"></span></div>
+      <div class="kv"><span>Pasif gelir</span><span id="wpas"></span></div>
+      <div class="kv"><span>Müşteri çekim gücü</span><span id="wpm"></span></div>
+      <p style="margin-top:8px">Kazandığın parayı şehirde harca. Evler kira, araçlar kurye, yatırımlar temettü getirir. Prestij kafene daha çok müşteri çeker.</p>
+    </div>
+    <div id="assetlist"></div>
+  </div>
+  <div id="p-ach" hidden>
+    <div class="box"><h4>Başarımlar<small id="achcount"></small></h4><p>Hedefleri tamamla, ödülünü topla.</p></div>
+    <div id="achlist"></div>
+  </div>
+  <div id="p-skill" hidden>
+    <div class="box">
+      <h4>Seviye <span id="sklvl"></span></h4>
+      <p id="skxp"></p>
+      <div class="meter"><i id="skbar"></i></div>
+      <div class="kv"><span>Yetenek puanı</span><span id="skpts"></span></div>
+    </div>
+    <div id="perks"></div>
+  </div>
+  <div id="p-cafe" hidden>
+    <div class="box">
+      <h4>Kafe adı</h4>
+      <p>Tabelada görünür.</p>
+      <input type="text" id="cname" maxlength="14" placeholder="Kafe adı" autocomplete="off">
+    </div>
+    <div class="box">
+      <h4>Şube bilgisi</h4>
+      <div class="kv"><span>Mekan</span><span id="croom"></span></div>
+      <div class="kv"><span>Şehir</span><span id="cbranch"></span></div>
+      <div class="kv"><span>Marka değeri</span><span id="cbrand"></span></div>
+      <div class="kv"><span>Toplam müşteri</span><span id="clife"></span></div>
+    </div>
+    <div class="box">
+      <h4>Franchise</h4>
+      <p id="cfp"></p>
+      <div style="display:flex;margin-top:10px"><button id="cfbtn" style="flex:1;background:var(--copper);color:#1d1000;border-color:transparent">Franchise aç</button></div>
+    </div>
+  </div>
+  <p class="note">Reklam butonları prototipte simüle edilir.</p>
+</div></div>
+<div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
+
+<script>
+(function () {
+  function $(id) { return document.getElementById(id); }
+  var cv = $('cv'), ctx = cv.getContext('2d');
+  var wv = $('wv'), wctx = wv.getContext('2d');
+  var W = 360, H = 320, WH = 250;
+  var LANES_X = [70, 130, 190], QY = 116, QS = 16, QMAX = 5;
+  var COLX = [80, 180, 280];
+  var DOOR = { x: 180, y: H + 10 };
+  var DAY_LEN = 90;
+  function tablePos(i) { return [COLX[i % 3], 214 + 64 * Math.floor(i / 3)]; }
+  var MACH_COL = ['#aeb4bd', '#c9a36a', '#d28a3c', '#e6b94a', '#5fb7d9', '#b07ae0', '#f0f0f0'];
+  var SHIRTS = ['#e5634d', '#4cc9f0', '#ffd23f', '#7bd389', '#b388eb', '#ff9ecd', '#f4f1ea'];
+  var SKINS = ['#f1c9a5', '#d9a273', '#a8744f', '#7a4a2f'];
+  var HAIRS = ['#2b1d14', '#5a3a22', '#c9a24d', '#1a1a1a', '#8a3b2a'];
+  var CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Trabzon', 'Gaziantep', 'Eskişehir'];
+  var EVENTS = [
+    { n: 'Normal gün', m: 1, w: 4 }, { n: 'Yağmurlu gün', m: 0.7, w: 2 }, { n: 'Hafta sonu', m: 1.4, w: 2 },
+    { n: 'Festival', m: 1.8, w: 1 }, { n: 'Öğrenci haftası', m: 1.25, w: 2 }
+  ];
+  var PERKS = [
+    { k: 'fast', n: 'Hızlı eller', d: 'Servis süresi -%5 / seviye' },
+    { k: 'patience', n: 'Güler yüz', d: 'Müşteri sabrı +2 sn / seviye' },
+    { k: 'magnet', n: 'Müşteri mıknatısı', d: 'Gelen müşteri +%5 / seviye' },
+    { k: 'tip', n: 'Bahşiş ustası', d: 'Bahşiş +%10 / seviye' },
+    { k: 'vip', n: 'VIP kulübü', d: 'VIP müşteri şansı +%2 / seviye (VIP 2,5 kat öder)' }
+  ];
+  var PERK_MAX = 10;
+  var ROOMS = [
+    { n: 'Köşe kafe', tabs: 6 },
+    { n: 'Geniş salon', tabs: 9, cost: 3000, req: 6 },
+    { n: 'Teras katı', tabs: 12, cost: 15000, req: 10 },
+    { n: 'Büyük kafe', tabs: 15, cost: 80000, req: 15 }
+  ];
+  var PRODUCTS = [
+    { id: 'espresso', n: 'Espresso',        type: 'drink', base: 5,   cost: 0,    req: 1,  w: 5 },
+    { id: 'turk',     n: 'Türk kahvesi',    type: 'drink', base: 6.5, cost: 250,  req: 2,  w: 3 },
+    { id: 'latte',    n: 'Latte',           type: 'drink', base: 8,   cost: 600,  req: 4,  w: 4 },
+    { id: 'cold',     n: 'Soğuk kahve',     type: 'drink', base: 9.5, cost: 1500, req: 6,  w: 3 },
+    { id: 'matcha',   n: 'Matcha latte',    type: 'drink', base: 12,  cost: 4000, req: 9,  w: 2 },
+    { id: 'cookie',   n: 'Kurabiye',        type: 'food',  base: 3,   cost: 150,  req: 2,  w: 4 },
+    { id: 'brown',    n: 'Brownie',         type: 'food',  base: 5,   cost: 500,  req: 3,  w: 3 },
+    { id: 'cake',     n: 'Cheesecake',      type: 'food',  base: 7,   cost: 900,  req: 5,  w: 3 },
+    { id: 'sand',     n: 'Sandviç',         type: 'food',  base: 9,   cost: 2500, req: 7,  w: 3 },
+    { id: 'brunch',   n: 'Kahvaltı tabağı', type: 'food',  base: 16,  cost: 9000, req: 12, w: 2 }
+  ];
+  var PBY = {};
+  PRODUCTS.forEach(function (p) { PBY[p.id] = p; });
+
+  var ASSETS = [
+    { id: 'studio',  cat: 'Konut',   n: 'Stüdyo daire',   cost: 4000,    inc: 90,     pr: 2,   req: 3 },
+    { id: 'flat',    cat: 'Konut',   n: '2+1 daire',      cost: 12000,   inc: 280,    pr: 5,   req: 5 },
+    { id: 'house',   cat: 'Konut',   n: 'Müstakil ev',    cost: 45000,   inc: 1000,   pr: 10,  req: 8 },
+    { id: 'villa',   cat: 'Konut',   n: 'Villa',          cost: 150000,  inc: 3600,   pr: 25,  req: 12 },
+    { id: 'mansion', cat: 'Konut',   n: 'Malikâne',       cost: 600000,  inc: 16000,  pr: 60,  req: 16 },
+    { id: 'scooter', cat: 'Araç',    n: 'Scooter',        cost: 1500,    inc: 40,     pr: 1,   req: 2 },
+    { id: 'hatch',   cat: 'Araç',    n: 'Hatchback',      cost: 9000,    inc: 210,    pr: 4,   req: 4 },
+    { id: 'sedan',   cat: 'Araç',    n: 'Sedan',          cost: 30000,   inc: 720,    pr: 9,   req: 7 },
+    { id: 'sport',   cat: 'Araç',    n: 'Spor araba',     cost: 120000,  inc: 3000,   pr: 22,  req: 11 },
+    { id: 'heli',    cat: 'Araç',    n: 'Helikopter',     cost: 900000,  inc: 24000,  pr: 80,  req: 18 },
+    { id: 'land',    cat: 'Yatırım', n: 'Arsa',           cost: 8000,    inc: 160,    pr: 2,   req: 4 },
+    { id: 'office',  cat: 'Yatırım', n: 'İş hanı',        cost: 70000,   inc: 1800,   pr: 14,  req: 9 },
+    { id: 'yacht',   cat: 'Yatırım', n: 'Marina ve yat',  cost: 400000,  inc: 11000,  pr: 45,  req: 14 },
+    { id: 'mall',    cat: 'Yatırım', n: 'AVM payı',       cost: 2000000, inc: 60000,  pr: 120, req: 20 }
+  ];
+  var ABY = {};
+  ASSETS.forEach(function (a) { ABY[a.id] = a; });
+
+  /* ---------- Durum ---------- */
+  var S = { money: 50, day: 1, dayT: 0, rep: 3, served: 0, lost: 0, mach: 0, bar: 1, tab: 1, cas: 0, dec: 0, room: 0,
+            menu: { espresso: 1 }, pmi: {}, assets: {}, ach: {}, achc: {}, vipServed: 0, daysTotal: 0, dayPassive: 0,
+            goalI: 0, dayEarn: 0, dayServed: 0, dayLost: 0, last: Date.now(),
+            name: 'Köşe Kafe', level: 1, xp: 0, pts: 0, perks: {}, stars: 0, branch: 0, runServed: 0, life: 0, ev: 0, dyn: null, dynN: 0 };
+  try { var raw = localStorage.getItem('tycoon-v3'); if (raw) { var o = JSON.parse(raw); for (var k in o) S[k] = o[k]; } } catch (e) {}
+  PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
+  PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
+  S.menu.espresso = 1;
+  function persist() { S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
+
+  var customers = [], pops = [], lanes = [], seats = [], spawnAcc = 0, paused = false, speedUntil = 0, clock = 0, goalAcc = 0, achAcc = 0;
+  for (var li = 0; li < 3; li++) lanes.push({ q: [], cur: null, t: 0 });
+  for (var si = 0; si < 30; si++) seats.push({ x: 0, y: 0, who: null });
+  function layoutSeats() {
+    for (var i = 0; i < 30; i++) {
+      var p = tablePos(Math.floor(i / 2));
+      seats[i].x = p[0] + (i % 2 ? 22 : -22); seats[i].y = p[1] - 2;
+    }
+  }
+  function applyRoom() { H = 320 + 64 * S.room; DOOR.y = H + 10; layoutSeats(); }
+  applyRoom();
+
+  /* ---------- Ekonomi ---------- */
+  function qDrink() { return (1 + 0.3 * S.mach) * (1 + 0.1 * (S.rep - 3)) * (1 + 0.04 * S.dec); }
+  function qFood() { return (1 + 0.2 * S.cas) * (1 + 0.1 * (S.rep - 3)) * (1 + 0.04 * S.dec); }
+  function fairOf(p) { return p.base * (p.type === 'drink' ? qDrink() : qFood()); }
+  function priceOf(p) { return fairOf(p) * S.pmi[p.id]; }
+  function demandOf(m) { return m <= 1 ? 1 + 0.5 * (1 - m) : 1 / (1 + Math.pow((m - 1) / 0.7, 2)); }
+  function unlocked(type) { return PRODUCTS.filter(function (p) { return S.menu[p.id] && (!type || p.type === type); }); }
+  function drinks() { return unlocked('drink'); }
+  function foods() { return S.cas > 0 ? unlocked('food') : []; }
+  function wavg(list, fn) { var s = 0, t = 0; for (var i = 0; i < list.length; i++) { s += list[i].w * fn(list[i]); t += list[i].w; } return t ? s / t : 0; }
+  function pickW(list) {
+    var t = 0, i; for (i = 0; i < list.length; i++) t += list[i].w;
+    var r = Math.random() * t;
+    for (i = 0; i < list.length; i++) { r -= list[i].w; if (r <= 0) return list[i]; }
+    return list[list.length - 1];
+  }
+  function makeOrder() {
+    var o = { d: pickW(drinks()).id, f: null }, fs = foods();
+    if (fs.length && Math.random() < 0.55) { var c = pickW(fs); if (Math.random() < demandOf(S.pmi[c.id])) o.f = c.id; }
+    return o;
+  }
+  function orderPrice(o) { var p = priceOf(PBY[o.d]); if (o.f) p += priceOf(PBY[o.f]); return p; }
+  function avgMult() { return wavg(drinks(), function (p) { return S.pmi[p.id]; }); }
+  function demandAvg() { return wavg(drinks(), function (p) { return demandOf(S.pmi[p.id]); }); }
+  function bm() { return 1 + 0.25 * S.stars; }
+  function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr; return t; }
+  function prestMult() { return 1 + 0.5 * (1 - Math.exp(-prestige() / 100)); }
+  function passiveDaily() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc; return t; }
+  function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].cost; return t; }
+  function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast)); }
+  function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience; }
+  function vipChance() { return 0.04 + 0.02 * S.perks.vip; }
+  function menuCount() { return unlocked().length; }
+  function popularity() {
+    return (0.6 + 0.2 * S.rep) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
+      (1 + 0.04 * (menuCount() - 1)) * prestMult();
+  }
+  function rush() { return 0.7 + 0.9 * Math.pow(Math.sin(Math.PI * Math.min(S.dayT, DAY_LEN) / DAY_LEN), 2); }
+  function spawnRate() { return popularity() * rush() / 4.2; }
+  function tipOf(base, vip) { return Math.max(1, Math.round(base * 0.25 * (1 + 0.15 * S.dec) * (1 + 0.1 * S.perks.tip) * (vip ? 3 : 1) * bm())); }
+  function avgRev() {
+    var d = wavg(drinks(), priceOf), fs = foods(), f = fs.length ? wavg(fs, priceOf) : 0;
+    return (d + 0.55 * f) * bm() + 0.8 * Math.max(1, d * 0.25 * bm());
+  }
+  function estPerMin() {
+    var arr = popularity() / 4.2 * 1.15, svc = S.bar / svcTime();
+    return { rate: Math.min(arr, svc) * avgRev() * 60, full: arr > svc };
+  }
+  function need(l) { return Math.round(20 * Math.pow(l, 1.5)); }
+  function fmt(n) {
+    if (n < 1000) return n < 10 ? n.toFixed(1).replace(/\.0$/, '') : String(Math.floor(n));
+    var u = ['K', 'M', 'B', 'T'], i = -1;
+    while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; }
+    return (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0)) + u[i];
+  }
+  function money1(n) { return n.toFixed(1).replace(/\.0$/, ''); }
+
+  var TAB_COST = [60, 120, 220, 360, 560, 800, 1100, 1500, 2000, 2700, 3500, 4500, 5800, 7500];
+  var TAB_REQ = [1, 2, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+  var ITEMS = [
+    { k: 'tab', n: 'Masa', max: function () { return ROOMS[S.room].tabs; }, lv: function () { return S.tab; },
+      cost: function () { return TAB_COST[S.tab - 1]; }, req: function () { return TAB_REQ[S.tab - 1]; },
+      d: function () { return S.tab >= ROOMS[S.room].tabs ? 'Daha fazla masa için mekanı genişlet.' : 'Her masa 2 koltuk. Oturan müşteri bahşiş bırakır.'; } },
+    { k: 'room', n: 'Mekan genişletme', max: function () { return ROOMS.length; }, lv: function () { return S.room + 1; },
+      cost: function () { return ROOMS[S.room + 1].cost; }, req: function () { return ROOMS[S.room + 1].req; },
+      d: function () { return S.room + 1 < ROOMS.length ? 'Sıradaki: ' + ROOMS[S.room + 1].n + ' (' + ROOMS[S.room + 1].tabs + ' masa)' : 'En büyük mekan.'; } },
+    { k: 'bar', n: 'Barista', max: function () { return 3; }, lv: function () { return S.bar; },
+      cost: function () { return [150, 450][S.bar - 1]; }, req: function () { return [2, 6][S.bar - 1]; }, d: function () { return 'Yeni sipariş hattı, kuyruk kısalır.'; } },
+    { k: 'mach', n: 'Espresso makinesi', max: function () { return 7; }, lv: function () { return S.mach + 1; },
+      cost: function () { return Math.round(80 * Math.pow(1.9, S.mach)); }, req: function () { return [1, 2, 3, 5, 7, 9][S.mach]; },
+      d: function () { return 'Servis ' + svcTime().toFixed(1) + ' sn · içecek kalitesi x' + qDrink().toFixed(2); } },
+    { k: 'cas', n: 'Pasta vitrini', max: function () { return 4; }, lv: function () { return S.cas + 1; },
+      cost: function () { return [200, 700, 1800][S.cas]; }, req: function () { return [3, 5, 8][S.cas]; },
+      d: function () { return S.cas ? 'Yiyecek kalitesi x' + qFood().toFixed(2) : 'Yiyecek satışı için gerekli.'; } },
+    { k: 'dec', n: 'Dekor', max: function () { return 6; }, lv: function () { return S.dec + 1; },
+      cost: function () { return [100, 260, 600, 1300, 2600][S.dec]; }, req: function () { return [1, 3, 5, 8, 10][S.dec]; },
+      d: function () { return 'Daha çok müşteri gelir, bahşişler artar.'; } }
+  ];
+  function maxed(it) { return it.lv() >= it.max(); }
+  function allMaxed() { for (var i = 0; i < ITEMS.length; i++) if (!maxed(ITEMS[i])) return false; return true; }
+
+  var GOALS = [
+    { t: '3 masa kur', f: function () { return S.tab >= 3; }, r: 80 },
+    { t: '25 müşteri ağırla', f: function () { return S.runServed >= 25; }, r: 100 },
+    { t: '2. barista tut', f: function () { return S.bar >= 2; }, r: 150 },
+    { t: 'Menüye 2. ürünü ekle', f: function () { return menuCount() >= 2; }, r: 200 },
+    { t: 'Makineyi 3. seviyeye çıkar', f: function () { return S.mach >= 2; }, r: 250 },
+    { t: '100 müşteri ağırla', f: function () { return S.runServed >= 100; }, r: 400 },
+    { t: 'İtibar 4.0', f: function () { return S.rep >= 4; }, r: 600 },
+    { t: '500 müşteri ağırla', f: function () { return S.runServed >= 500; }, r: 1500 }
+  ];
+  function newDyn() {
+    if (S.dynN % 2 === 0) {
+      var tg = 50 + 25 * S.level;
+      return { kind: 'served', base: S.runServed, target: tg, r: 150 * S.level, text: tg + ' müşteri ağırla' };
+    }
+    var te = Math.round(150 * S.level * (1 + S.stars));
+    return { kind: 'earn', target: te, r: 200 * S.level, text: 'Tek günde ₺' + fmt(te) + ' kazan' };
+  }
+  function currentGoal() {
+    if (S.goalI < GOALS.length) return { text: GOALS[S.goalI].t, r: GOALS[S.goalI].r };
+    if (!S.dyn) S.dyn = newDyn();
+    return { text: S.dyn.text, r: S.dyn.r };
+  }
+
+  function ownedCount() { var n = 0; for (var id in S.assets) if (S.assets[id]) n++; return n; }
+  var ACH = [
+    { id: 's100',  n: 'İlk yüz',            d: '100 müşteri ağırla',        f: function () { return S.life >= 100; },    r: 200,    x: 30 },
+    { id: 's500',  n: 'Mahallenin kafesi',  d: '500 müşteri ağırla',        f: function () { return S.life >= 500; },    r: 1000,   x: 60 },
+    { id: 's2k',   n: 'Şehrin gözdesi',     d: '2.000 müşteri ağırla',      f: function () { return S.life >= 2000; },   r: 5000,   x: 120 },
+    { id: 's10k',  n: 'Efsane kafe',        d: '10.000 müşteri ağırla',     f: function () { return S.life >= 10000; },  r: 30000,  x: 300 },
+    { id: 'l5',    n: 'Çırak değil usta',   d: 'Seviye 5\'e ulaş',          f: function () { return S.level >= 5; },     r: 500,    x: 40 },
+    { id: 'l10',   n: 'Deneyimli girişimci', d: 'Seviye 10\'a ulaş',        f: function () { return S.level >= 10; },    r: 4000,   x: 100 },
+    { id: 'l20',   n: 'İş dünyası kurdu',   d: 'Seviye 20\'ye ulaş',        f: function () { return S.level >= 20; },    r: 40000,  x: 300 },
+    { id: 'rep5',  n: 'Kusursuz hizmet',    d: 'İtibarı 5.0\'a çıkar',      f: function () { return S.rep >= 4.95; },    r: 3000,   x: 80 },
+    { id: 'vip',   n: 'VIP ağırlama',       d: '25 VIP müşteriye servis ver', f: function () { return S.vipServed >= 25; }, r: 2500,  x: 60 },
+    { id: 'menu5', n: 'Geniş menü',         d: 'Menüde 5 ürün aç',          f: function () { return menuCount() >= 5; }, r: 1500,   x: 50 },
+    { id: 'menu10', n: 'Şef tabağı',        d: 'Menüdeki tüm ürünleri aç',  f: function () { return menuCount() >= 10; }, r: 20000, x: 200 },
+    { id: 'room1', n: 'Büyüyen işletme',    d: 'Mekanı genişlet',           f: function () { return S.room >= 1; },      r: 3000,   x: 70 },
+    { id: 'room3', n: 'Büyük hayaller',     d: 'En büyük mekana ulaş',      f: function () { return S.room >= 3; },      r: 60000,  x: 300 },
+    { id: 'a1',    n: 'İlk mülk',           d: 'Dünyadan ilk varlığını al', f: function () { return ownedCount() >= 1; }, r: 500,    x: 30 },
+    { id: 'a5',    n: 'Portföy sahibi',     d: '5 varlığa sahip ol',        f: function () { return ownedCount() >= 5; }, r: 6000,   x: 100 },
+    { id: 'a14',   n: 'Şehrin sahibi',      d: 'Tüm varlıkları satın al',   f: function () { return ownedCount() >= ASSETS.length; }, r: 500000, x: 600 },
+    { id: 'n100k', n: 'Yüz bin kulübü',     d: 'Net servet ₺100K',          f: function () { return netWorth() >= 1e5; }, r: 5000,   x: 80 },
+    { id: 'n1m',   n: 'Milyoner',           d: 'Net servet ₺1M',            f: function () { return netWorth() >= 1e6; }, r: 50000,  x: 250 },
+    { id: 'n10m',  n: 'Çok milyoner',       d: 'Net servet ₺10M',           f: function () { return netWorth() >= 1e7; }, r: 500000, x: 600 },
+    { id: 'fr1',   n: 'İlk franchise',      d: 'İkinci şehirde şube aç',    f: function () { return S.branch >= 1; },    r: 10000,  x: 200 },
+    { id: 'd30',   n: 'Düzenli esnaf',      d: '30 gün çalış',              f: function () { return S.daysTotal >= 30; }, r: 3000,   x: 80 },
+    { id: 'd100',  n: 'Köklü işletme',      d: '100 gün çalış',             f: function () { return S.daysTotal >= 100; }, r: 25000, x: 250 }
+  ];
+
+  /* ---------- Arayüz ---------- */
+  var TABS = ['inv', 'menu', 'price', 'world', 'ach', 'skill', 'cafe'];
+  var tab = 'inv';
+  var listEl = $('list'), speedBtn = $('speed'), modal = $('modal'), mcard = $('mcard');
+
+  var rows = [], menuRows = [], assetRows = [], achRows = [], priceSig = '';
+  (function buildLists() {
+    var html = '', i;
+    for (i = 0; i < ITEMS.length; i++) {
+      html += '<div class="item"><div class="info"><b>' + ITEMS[i].n + '<em></em></b><span></span></div><button class="buy" data-i="' + i + '"></button></div>';
+    }
+    listEl.innerHTML = html;
+    var els = listEl.querySelectorAll('.item');
+    for (var j = 0; j < els.length; j++) rows.push({ lv: els[j].querySelector('em'), d: els[j].querySelector('span'), b: els[j].querySelector('button') });
+
+    html = '';
+    for (i = 0; i < PRODUCTS.length; i++) {
+      var p = PRODUCTS[i];
+      html += '<div class="item"><div class="info"><b>' + p.n + '<em>' + (p.type === 'drink' ? 'İçecek' : 'Yiyecek') + '</em></b><span></span></div><button class="buy" data-id="' + p.id + '"></button></div>';
+    }
+    $('menulist').innerHTML = html;
+    var me = $('menulist').querySelectorAll('.item');
+    for (i = 0; i < me.length; i++) menuRows.push({ el: me[i], d: me[i].querySelector('span'), b: me[i].querySelector('button') });
+
+    html = ''; var cat = '';
+    for (i = 0; i < ASSETS.length; i++) {
+      var a = ASSETS[i];
+      if (a.cat !== cat) { cat = a.cat; html += '<h5>' + cat + '</h5>'; }
+      html += '<div class="item"><div class="info"><b>' + a.n + '<em></em></b><span>+₺' + fmt(a.inc) + '/gün · prestij +' + a.pr + '</span></div><button class="buy" data-id="' + a.id + '"></button></div>';
+    }
+    $('assetlist').innerHTML = html;
+    var ae = $('assetlist').querySelectorAll('.item');
+    for (i = 0; i < ae.length; i++) assetRows.push({ el: ae[i], lv: ae[i].querySelector('em'), b: ae[i].querySelector('button') });
+
+    html = '';
+    for (i = 0; i < ACH.length; i++) {
+      html += '<div class="item"><div class="info"><b>' + ACH[i].n + '<em></em></b><span>' + ACH[i].d + ' · ödül ₺' + fmt(ACH[i].r) + ' + ' + ACH[i].x + ' deneyim</span></div><button class="buy" data-id="' + ACH[i].id + '"></button></div>';
+    }
+    $('achlist').innerHTML = html;
+    var ce = $('achlist').querySelectorAll('.item');
+    for (i = 0; i < ce.length; i++) achRows.push({ el: ce[i], b: ce[i].querySelector('button'), st: ce[i].querySelector('em') });
+
+    var ph = '';
+    for (i = 0; i < PERKS.length; i++) {
+      ph += '<div class="item"><div class="info"><b>' + PERKS[i].n + '<em></em></b><span>' + PERKS[i].d + '</span></div><button class="buy" data-k="' + PERKS[i].k + '">1 puan</button></div>';
+    }
+    $('perks').innerHTML = ph;
+  })();
+  var perkRows = $('perks').querySelectorAll('.item');
+
+  function claimable() { var n = 0; for (var i = 0; i < ACH.length; i++) if (S.ach[ACH[i].id] && !S.achc[ACH[i].id]) n++; return n; }
+
+  function refreshHud() {
+    $('money').textContent = fmt(S.money);
+    $('cname-hud').textContent = S.name + ' · ' + CITIES[S.branch % CITIES.length] + (S.stars ? ' · ' + (S.branch + 1) + '. şube' : '');
+    $('day').innerHTML = 'Gün ' + S.day + ' · <em>' + EVENTS[S.ev].n + '</em>';
+    $('daybar').style.width = Math.min(100, S.dayT / DAY_LEN * 100) + '%';
+    $('rep').textContent = '★ ' + S.rep.toFixed(1);
+    $('served').textContent = S.served;
+    $('lvl').textContent = S.level;
+    $('xpbar').style.width = Math.min(100, S.xp / need(S.level) * 100) + '%';
+    var g = currentGoal();
+    $('goal').textContent = 'Hedef: ' + g.text + ' (+₺' + fmt(g.r) + ')';
+    $('skdot').hidden = S.pts <= 0;
+    $('achdot').hidden = claimable() <= 0;
+    var left = Math.max(0, speedUntil - Date.now());
+    speedBtn.disabled = left > 0;
+    speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : 'Reklam';
+  }
+
+  function buildPriceList() {
+    var us = unlocked(), sig = us.map(function (p) { return p.id; }).join(',') + '|' + S.cas;
+    if (sig === priceSig) return;
+    priceSig = sig;
+    var html = '';
+    us.forEach(function (p) {
+      var lock = p.type === 'food' && S.cas < 1;
+      html += '<div class="box" data-id="' + p.id + '"><h4>' + p.n + '<small class="pd"></small></h4>' +
+        (lock ? '<p>Satış için pasta vitrini gerekli.</p>' : '') +
+        '<div class="stepper"><button data-id="' + p.id + '" data-d="-1" aria-label="Fiyatı düşür">−</button><div class="val"><span class="pv"></span><small class="pm"></small></div><button data-id="' + p.id + '" data-d="1" aria-label="Fiyatı artır">+</button></div></div>';
+    });
+    $('pricelist').innerHTML = html;
+  }
+
+  function refreshPanel() {
+    var i;
+    if (tab === 'inv') {
+      for (i = 0; i < ITEMS.length; i++) {
+        var it = ITEMS[i], r = rows[i];
+        r.lv.textContent = 'Sv. ' + it.lv();
+        r.d.textContent = it.d();
+        if (maxed(it)) { r.b.textContent = 'Maks'; r.b.disabled = true; }
+        else if (S.level < it.req()) { r.b.innerHTML = 'Seviye ' + it.req(); r.b.disabled = true; }
+        else { var c = it.cost(); r.b.innerHTML = '₺' + fmt(c); r.b.disabled = S.money < c; }
+      }
+    } else if (tab === 'menu') {
+      $('menucount').textContent = menuCount() + ' / ' + PRODUCTS.length;
+      for (i = 0; i < PRODUCTS.length; i++) {
+        var p = PRODUCTS[i], mr = menuRows[i], own = !!S.menu[p.id];
+        mr.d.textContent = 'Adil fiyat ₺' + money1(fairOf(p)) + (p.type === 'food' && S.cas < 1 ? ' · vitrin gerekli' : '');
+        if (own) { mr.b.textContent = 'Menüde'; mr.b.disabled = true; mr.el.classList.add('done'); }
+        else if (S.level < p.req) { mr.b.innerHTML = 'Seviye ' + p.req; mr.b.disabled = true; }
+        else { mr.b.innerHTML = '₺' + fmt(p.cost); mr.b.disabled = S.money < p.cost; }
+      }
+    } else if (tab === 'price') {
+      buildPriceList();
+      var dm = demandAvg(), e = estPerMin(), am = avgMult();
+      $('pdem').textContent = '%' + Math.round(dm * 100);
+      $('pdembar').style.width = Math.min(100, dm / 1.25 * 100) + '%';
+      $('pdembar').style.background = dm >= 1 ? 'var(--good)' : dm > 0.6 ? 'var(--copper)' : 'var(--bad)';
+      $('pest').textContent = '₺' + fmt(e.rate) + ' / dk';
+      var hint = '';
+      if (e.full && am < 1.4) hint = 'Servis kapasiten dolu. Fiyatı artırmak kazancı yükseltebilir.';
+      else if (!e.full && am > 1.3) hint = 'Müşteri kaçıyor. Fiyatı düşürmeyi dene.';
+      else if (am > 1.5) hint = 'Çok pahalı: itibar düşüyor.';
+      $('phint').textContent = hint;
+      var boxes = $('pricelist').querySelectorAll('.box');
+      for (i = 0; i < boxes.length; i++) {
+        var pid = boxes[i].getAttribute('data-id'), pp = PBY[pid], m = S.pmi[pid];
+        boxes[i].querySelector('.pv').textContent = '₺' + money1(priceOf(pp));
+        boxes[i].querySelector('.pm').textContent = 'adil fiyatın %' + Math.round(m * 100) + '\'i (talep %' + Math.round(demandOf(m) * 100) + ')';
+        boxes[i].querySelector('.pd').textContent = 'adil ₺' + money1(fairOf(pp));
+        var bs = boxes[i].querySelectorAll('button');
+        bs[0].disabled = m <= 0.5; bs[1].disabled = m >= 3;
+      }
+    } else if (tab === 'world') {
+      $('wprest').textContent = 'Prestij ' + prestige();
+      $('wnet').textContent = '₺' + fmt(netWorth());
+      $('wpas').textContent = '₺' + fmt(passiveDaily()) + ' / gün';
+      $('wpm').textContent = 'x' + prestMult().toFixed(2);
+      for (i = 0; i < ASSETS.length; i++) {
+        var a = ASSETS[i], ar = assetRows[i], has = !!S.assets[a.id];
+        ar.lv.textContent = has ? 'Sahipsin' : '';
+        if (has) { ar.b.textContent = 'Sahipsin'; ar.b.disabled = true; ar.el.classList.add('done'); }
+        else if (S.level < a.req) { ar.b.innerHTML = 'Seviye ' + a.req; ar.b.disabled = true; }
+        else { ar.b.innerHTML = '₺' + fmt(a.cost); ar.b.disabled = S.money < a.cost; }
+      }
+    } else if (tab === 'ach') {
+      var done = 0;
+      for (i = 0; i < ACH.length; i++) {
+        var ac = ACH[i], rr = achRows[i], un = !!S.ach[ac.id], cl = !!S.achc[ac.id];
+        if (un) done++;
+        rr.el.classList.toggle('done', un);
+        rr.st.textContent = cl ? 'Alındı' : un ? 'Hazır' : '';
+        rr.b.classList.toggle('claim', un && !cl);
+        if (cl) { rr.b.textContent = 'Alındı'; rr.b.disabled = true; }
+        else if (un) { rr.b.textContent = 'Ödülü al'; rr.b.disabled = false; }
+        else { rr.b.textContent = 'Kilitli'; rr.b.disabled = true; }
+      }
+      $('achcount').textContent = done + ' / ' + ACH.length;
+    } else if (tab === 'skill') {
+      $('sklvl').textContent = S.level;
+      $('skxp').textContent = 'Deneyim ' + S.xp + ' / ' + need(S.level) + '. Müşteri ağırlayıp hedef tamamlayarak kazanılır.';
+      $('skbar').style.width = Math.min(100, S.xp / need(S.level) * 100) + '%';
+      $('skpts').textContent = S.pts;
+      for (i = 0; i < PERKS.length; i++) {
+        var lv = S.perks[PERKS[i].k], row = perkRows[i], b = row.querySelector('button');
+        row.querySelector('em').textContent = 'Sv. ' + lv + '/' + PERK_MAX;
+        if (lv >= PERK_MAX) { b.textContent = 'Maks'; b.disabled = true; } else { b.textContent = '1 puan'; b.disabled = S.pts < 1; }
+      }
+    } else if (tab === 'cafe') {
+      $('croom').textContent = ROOMS[S.room].n + ' (' + ROOMS[S.room].tabs + ' masa)';
+      $('cbranch').textContent = CITIES[S.branch % CITIES.length] + ' (' + (S.branch + 1) + '. şube)';
+      $('cbrand').textContent = 'x' + bm().toFixed(2);
+      $('clife').textContent = S.life;
+      var ready = allMaxed();
+      var gain = 1 + Math.floor(S.runServed / 300);
+      $('cfp').textContent = ready
+        ? 'Yeni şehirde yeniden başla. Seviyen, yeteneklerin, başarımların, dünyadaki varlıkların ve adın kalır. +' + gain + ' marka yıldızı (her yıldız +%25 gelir).'
+        : 'Tüm yatırımlar maksimum seviyeye gelince yeni şehirde şube açabilirsin. Marka yıldızı kalıcı gelir artışı verir.';
+      $('cfbtn').disabled = !ready;
+    }
+  }
+  function refresh() { refreshHud(); refreshPanel(); }
+
+  function layoutCanvases() {
+    var box = $('scenebox') || cv.parentNode;
+    var availW = Math.min(box.clientWidth - 32, 448);
+    var maxH = window.innerHeight * 0.36;
+    var dpr = window.devicePixelRatio || 1;
+    [[cv, ctx, W, H], [wv, wctx, W, WH]].forEach(function (a) {
+      var cw = Math.max(120, Math.min(availW, maxH * a[2] / a[3]));
+      a[0].style.width = cw + 'px'; a[0].style.height = (cw * a[3] / a[2]) + 'px';
+      a[0].width = Math.round(cw * dpr); a[0].height = Math.round(cw * dpr * a[3] / a[2]);
+      a[1].setTransform(a[0].width / a[2], 0, 0, a[0].width / a[2], 0, 0);
+    });
+  }
+
+  function setTab(t) {
+    tab = t;
+    var all = $('tabs').querySelectorAll('button');
+    for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i].getAttribute('data-tab') === t);
+    TABS.forEach(function (x) { $('p-' + x).hidden = x !== t; });
+    cv.hidden = t === 'world'; wv.hidden = t !== 'world';
+    layoutCanvases();
+    refresh();
+  }
+  $('tabs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-tab]') : null;
+    if (b) setTab(b.getAttribute('data-tab'));
+  });
+
+  listEl.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button.buy') : null;
+    if (!b || b.disabled) return;
+    var it = ITEMS[parseInt(b.getAttribute('data-i'), 10)];
+    if (maxed(it) || S.level < it.req()) return;
+    var c = it.cost();
+    if (S.money < c) return;
+    S.money -= c; S[it.k]++;
+    if (it.k === 'room') { applyRoom(); layoutCanvases(); }
+    pops.push({ x: W / 2, y: 120, t: 0, text: it.n + ' alındı', c: '#6fd6a2' });
+    persist();
+  });
+  $('menulist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button.buy') : null;
+    if (!b || b.disabled) return;
+    var p = PBY[b.getAttribute('data-id')];
+    if (S.menu[p.id] || S.level < p.req || S.money < p.cost) return;
+    S.money -= p.cost; S.menu[p.id] = 1;
+    pops.push({ x: W / 2, y: 120, t: 0, text: p.n + ' menüde', c: '#6fd6a2' });
+    persist(); refresh();
+  });
+  $('pricelist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-d]') : null;
+    if (!b || b.disabled) return;
+    var id = b.getAttribute('data-id'), d = parseInt(b.getAttribute('data-d'), 10);
+    S.pmi[id] = Math.min(3, Math.max(0.5, Math.round((S.pmi[id] + d * 0.05) * 100) / 100));
+    persist(); refresh();
+  });
+  $('assetlist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button.buy') : null;
+    if (!b || b.disabled) return;
+    var a = ABY[b.getAttribute('data-id')];
+    if (S.assets[a.id] || S.level < a.req || S.money < a.cost) return;
+    S.money -= a.cost; S.assets[a.id] = 1;
+    persist(); refresh();
+  });
+  $('achlist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button.buy') : null;
+    if (!b || b.disabled) return;
+    var id = b.getAttribute('data-id'), ac = null;
+    for (var i = 0; i < ACH.length; i++) if (ACH[i].id === id) ac = ACH[i];
+    if (!ac || !S.ach[id] || S.achc[id]) return;
+    S.achc[id] = 1; S.money += ac.r; gainXp(ac.x);
+    pops.push({ x: W / 2, y: 140, t: 0, text: '+₺' + fmt(ac.r), c: '#ffd23f' });
+    persist(); refresh();
+  });
+  $('perks').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-k]') : null;
+    if (!b || b.disabled) return;
+    var k = b.getAttribute('data-k');
+    if (S.pts < 1 || S.perks[k] >= PERK_MAX) return;
+    S.pts--; S.perks[k]++; persist(); refresh();
+  });
+  $('cname').value = S.name;
+  $('cname').addEventListener('input', function (e) { S.name = e.target.value.slice(0, 14); persist(); refreshHud(); });
+  speedBtn.addEventListener('click', function () { speedUntil = Date.now() + 30000; });   // reklam simülasyonu
+
+  var queueFns = [];
+  function showModal(html, handlers) {
+    mcard.innerHTML = html;
+    modal.hidden = false;
+    mcard.onclick = function (e) {
+      var id = e.target && e.target.getAttribute ? e.target.getAttribute('data-act') : null;
+      if (!id) return;
+      if (handlers && handlers[id]) handlers[id]();
+      modal.hidden = true;
+      nextModal();
+    };
+  }
+  function nextModal() { if (!modal.hidden) return; var f = queueFns.shift(); if (f) f(); }
+  function enqueue(f) { queueFns.push(f); nextModal(); }
+
+  $('cfbtn').addEventListener('click', function () {
+    if (!allMaxed()) return;
+    var gain = 1 + Math.floor(S.runServed / 300);
+    enqueue(function () {
+      showModal('<h2>Franchise aç</h2><p>Kafe sıfırlanır: yatırımlar, menü, para, itibar. Seviye, yetenek, başarım, dünyadaki varlıklar ve kafe adın kalır.</p>' +
+        '<div class="big">+' + gain + ' yıldız</div><p>Kalıcı gelir +%' + (gain * 25) + '</p>' +
+        '<div class="row"><button data-act="no">Vazgeç</button><button class="on" data-act="yes">Aç</button></div>',
+        { yes: function () {
+          S.stars += gain; S.branch++;
+          S.money = 50 + 100 * S.stars; S.mach = 0; S.bar = 1; S.tab = 1; S.cas = 0; S.dec = 0; S.rep = 3; S.room = 0;
+          S.menu = { espresso: 1 }; PRODUCTS.forEach(function (p) { S.pmi[p.id] = 1; });
+          S.goalI = 0; S.dyn = null; S.runServed = 0; S.day = 1; S.dayT = 0; S.dayEarn = 0; S.dayServed = 0; S.dayLost = 0;
+          customers.length = 0; for (var i = 0; i < 3; i++) { lanes[i].q.length = 0; lanes[i].cur = null; }
+          for (var j = 0; j < seats.length; j++) seats[j].who = null;
+          applyRoom(); layoutCanvases();
+          pops.push({ x: W / 2, y: 150, t: 0, text: CITIES[S.branch % CITIES.length] + ' şubesi açıldı', c: '#ffd23f' });
+          persist();
+        } });
+    });
+  });
+
+  function pickEvent() {
+    var tot = 0, i;
+    for (i = 0; i < EVENTS.length; i++) tot += EVENTS[i].w;
+    var r = Math.random() * tot;
+    for (i = 0; i < EVENTS.length; i++) { r -= EVENTS[i].w; if (r <= 0) return i; }
+    return 0;
+  }
+
+  function gainXp(n) {
+    S.xp += n;
+    while (S.xp >= need(S.level)) {
+      S.xp -= need(S.level); S.level++; S.pts++;
+      S.money += 50 * S.level;
+      pops.push({ x: W / 2, y: 100, t: 0, text: 'Seviye ' + S.level + '! +1 puan', c: '#ffd23f' });
+    }
+  }
+
+  function endDay() {
+    paused = true;
+    gainXp(10);
+    S.daysTotal++;
+    var extra = '';
+    if (S.goalI >= GOALS.length && S.dyn && S.dyn.kind === 'earn' && S.dayEarn >= S.dyn.target) {
+      S.money += S.dyn.r; gainXp(40); extra = '<span>Hedef ödülü</span><span>+₺' + fmt(S.dyn.r) + '</span>';
+      S.dyn = null; S.dynN++;
+    }
+    var stats = '<span>Kafe geliri</span><span>₺' + fmt(S.dayEarn) + '</span><span>Pasif gelir</span><span>₺' + fmt(S.dayPassive) + '</span>' +
+      '<span>Müşteri</span><span>' + S.dayServed + '</span><span>Kaçan</span><span>' + S.dayLost + '</span>' +
+      '<span>İtibar</span><span>★ ' + S.rep.toFixed(1) + '</span>' + extra;
+    enqueue(function () {
+      showModal('<h2>Gün ' + S.day + ' bitti</h2><div class="stats">' + stats + '</div>' +
+        '<p>Parayı Dünya sekmesinde harcamayı unutma.</p>' +
+        '<div class="row"><button class="on" data-act="next">Sonraki gün</button></div>',
+        { next: function () {
+          S.day++; S.dayT = 0; S.dayEarn = 0; S.dayServed = 0; S.dayLost = 0; S.dayPassive = 0; S.ev = pickEvent(); paused = false; persist();
+        } });
+    });
+  }
+
+  function offlineCheck() {
+    var el = Date.now() - S.last;
+    if (el < 60000) return;
+    var sec = Math.min(el, 3 * 3600 * 1000) / 1000;
+    var rate = Math.min(popularity() / 4.2, S.bar / svcTime());
+    var amt = (rate * avgRev() + passiveDaily() / DAY_LEN) * sec * 0.3;
+    if (amt < 1) return;
+    enqueue(function () {
+      showModal('<h2>Hoş geldin!</h2><p>Sen yokken kafe ve yatırımların çalıştı.</p><div class="big">+₺' + fmt(amt) + '</div>' +
+        '<div class="row"><button data-act="ad">Reklam izle: x2</button><button class="on" data-act="ok">Topla</button></div>',
+        { ad: function () { S.money += amt * 2; persist(); }, ok: function () { S.money += amt; persist(); } });
+    });
+  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) persist(); else offlineCheck(); });
+
+  /* ---------- Müşteri simülasyonu ---------- */
+  function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+  function spawn() {
+    var best = -1, bl = 99;
+    for (var i = 0; i < S.bar; i++) if (lanes[i].q.length < bl) { bl = lanes[i].q.length; best = i; }
+    if (best < 0 || bl >= QMAX) {
+      S.dayLost++; S.rep = Math.max(1, S.rep - 0.02);
+      pops.push({ x: DOOR.x, y: H - 40, t: 0, text: 'Dolu!', c: '#ff7a66' });
+      return;
+    }
+    var c = { x: DOOR.x + (Math.random() * 20 - 10), y: DOOR.y, tx: LANES_X[best], ty: QY + bl * QS, state: 'queue', lane: best,
+              wait: 0, skin: rnd(SKINS), shirt: rnd(SHIRTS), hair: rnd(HAIRS), order: makeOrder(),
+              vip: Math.random() < vipChance(),
+              seat: null, eat: 0, cup: false, ph: Math.random() * 6, serving: false, sp: 60 + Math.random() * 20 };
+    lanes[best].q.push(c);
+    customers.push(c);
+  }
+
+  function leave(c, unhappy) {
+    c.state = 'leave'; c.tx = DOOR.x; c.ty = DOOR.y; c.serving = false;
+    if (unhappy) { S.rep = Math.max(1, S.rep - 0.04); S.dayLost++; pops.push({ x: c.x, y: c.y - 24, t: 0, text: 'Bekledi...', c: '#ff7a66' }); }
+  }
+
+  function findSeat() {
+    for (var i = 0; i < S.tab * 2; i++) if (!seats[i].who) return seats[i];
+    return null;
+  }
+
+  function complete(c, lane) {
+    c.base = orderPrice(c.order);
+    var pay = c.base * bm() * (c.vip ? 2.5 : 1);
+    S.money += pay; S.dayEarn += pay; S.served++; S.dayServed++; S.runServed++; S.life++;
+    if (c.vip) S.vipServed++;
+    gainXp(c.vip ? 3 : 1);
+    var am = avgMult();
+    if (am > 1.5) S.rep = Math.max(1, S.rep - 0.01 * (am - 1.5));
+    else if (am < 0.9) S.rep = Math.min(5, S.rep + 0.004);
+    pops.push({ x: LANES_X[c.lane], y: 78, t: 0, text: '+₺' + fmt(pay), c: c.vip ? '#ffd23f' : '#f2efe9' });
+    lane.q.shift(); lane.cur = null; c.serving = false; c.cup = true;
+    var seat = findSeat();
+    if (seat) { seat.who = c; c.seat = seat; c.state = 'toSeat'; c.tx = seat.x; c.ty = seat.y; }
+    else { leave(c, false); S.rep = Math.max(1, S.rep - 0.01); }
+  }
+
+  function updateCustomers(dt) {
+    var i;
+    for (i = 0; i < S.bar; i++) {
+      var ln = lanes[i];
+      for (var k = 0; k < ln.q.length; k++) { ln.q[k].tx = LANES_X[i]; ln.q[k].ty = QY + k * QS; }
+      if (!ln.cur && ln.q.length) {
+        var h = ln.q[0];
+        if (Math.hypot(h.x - h.tx, h.y - h.ty) < 3) { ln.cur = h; ln.t = 0; h.serving = true; }
+      }
+      if (ln.cur) {
+        ln.t += dt;
+        if (ln.t >= svcTime()) complete(ln.cur, ln);
+      }
+    }
+    for (i = customers.length - 1; i >= 0; i--) {
+      var c = customers[i];
+      var dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
+      c.moving = d > 1.5;
+      if (c.moving) { var st = Math.min(d, c.sp * dt); c.x += dx / d * st; c.y += dy / d * st; }
+      if (c.state === 'queue') {
+        if (!c.serving) {
+          c.wait += dt;
+          if (c.wait > patience() * (c.vip ? 0.6 : 1)) {
+            var q = lanes[c.lane].q, ix = q.indexOf(c);
+            if (ix >= 0) q.splice(ix, 1);
+            leave(c, true);
+          }
+        }
+      } else if (c.state === 'toSeat' && !c.moving) {
+        c.state = 'eat'; c.eat = 6 + Math.random() * 5;
+      } else if (c.state === 'eat') {
+        c.eat -= dt;
+        if (c.eat <= 0) {
+          var tip = tipOf(c.base, c.vip);
+          S.money += tip; S.dayEarn += tip; S.rep = Math.min(5, S.rep + 0.015);
+          pops.push({ x: c.x, y: c.y - 26, t: 0, text: '+₺' + tip, c: '#6fd6a2' });
+          if (c.seat) c.seat.who = null;
+          c.seat = null; c.cup = false;
+          leave(c, false);
+        }
+      } else if (c.state === 'leave' && !c.moving) {
+        customers.splice(i, 1);
+      }
+    }
+    for (var p = pops.length - 1; p >= 0; p--) { pops[p].t += dt; if (pops[p].t > 1.2) pops.splice(p, 1); }
+  }
+
+  function checkGoal() {
+    if (S.goalI < GOALS.length) {
+      var g = GOALS[S.goalI];
+      if (g.f()) {
+        S.money += g.r; S.goalI++; gainXp(Math.round(g.r / 10));
+        pops.push({ x: W / 2, y: 150, t: 0, text: 'Hedef tamam +₺' + g.r, c: '#ffd23f' });
+        persist();
+      }
+    } else {
+      if (!S.dyn) S.dyn = newDyn();
+      if (S.dyn.kind === 'served' && S.runServed - S.dyn.base >= S.dyn.target) {
+        S.money += S.dyn.r; gainXp(30);
+        pops.push({ x: W / 2, y: 150, t: 0, text: 'Hedef tamam +₺' + fmt(S.dyn.r), c: '#ffd23f' });
+        S.dyn = null; S.dynN++;
+        persist();
+      }
+    }
+  }
+
+  function checkAch() {
+    for (var i = 0; i < ACH.length; i++) {
+      var a = ACH[i];
+      if (!S.ach[a.id] && a.f()) {
+        S.ach[a.id] = 1;
+        pops.push({ x: W / 2, y: 130, t: 0, text: 'Başarım: ' + a.n, c: '#ffd23f' });
+        persist();
+      }
+    }
+  }
+
+  function update(dt) {
+    var mult = Date.now() < speedUntil ? 2 : 1;
+    dt *= mult;
+    clock += dt;
+    if (paused) return;
+    S.dayT += dt;
+    var pas = passiveDaily() / DAY_LEN * dt;
+    S.money += pas; S.dayPassive += pas;
+    spawnAcc += dt * spawnRate();
+    while (spawnAcc >= 1) { spawnAcc -= 1; spawn(); }
+    updateCustomers(dt);
+    goalAcc += dt; achAcc += dt;
+    if (goalAcc > 0.4) { goalAcc = 0; checkGoal(); }
+    if (achAcc > 1) { achAcc = 0; checkAch(); }
+    if (S.dayT >= DAY_LEN) { S.dayT = DAY_LEN; endDay(); }
+  }
+
+  /* ---------- Çizim: kafe ---------- */
+  function rr(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+
+  function drawRoom() {
+    ctx.fillStyle = '#254540'; ctx.fillRect(0, 0, W, 52);
+    ctx.fillStyle = '#1d3834'; ctx.fillRect(0, 40, W, 12);
+    ctx.fillStyle = '#8b6b4d'; ctx.fillRect(0, 52, W, H - 52);
+    ctx.strokeStyle = '#7a5c40'; ctx.lineWidth = 1;
+    for (var y = 52, r = 0; y < H; y += 18, r++) {
+      ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
+      for (var x = (r % 2) * 30; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x + 0.5, y); ctx.lineTo(x + 0.5, y + 18); ctx.stroke(); }
+    }
+    ctx.fillStyle = '#5c3d26'; ctx.fillRect(236, 12, 110, 4);
+    ctx.fillStyle = '#f2efe9';
+    for (var i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(248 + i * 22, 9, 4, 0, Math.PI * 2); ctx.fill(); }
+    rr(ctx, 20, 8, 140, 26, 6); ctx.fillStyle = '#e58a3d'; ctx.fill();
+    var label = (S.name || 'KAFE').toLocaleUpperCase('tr');
+    var fs = 15;
+    ctx.textAlign = 'center'; ctx.fillStyle = '#2b1608';
+    do { ctx.font = '800 ' + fs + 'px "Bricolage Grotesque", system-ui, sans-serif'; fs--; } while (ctx.measureText(label).width > 124 && fs > 8);
+    ctx.fillText(label, 90, 27);
+    rr(ctx, DOOR.x - 28, H - 12, 56, 12, 4); ctx.fillStyle = '#3b2a1e'; ctx.fill();
+  }
+
+  function plant(x, y) {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(x, y + 2, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#9b5a3a'; rr(ctx, x - 8, y - 12, 16, 14, 3); ctx.fill();
+    ctx.fillStyle = '#4fae6a';
+    for (var i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(x + (i - 2) * 5, y - 18 - (i % 2) * 5, 5, 9, (i - 2) * 0.3, 0, Math.PI * 2); ctx.fill(); }
+  }
+  function drawDecor() {
+    if (S.dec >= 5) {
+      for (var i = 0; i < 3; i++) {
+        ctx.fillStyle = '#e8cfa6'; ctx.fillRect(170 + i * 30, 8, 22, 26);
+        ctx.fillStyle = ['#5fb7d9', '#e6b94a', '#b07ae0'][i]; ctx.fillRect(173 + i * 30, 11, 16, 20);
+      }
+    }
+    var pl = [[20, 128], [340, 128], [20, H - 24], [340, H - 24]];
+    for (var j = 0; j < 4; j++) if (S.dec > j) plant(pl[j][0], pl[j][1]);
+  }
+
+  var FOODCOL = ['#ff9ecd', '#e6b94a', '#c0572e', '#f4f1ea', '#7bd389', '#b388eb', '#ffb36b'];
+  function drawCounter() {
+    var i;
+    for (i = 0; i < 3; i++) {
+      var lx = LANES_X[i];
+      if (i >= S.bar) {
+        ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(lx - 8, 62, 10, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+        continue;
+      }
+      var busy = lanes[i].cur;
+      ctx.fillStyle = MACH_COL[Math.min(S.mach, 6)]; rr(ctx, lx + 12, 50, 20, 22, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(lx + 12, 62, 20, 3);
+      ctx.fillStyle = '#e58a3d'; ctx.beginPath(); ctx.arc(lx + 22, 56, 3, 0, Math.PI * 2); ctx.fill();
+      if (busy) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        for (var s = 0; s < 2; s++) {
+          var ph = (clock * 1.5 + s * 0.5) % 1;
+          ctx.globalAlpha = 1 - ph; ctx.beginPath(); ctx.moveTo(lx + 18 + s * 8, 48); ctx.quadraticCurveTo(lx + 14 + s * 8, 42 - ph * 8, lx + 18 + s * 8, 36 - ph * 10); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+      var bob = busy ? Math.sin(clock * 9) * 1.2 : 0;
+      ctx.fillStyle = '#f4f1ea'; rr(ctx, lx - 14, 56 + bob, 12, 16, 4); ctx.fill();
+      ctx.fillStyle = '#c0572e'; ctx.fillRect(lx - 14, 62 + bob, 12, 10);
+      ctx.fillStyle = '#e0b48f'; ctx.beginPath(); ctx.arc(lx - 8, 52 + bob, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2b1d14'; ctx.beginPath(); ctx.arc(lx - 8, 50 + bob, 6, Math.PI, 0); ctx.fill();
+    }
+    ctx.fillStyle = '#e8cfa6'; rr(ctx, 30, 70, 200, 22, 4); ctx.fill();
+    ctx.fillStyle = '#a86f3f'; ctx.fillRect(30, 84, 200, 14);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(30, 84, 200, 3);
+    for (i = 0; i < S.bar; i++) {
+      ctx.fillStyle = 'rgba(229,138,61,0.55)'; ctx.beginPath(); ctx.ellipse(LANES_X[i], QY - 12, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(190,230,255,0.22)'; rr(ctx, 250, 54, 76, 40, 5); ctx.fill();
+    ctx.strokeStyle = S.cas ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1.5;
+    if (!S.cas) ctx.setLineDash([4, 4]);
+    rr(ctx, 250, 54, 76, 40, 5); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#a86f3f'; ctx.fillRect(248, 90, 80, 8);
+    var fl = S.cas ? unlocked('food') : [];
+    for (i = 0; i < Math.min(fl.length * 2 || 0, 8); i++) {
+      ctx.fillStyle = FOODCOL[i % 7];
+      ctx.beginPath(); ctx.arc(260 + (i % 4) * 16, 66 + Math.floor(i / 4) * 14, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  function drawTable(t) {
+    var p = tablePos(t), tx = p[0], ty = p[1];
+    if (t >= S.tab) {
+      if (t >= ROOMS[S.room].tabs) return;
+      ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(tx, ty, 24, 12, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      return;
+    }
+    for (var s = 0; s < 2; s++) {
+      var sx = tx + (s ? 22 : -22);
+      ctx.fillStyle = '#3f7d73'; rr(ctx, sx - 7, ty - 12, 14, 16, 4); ctx.fill();
+    }
+  }
+  function drawTableTop(t) {
+    if (t >= S.tab) return;
+    var p = tablePos(t), tx = p[0], ty = p[1];
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(tx, ty + 8, 24, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c9a074'; ctx.fillRect(tx - 3, ty, 6, 8);
+    ctx.fillStyle = '#ddb98a'; ctx.beginPath(); ctx.ellipse(tx, ty, 24, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.stroke();
+    for (var s = 0; s < 2; s++) {
+      var seat = seats[t * 2 + s];
+      if (seat.who && seat.who.state === 'eat') {
+        ctx.fillStyle = '#f4f1ea'; ctx.beginPath(); ctx.arc(tx + (s ? 8 : -8), ty, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#6b3b1d'; ctx.beginPath(); ctx.arc(tx + (s ? 8 : -8), ty, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+
+  function star(c, x, y, r) {
+    c.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var a = -Math.PI / 2 + i * Math.PI / 5, r2 = i % 2 ? r * 0.45 : r;
+      c.lineTo(x + Math.cos(a) * r2, y + Math.sin(a) * r2);
+    }
+    c.closePath(); c.fillStyle = '#ffd23f'; c.fill();
+  }
+
+  function drawCustomer(c) {
+    var seated = c.state === 'eat';
+    var x = c.x, y = c.y;
+    ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(x, y + 1, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+    var walking = c.moving;
+    var bob = walking ? Math.sin(clock * 12 + c.ph) * 1.2 : 0;
+    if (!seated) {
+      var sw = walking ? Math.sin(clock * 12 + c.ph) * 2.5 : 0;
+      ctx.fillStyle = '#2b2b3a'; ctx.fillRect(x - 5 + sw, y - 7, 3.5, 7); ctx.fillRect(x + 1.5 - sw, y - 7, 3.5, 7);
+    }
+    var by = seated ? y - 15 : y - 19;
+    ctx.fillStyle = c.vip ? '#2b2b3a' : c.shirt; rr(ctx, x - 6.5, by + bob, 13, 13, 4); ctx.fill();
+    if (c.vip) { ctx.fillStyle = '#ffd23f'; ctx.fillRect(x - 1, by + 2 + bob, 2, 9); }
+    ctx.fillStyle = c.skin; ctx.beginPath(); ctx.arc(x, by - 5 + bob, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = c.hair; ctx.beginPath(); ctx.arc(x, by - 6.5 + bob, 5.6, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#2b1d14'; ctx.fillRect(x - 2.6, by - 5 + bob, 1.4, 1.4); ctx.fillRect(x + 1.2, by - 5 + bob, 1.4, 1.4);
+    if (c.cup && !seated) { ctx.fillStyle = '#f4f1ea'; rr(ctx, x + 6, by + 4 + bob, 4.5, 5.5, 1.5); ctx.fill(); }
+    if (c.vip) star(ctx, x, by - 17 + bob, 5);
+    if (c.state === 'queue' && !c.serving && c.wait > 12) {
+      ctx.fillStyle = '#ff7a66'; ctx.font = '800 11px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('!', x + 9, by - 6);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawRoom();
+    drawDecor();
+    drawCounter();
+    var items = [], t, i;
+    for (t = 0; t < 15; t++) {
+      drawTable(t);
+      items.push({ y: tablePos(t)[1], f: (function (tt) { return function () { drawTableTop(tt); }; })(t) });
+    }
+    for (i = 0; i < customers.length; i++) {
+      items.push({ y: customers[i].state === 'eat' ? customers[i].y - 3 : customers[i].y, f: (function (cc) { return function () { drawCustomer(cc); }; })(customers[i]) });
+    }
+    items.sort(function (a, b) { return a.y - b.y; });
+    for (i = 0; i < items.length; i++) items[i].f();
+    ctx.textAlign = 'center';
+    for (i = 0; i < pops.length; i++) {
+      var p = pops[i];
+      ctx.globalAlpha = Math.max(0, 1 - p.t / 1.2);
+      ctx.fillStyle = p.c; ctx.font = '800 13px "Bricolage Grotesque", system-ui, sans-serif';
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
+      ctx.strokeText(p.text, p.x, p.y - p.t * 22); ctx.fillText(p.text, p.x, p.y - p.t * 22);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /* ---------- Çizim: dünya (şehir) ---------- */
+  function slot(x, base, w, h) {
+    wctx.setLineDash([4, 4]); wctx.strokeStyle = 'rgba(255,255,255,0.3)'; wctx.lineWidth = 1.5;
+    wctx.strokeRect(x - w / 2, base - h, w, h); wctx.setLineDash([]);
+    wctx.fillStyle = 'rgba(255,255,255,0.35)'; wctx.font = '800 12px system-ui, sans-serif'; wctx.textAlign = 'center';
+    wctx.fillText('?', x, base - h / 2 + 4);
+  }
+  function box(x, base, w, h, col, roof) {
+    var L = x - w / 2;
+    wctx.fillStyle = 'rgba(0,0,0,0.18)'; wctx.beginPath(); wctx.ellipse(x, base + 1, w / 2 + 3, 3, 0, 0, Math.PI * 2); wctx.fill();
+    wctx.fillStyle = col; wctx.fillRect(L, base - h, w, h);
+    if (roof === 'gable') {
+      wctx.fillStyle = '#9b4a3a'; wctx.beginPath(); wctx.moveTo(L - 3, base - h); wctx.lineTo(x, base - h - 14); wctx.lineTo(L + w + 3, base - h); wctx.closePath(); wctx.fill();
+    } else {
+      wctx.fillStyle = 'rgba(0,0,0,0.25)'; wctx.fillRect(L - 1, base - h - 3, w + 2, 4);
+    }
+    wctx.fillStyle = 'rgba(255,240,170,0.85)';
+    var cols = Math.max(1, Math.floor(w / 12)), rowsN = Math.max(1, Math.floor((h - 8) / 14));
+    for (var r = 0; r < rowsN; r++) for (var c = 0; c < cols; c++) {
+      wctx.fillRect(L + 4 + c * ((w - 8) / cols) + 1, base - h + 5 + r * 14, Math.max(3, (w - 8) / cols - 4), 7);
+    }
+    wctx.fillStyle = 'rgba(40,25,15,0.7)'; wctx.fillRect(x - 3, base - 9, 6, 9);
+  }
+  function car(x, y, dir, col, len, hh) {
+    wctx.save(); wctx.translate(x, y); wctx.scale(dir, 1);
+    wctx.fillStyle = col; rr(wctx, -len / 2, -hh, len, hh, 3); wctx.fill();
+    wctx.fillStyle = 'rgba(190,230,255,0.85)'; rr(wctx, -len / 4, -hh - hh * 0.6, len / 2, hh * 0.65, 2); wctx.fill();
+    wctx.fillStyle = '#1a1a22';
+    wctx.beginPath(); wctx.arc(-len / 3, 0, hh * 0.36, 0, Math.PI * 2); wctx.arc(len / 3, 0, hh * 0.36, 0, Math.PI * 2); wctx.fill();
+    wctx.restore();
+  }
+  function roadX(speed, dir, off) {
+    var span = W + 80, v = ((clock * speed + off) % span);
+    return dir > 0 ? v - 40 : W + 40 - v;
+  }
+
+  function drawWorld() {
+    var g = wctx.createLinearGradient(0, 0, 0, 110);
+    g.addColorStop(0, '#8fcbe6'); g.addColorStop(1, '#dff1f6');
+    wctx.fillStyle = g; wctx.fillRect(0, 0, W, 110);
+    wctx.fillStyle = '#5f9a7a'; wctx.beginPath(); wctx.ellipse(70, 106, 120, 26, 0, Math.PI, 0); wctx.fill();
+    wctx.fillStyle = '#4f8a6a'; wctx.beginPath(); wctx.ellipse(250, 106, 150, 20, 0, Math.PI, 0); wctx.fill();
+    wctx.fillStyle = '#4a8d5c'; wctx.fillRect(0, 106, W, WH - 106);
+    wctx.fillStyle = '#3a3d48'; wctx.fillRect(0, 112, W, 28);
+    wctx.fillStyle = 'rgba(255,255,255,0.55)';
+    for (var d = 0; d < W; d += 28) wctx.fillRect(d, 125, 14, 2);
+    wctx.fillStyle = '#b9b4a5'; wctx.fillRect(0, 108, W, 4); wctx.fillRect(0, 140, W, 4);
+    // deniz (marina)
+    var wg = wctx.createLinearGradient(0, 150, 0, WH);
+    wg.addColorStop(0, '#4ea4c9'); wg.addColorStop(1, '#2c79a5');
+    wctx.fillStyle = wg; wctx.fillRect(262, 150, W - 262, WH - 150);
+    wctx.strokeStyle = 'rgba(255,255,255,0.35)'; wctx.lineWidth = 1;
+    for (var i = 0; i < 4; i++) { wctx.beginPath(); wctx.moveTo(270 + i * 22, 170 + (i % 2) * 20); wctx.quadraticCurveTo(278 + i * 22, 166 + (i % 2) * 20, 286 + i * 22, 170 + (i % 2) * 20); wctx.stroke(); }
+    wctx.fillStyle = '#8a7350'; wctx.fillRect(262, 150, 4, 100);
+
+    var has = S.assets;
+    function ph(id, x, base, w, h, fn) { if (has[id]) fn(); else slot(x, base, w, h); }
+    ph('studio', 34, 106, 28, 26, function () { box(34, 106, 28, 26, '#c9a27a', 'flat'); });
+    ph('flat', 88, 106, 34, 42, function () { box(88, 106, 34, 42, '#9fb3c8', 'flat'); });
+    ph('house', 148, 106, 42, 32, function () { box(148, 106, 42, 32, '#d98f6a', 'gable'); });
+    ph('villa', 222, 106, 58, 40, function () {
+      box(222, 106, 58, 38, '#ece6d6', 'flat');
+      wctx.fillStyle = 'rgba(120,190,220,0.8)'; wctx.fillRect(200, 80, 44, 14);
+      wctx.fillStyle = '#4fae6a'; wctx.beginPath(); wctx.arc(256, 100, 6, 0, Math.PI * 2); wctx.fill();
+    });
+    ph('mansion', 312, 106, 72, 58, function () {
+      box(312, 106, 72, 52, '#d6c7a8', 'gable');
+      wctx.fillStyle = '#efe6cf'; for (var q = 0; q < 4; q++) wctx.fillRect(286 + q * 16, 62, 4, 44);
+    });
+    ph('land', 34, 214, 40, 22, function () {
+      wctx.fillStyle = '#c7b183'; wctx.fillRect(14, 196, 40, 18);
+      wctx.fillStyle = '#6b4a2b'; wctx.fillRect(18, 178, 3, 20); wctx.fillStyle = '#f4f1ea'; wctx.fillRect(10, 172, 28, 10);
+      wctx.fillStyle = '#2b1608'; wctx.font = '800 7px system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.fillText('SATILIK', 24, 180);
+    });
+    ph('office', 96, 214, 34, 84, function () { box(96, 214, 34, 84, '#6b8fb3', 'flat'); });
+    ph('mall', 188, 214, 96, 46, function () {
+      box(188, 214, 96, 46, '#b69fd0', 'flat');
+      wctx.fillStyle = '#fff'; wctx.font = '800 9px system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.fillText('AVM', 188, 176);
+    });
+    ph('yacht', 310, 215, 70, 40, function () {
+      var by = Math.sin(clock * 1.5) * 1.5;
+      wctx.fillStyle = '#f4f1ea'; wctx.beginPath(); wctx.moveTo(278, 200 + by); wctx.lineTo(346, 200 + by); wctx.lineTo(334, 214 + by); wctx.lineTo(288, 214 + by); wctx.closePath(); wctx.fill();
+      wctx.fillStyle = '#e58a3d'; wctx.fillRect(280, 202 + by, 64, 2);
+      wctx.fillStyle = '#dff1f6'; wctx.fillRect(298, 188 + by, 28, 12);
+      wctx.fillStyle = '#5a8bb0'; wctx.fillRect(304, 191 + by, 16, 5);
+    });
+
+    var cars = [
+      { id: 'scooter', col: '#e5634d', len: 14, hh: 7, sp: 52, dir: 1, y: 134, off: 20 },
+      { id: 'hatch', col: '#4cc9f0', len: 24, hh: 9, sp: 38, dir: -1, y: 121, off: 90 },
+      { id: 'sedan', col: '#6fd6a2', len: 28, hh: 9, sp: 46, dir: 1, y: 135, off: 160 },
+      { id: 'sport', col: '#ffd23f', len: 28, hh: 8, sp: 90, dir: -1, y: 122, off: 40 }
+    ];
+    cars.forEach(function (c) { if (has[c.id]) car(roadX(c.sp, c.dir, c.off), c.y, c.dir, c.col, c.len, c.hh); });
+    if (!has.scooter && !has.hatch && !has.sedan && !has.sport) {
+      wctx.fillStyle = 'rgba(255,255,255,0.35)'; wctx.font = '700 10px system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.fillText('Araç al, yollar canlansın', 180, 129);
+    }
+    if (has.heli) {
+      var hx = 150 + Math.sin(clock * 0.6) * 80, hy = 44 + Math.sin(clock * 1.7) * 3;
+      wctx.fillStyle = '#d4443a'; wctx.beginPath(); wctx.ellipse(hx, hy, 14, 7, 0, 0, Math.PI * 2); wctx.fill();
+      wctx.fillRect(hx - 24, hy - 2, 12, 3);
+      wctx.fillStyle = 'rgba(190,230,255,0.9)'; wctx.beginPath(); wctx.ellipse(hx + 5, hy - 1, 5, 4, 0, 0, Math.PI * 2); wctx.fill();
+      wctx.strokeStyle = 'rgba(30,30,40,0.7)'; wctx.lineWidth = 2;
+      var rw = Math.abs(Math.cos(clock * 30)) * 22 + 6;
+      wctx.beginPath(); wctx.moveTo(hx - rw, hy - 8); wctx.lineTo(hx + rw, hy - 8); wctx.stroke();
+    } else {
+      wctx.setLineDash([4, 4]); wctx.strokeStyle = 'rgba(255,255,255,0.45)'; wctx.lineWidth = 1.5;
+      wctx.beginPath(); wctx.ellipse(150, 44, 14, 7, 0, 0, Math.PI * 2); wctx.stroke(); wctx.setLineDash([]);
+    }
+    // kafe binası
+    box(250, 214, 22, 30, '#e58a3d', 'flat');
+    wctx.fillStyle = '#2b1608'; wctx.font = '800 6px system-ui, sans-serif'; wctx.textAlign = 'center'; wctx.fillText('KAFE', 250, 192);
+    // üst yazı
+    wctx.fillStyle = 'rgba(8,14,13,0.55)'; rr(wctx, 8, 8, 112, 20, 6); wctx.fill();
+    wctx.fillStyle = '#fff'; wctx.font = '800 11px "Bricolage Grotesque", system-ui, sans-serif'; wctx.textAlign = 'left';
+    wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
+  }
+
+  window.addEventListener('resize', layoutCanvases);
+
+  var prev = performance.now(), uiAcc = 0, saveAcc = 0;
+  function frame(now) {
+    var dt = Math.min(0.05, (now - prev) / 1000);
+    prev = now;
+    update(dt);
+    if (tab === 'world') drawWorld(); else draw();
+    uiAcc += dt; saveAcc += dt;
+    if (uiAcc > 0.15) { uiAcc = 0; refresh(); }
+    if (saveAcc > 4) { saveAcc = 0; persist(); }
+    requestAnimationFrame(frame);
+  }
+
+  layoutCanvases();
+  offlineCheck();
+  refresh();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
