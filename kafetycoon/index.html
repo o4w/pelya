@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Köşe Kafe Tycoon</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@500;700&display=swap">
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 <style>
   /* Kafe tycoon: üstte sahne (kafe veya şehir), altta sekmeli yönetim paneli. */
   :root {
@@ -50,6 +51,9 @@
   .goal { color: var(--good); font-size: 12px; font-weight: 700; margin-top: 6px; }
   .scene { padding-block: 0; display: flex; justify-content: center; }
   canvas { display: block; border-radius: 14px; background: #1d3834; }
+  .stagebox { position: relative; line-height: 0; }
+  .v3d { position: absolute; top: 8px; right: 8px; line-height: 1; padding: 6px 10px; font-size: 12px; background: rgba(8,14,13,0.65); }
+  .v3d.on { background: var(--copper); color: #1d1000; border-color: transparent; }
   .tabs { display: flex; gap: 6px; padding-block: 10px 8px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
   .tabs::-webkit-scrollbar { display: none; }
   .tabs button { flex: 0 0 auto; font-size: 13px; padding: 9px 13px; position: relative; }
@@ -135,7 +139,7 @@
   </div>
   <div class="goal" id="goal"></div>
 </div>
-<div class="scene wrap"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas></div>
+<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button></div></div>
 <div class="tabs wrap" id="tabs">
   <button data-tab="inv" class="on">Yatırım</button>
   <button data-tab="menu">Menü</button>
@@ -624,7 +628,7 @@
   function refresh() { refreshHud(); refreshPanel(); }
 
   function layoutCanvases() {
-    var box = $('scenebox') || cv.parentNode;
+    var box = document.querySelector('.scene');
     var availW = Math.min(box.clientWidth - 32, 448);
     var maxH = window.innerHeight * 0.36;
     var dpr = window.devicePixelRatio || 1;
@@ -634,6 +638,9 @@
       a[0].width = Math.round(cw * dpr); a[0].height = Math.round(cw * dpr * a[3] / a[2]);
       a[1].setTransform(a[0].width / a[2], 0, 0, a[0].width / a[2], 0, 0);
     });
+    var ah = tab === 'world' ? WH : H, cw3 = Math.max(120, Math.min(availW, maxH * W / ah)), d3 = Math.min(dpr, 2);
+    cv3.style.width = cw3 + 'px'; cv3.style.height = (cw3 * ah / W) + 'px';
+    if (v3) v3.resize(Math.round(cw3 * d3), Math.round(cw3 * ah / W * d3));
   }
 
   function setTab(t) {
@@ -641,7 +648,7 @@
     var all = $('tabs').querySelectorAll('button');
     for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i].getAttribute('data-tab') === t);
     TABS.forEach(function (x) { $('p-' + x).hidden = x !== t; });
-    cv.hidden = t === 'world'; wv.hidden = t !== 'world';
+    applyViews();
     layoutCanvases();
     refresh();
   }
@@ -1231,6 +1238,41 @@
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
   }
 
+  /* ---------- 3B görünüm (Three.js, depodaki sabit sürüm; yalnızca isteyince yüklenir) ---------- */
+  var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false;
+  function applyViews() {
+    cv.hidden = v3on || tab === 'world';
+    wv.hidden = v3on || tab !== 'world';
+    cv3.hidden = !v3on;
+    $('v3d').classList.toggle('on', v3on);
+    $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
+  }
+  function v3msg(t) {
+    var b = $('v3d'); b.textContent = t;
+    setTimeout(function () { b.textContent = '3B'; }, 3000);
+  }
+  function stop3d() {
+    v3on = false;
+    if (v3) { try { v3.dispose(); } catch (e) {} v3 = null; }
+    applyViews(); layoutCanvases();
+  }
+  $('v3d').addEventListener('click', function () {
+    if (v3on) { stop3d(); return; }
+    if (v3busy) return;
+    if (location.protocol === 'file:') { v3msg('http(s) gerekli'); return; }
+    v3busy = true;
+    import('./three-view.js').then(function (m) {
+      var bridge = {
+        S: S, customers: customers, lanes: lanes, ROOMS: ROOMS, LANES_X: LANES_X, tablePos: tablePos,
+        getH: function () { return H; }, clock: function () { return clock; }
+      };
+      v3 = m.createView3D(cv3, bridge);
+      v3on = true; v3busy = false;
+      applyViews(); layoutCanvases();
+    }).catch(function () { v3busy = false; v3 = null; v3on = false; applyViews(); v3msg('3B açılamadı'); });
+  });
+  cv3.addEventListener('webglcontextlost', function (e) { e.preventDefault(); stop3d(); v3msg('3B durdu'); });
+
   /* ---------- Bulut: Supabase (giriş, kayıt, liderlik tablosu) ---------- */
   var SUPABASE_URL = 'https://jsweeupxworydfpihlgd.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_nHw_RRfLa839N-Vs3c0ftQ_av9-Exzh';   // herkese açık anahtar, RLS ile korunur
@@ -1414,7 +1456,8 @@
     var dt = Math.min(0.05, (now - prev) / 1000);
     prev = now;
     update(dt);
-    if (tab === 'world') drawWorld(); else draw();
+    if (v3on && v3) { try { v3.update(dt, tab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
+    else if (tab === 'world') drawWorld(); else draw();
     uiAcc += dt; saveAcc += dt;
     if (uiAcc > 0.15) { uiAcc = 0; refresh(); }
     if (saveAcc > 4) { saveAcc = 0; persist(); }

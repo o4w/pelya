@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Köşe Kafe 3B Demo</title>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
+<style>
+  /* Köşe Kafe'nin 3B görünümünü serbestçe gezebileceğin ayrı demo sayfası. */
+  :root { --bg:#0f1a19; --fg:#f2efe9; --muted:#93aaa6; --copper:#e58a3d; color-scheme: dark; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .bar {
+    position: fixed; left: 0; right: 0; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(rgba(8,14,13,0.85), rgba(8,14,13,0));
+  }
+  .bar h1 { font-size: 16px; margin: 0 8px 0 0; }
+  button { font: inherit; font-weight: 700; font-size: 13px; color: var(--fg); cursor: pointer; background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; }
+  button.on { background: var(--copper); color: #1d1000; border-color: transparent; }
+  button:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .hint { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; text-align: center; color: var(--muted); font-size: 12px;
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(8,14,13,0), rgba(8,14,13,0.85)); }
+  .msg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; z-index: 3; }
+  .msg.show { display: flex; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="bar">
+  <h1>Köşe Kafe 3B</h1>
+  <button id="mCafe" class="on">Kafe</button>
+  <button id="mCity">Şehir</button>
+  <button id="room">Mekan: Geniş salon</button>
+</div>
+<div class="hint">Döndürmek için sürükle, yakınlaştırmak için kaydır veya çimdikle.</div>
+<div class="msg" id="msg"></div>
+
+<script type="module">
+const msg = document.getElementById('msg');
+function fail(t) { msg.textContent = t; msg.classList.add('show'); }
+if (location.protocol === 'file:') {
+  fail('Bu sayfa dosya olarak açılamaz. Klasörde "python3 -m http.server" çalıştırıp http://localhost:8000/3d-demo.html adresini aç.');
+} else {
+  try {
+    const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+    const { createView3D } = await import('./three-view.js');
+    start(OrbitControls, createView3D);
+  } catch (e) {
+    fail('3B yüklenemedi: ' + (e && e.message ? e.message : e));
+  }
+}
+
+function start(OrbitControls, createView3D) {
+  const canvas = document.getElementById('c');
+  const allAssets = {};
+  ['studio', 'flat', 'house', 'villa', 'mansion', 'scooter', 'hatch', 'sedan', 'sport', 'heli', 'land', 'office', 'yacht', 'mall'].forEach((k) => { allAssets[k] = 1; });
+  const ROOMS = [{ n: 'Köşe kafe', tabs: 6 }, { n: 'Geniş salon', tabs: 9 }, { n: 'Teras katı', tabs: 12 }, { n: 'Büyük kafe', tabs: 15 }];
+  const S = { tab: 6, bar: 3, mach: 4, cas: 3, dec: 5, room: 1, name: 'Demo Kafe', assets: allAssets };
+  const LANES_X = [70, 130, 190];
+  const COLX = [80, 180, 280];
+  const tablePos = (i) => [COLX[i % 3], 214 + 64 * Math.floor(i / 3)];
+  const getH = () => 320 + 64 * S.room;
+  const lanes = [{ cur: null }, { cur: null }, { cur: null }];
+  const customers = [];
+  let clock = 0;
+
+  const SHIRTS = ['#e5634d', '#4cc9f0', '#ffd23f', '#7bd389', '#b388eb', '#ff9ecd', '#f4f1ea'];
+  const SKINS = ['#f1c9a5', '#d9a273', '#a8744f', '#7a4a2f'];
+  const HAIRS = ['#2b1d14', '#5a3a22', '#c9a24d', '#1a1a1a', '#8a3b2a'];
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const seats = [];
+  const buildSeats = () => { seats.length = 0; for (let i = 0; i < S.tab * 2; i++) { const p = tablePos(Math.floor(i / 2)); seats.push({ x: p[0] + (i % 2 ? 22 : -22), y: p[1] - 2, who: null }); } };
+  buildSeats();
+
+  // Basit bir müşteri akışı: kuyruk, servis, oturma, çıkış. (Gerçek oyunun mantığı burada yok, sadece görsel demo.)
+  let spawnT = 0;
+  function spawn() {
+    const lane = Math.floor(Math.random() * S.bar);
+    const q = customers.filter((c) => c.state === 'queue' && c.lane === lane).length;
+    customers.push({ x: 180, y: getH() + 10, tx: LANES_X[lane], ty: 116 + q * 16, state: 'queue', lane, wait: 0, skin: pick(SKINS), shirt: pick(SHIRTS), hair: pick(HAIRS),
+      vip: Math.random() < 0.12, ph: Math.random() * 6, cup: false, serving: false, moving: true, t: 0, seat: null });
+  }
+  function sim(dt) {
+    spawnT += dt;
+    if (spawnT > 1.6 && customers.length < 16) { spawnT = 0; spawn(); }
+    for (let i = 0; i < 3; i++) lanes[i].cur = null;
+    for (let i = customers.length - 1; i >= 0; i--) {
+      const c = customers[i];
+      const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
+      c.moving = d > 1.5;
+      if (c.moving) { const s = Math.min(d, 70 * dt); c.x += dx / d * s; c.y += dy / d * s; }
+      c.t += dt;
+      if (c.state === 'queue') {
+        const q = customers.filter((o) => o.state === 'queue' && o.lane === c.lane);
+        const idx = q.indexOf(c);
+        c.ty = 116 + idx * 16;
+        if (idx === 0 && !c.moving) {
+          lanes[c.lane].cur = c; c.serving = true; c.wait += dt;
+          if (c.wait > 2.2) {
+            c.serving = false; c.cup = true;
+            const seat = seats.find((s) => !s.who);
+            if (seat) { seat.who = c; c.seat = seat; c.state = 'toSeat'; c.tx = seat.x; c.ty = seat.y; }
+            else { c.state = 'leave'; c.tx = 180; c.ty = getH() + 12; }
+          }
+        }
+      } else if (c.state === 'toSeat' && !c.moving) { c.state = 'eat'; c.t = 0; }
+      else if (c.state === 'eat' && c.t > 6) { if (c.seat) c.seat.who = null; c.cup = false; c.state = 'leave'; c.tx = 180; c.ty = getH() + 12; }
+      else if (c.state === 'leave' && !c.moving) customers.splice(i, 1);
+    }
+  }
+
+  const bridge = { S, customers, lanes, ROOMS, LANES_X, tablePos, getH, clock: () => clock };
+  let view;
+  try { view = createView3D(canvas, bridge, { autoCamera: true }); }
+  catch (e) { fail('Bu cihazda WebGL kullanılamıyor.'); return; }
+  let mode = 'cafe';
+
+  const resize = () => view.resize(window.innerWidth, window.innerHeight);
+  resize();
+  view.update(0.016, mode);                // kamerayı sahneye sığdırır
+  view.setAutoCamera(false);               // bundan sonra kamerayı kullanıcı yönetir
+  const controls = new OrbitControls(view.camera, canvas);
+  controls.enableDamping = true;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.minDistance = 4;
+  controls.maxDistance = 60;
+  controls.target.set(0, 0.5, mode === 'cafe' ? 0.4 : 0.9);
+  controls.update();
+
+  function refit() {
+    view.setAutoCamera(true);
+    view.update(0.016, mode);
+    view.setAutoCamera(false);
+    controls.target.set(0, 0.5, mode === 'cafe' ? 0.4 : 0.9);
+    controls.update();
+  }
+  window.addEventListener('resize', () => { resize(); refit(); });
+
+  const bCafe = document.getElementById('mCafe'), bCity = document.getElementById('mCity'), bRoom = document.getElementById('room');
+  function setMode(m) {
+    mode = m;
+    bCafe.classList.toggle('on', m === 'cafe');
+    bCity.classList.toggle('on', m === 'city');
+    bRoom.style.display = m === 'cafe' ? '' : 'none';
+    view.setMode(m);
+    refit();
+  }
+  bCafe.addEventListener('click', () => setMode('cafe'));
+  bCity.addEventListener('click', () => setMode('city'));
+  bRoom.addEventListener('click', () => {
+    S.room = (S.room + 1) % ROOMS.length;
+    S.tab = ROOMS[S.room].tabs;
+    buildSeats();
+    customers.length = 0;
+    bRoom.textContent = 'Mekan: ' + ROOMS[S.room].n;
+    refit();
+  });
+  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); fail('3B bağlamı kaybedildi. Sayfayı yenile.'); });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now; clock += dt;
+    if (mode === 'cafe') sim(dt);
+    controls.update();
+    view.update(dt, mode);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

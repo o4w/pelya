@@ -101,6 +101,18 @@ Oyunu kapatınca kafe ve yatırımlar (en çok 3 saat, %30 hızla) çalışmaya 
 localStorage.removeItem('tycoon-v3'); location.reload();
 ```
 
+## 3B görünüm (Three.js)
+
+Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer, yine basınca 2B'ye döner. Kafe sekmelerinde 3B kafe, **Dünya** sekmesinde 3B şehir görünür.
+
+- 3B görünüm yalnızca düğmeye basınca yüklenir. Kapatınca kaynaklar temizlenir.
+- Müşteriler, baristalar, masalar, araçlar, helikopter ve yat oyun durumuyla birlikte hareket eder. 3B kod oyunu değiştirmez, yalnızca okur.
+- **Ayrı demo:** `3d-demo.html` sayfasında sahneyi serbestçe döndürüp yakınlaştırabilirsin (mekan büyüklüğünü değiştirme ve şehir görünümü dahil).
+- ES modülleri `file://` ile çalışmaz. 3B için oyunu http(s) üzerinden aç (yerelde `python3 -m http.server`). Dosya olarak açılırsa düğme "http(s) gerekli" der, oyun 2B çalışır.
+- WebGL desteklenmeyen cihazda düğme "3B açılamadı" der ve oyun 2B devam eder.
+
+**Güvenlik:** Three.js CDN'den değil, depodaki sabit sürümden (`vendor/three`, 0.170.0) yüklenir. Paketin bütünlüğü npm kaydıyla doğrulanmış, dosya özetleri `vendor/VENDOR.md` içinde. Dışarıdan model, doku veya betik çekilmez, her şey kodla çizilir. Projeye özel kurallar `.claude/skills/threejs/SKILL.md` içindedir.
+
 ## Bulut kaydı ve liderlik tablosu (Supabase)
 
 Oyun, Supabase ile isteğe bağlı bulut kaydı ve liderlik tablosu sunar. Giriş yapılmazsa oyun eskisi gibi yerel kayıtla çalışır. **Sıralama** sekmesinden giriş yapılır.
@@ -146,9 +158,16 @@ Güvenlik kuralları gerçek veritabanında denendi: başkasının satırı yaz�
 ```
 kafetycoon/
 ├── index.html                 # Oyunun tamamı (HTML + CSS + JavaScript)
+├── three-view.js              # 3B kafe ve şehir görünümü (Three.js modülü)
+├── 3d-demo.html               # Serbestçe gezilebilen ayrı 3B demo
 ├── README.md                  # Bu dosya
+├── vendor/
+│   ├── VENDOR.md              # Three.js sürümü, bütünlük ve özet değerleri
+│   └── three/                 # Three.js 0.170.0 (MIT), hiç değiştirilmeden
 └── supabase/
     └── migrations/            # Veritabanı şeması (tablolar, RLS, tetikleyiciler)
+
+../.claude/skills/threejs/     # Projeye özel Three.js kuralları (skill)
 ```
 
 ## Kodda ayar yapmak için
