@@ -67,10 +67,25 @@ export function createView3D(canvas, bridge, options = {}) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(36, 1.1, 0.1, 200);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x6b5a48, 1.0));
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x6b5a48, 1.0);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffffff, 1.3);
   sun.position.set(-6, 12, 8);
   scene.add(sun);
+  const bgColor = new THREE.Color();
+  scene.background = bgColor;
+
+  // Yağmur (yağmurlu gün olayında şehir görünümünde)
+  const rain = (() => {
+    const n = 160, pos = new Float32Array(n * 6), seed = [];
+    for (let i = 0; i < n; i++) seed.push([(Math.random() - 0.5) * 22, Math.random() * 8, (Math.random() - 0.5) * 14]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.5 }));
+    ls.frustumCulled = false; ls.visible = false;
+    scene.add(ls);
+    return { ls, pos, seed, n };
+  })();
 
   let mode = 'cafe';
   let autoCamera = options.autoCamera !== false;
@@ -424,7 +439,25 @@ export function createView3D(canvas, bridge, options = {}) {
     if (cafeGroup) cafeGroup.visible = mode === 'cafe';
     if (cityGroup) cityGroup.visible = mode === 'city';
     customerLayer.visible = mode === 'cafe';
-    scene.background = new THREE.Color(mode === 'cafe' ? '#14201f' : '#a9d7ea');
+    // gün içi ışık (sabah sıcak, akşam karanlık) ve olay etkisi
+    {
+      const Sd = bridge.S, dl = bridge.dayLen || 90, t = Math.min(Sd.dayT || 0, dl) / dl;
+      let k = 1;
+      if (t < 0.12) k = 0.8 + 0.2 * (t / 0.12); else if (t > 0.68) k = 1 - Math.min(0.5, (t - 0.68) / 0.32 * 0.5);
+      if (Sd.ev === 1) k *= 0.85;
+      hemi.intensity = 1.0 * k; sun.intensity = 1.3 * k;
+      bgColor.set(mode === 'cafe' ? '#14201f' : '#a9d7ea').multiplyScalar(0.4 + 0.6 * k);
+      const raining = mode === 'city' && Sd.ev === 1;
+      rain.ls.visible = raining;
+      if (raining) {
+        for (let i = 0; i < rain.n; i++) {
+          const s = rain.seed[i], y = (((s[1] - clock * 9) % 8) + 8) % 8, o = i * 6;
+          rain.pos[o] = s[0]; rain.pos[o + 1] = y; rain.pos[o + 2] = s[2];
+          rain.pos[o + 3] = s[0] - 0.1; rain.pos[o + 4] = y - 0.45; rain.pos[o + 5] = s[2];
+        }
+        rain.ls.geometry.attributes.position.needsUpdate = true;
+      }
+    }
 
     if (mode === 'cafe') {
       updateCustomers(dt, clock);

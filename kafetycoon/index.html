@@ -110,6 +110,13 @@
   .lbrow .nm small { display: block; color: var(--muted); font-size: 11px; font-weight: 700; }
   .lbrow .vl { color: var(--copper); font-variant-numeric: tabular-nums; }
   .lbrow.me { background: rgba(229,138,61,0.12); border-radius: 8px; padding-inline: 6px; }
+  .grip { display: block; width: 100%; background: none; border: 0; border-radius: 0; padding: 6px 0 2px; cursor: pointer; }
+  .grip span { display: block; width: 44px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.25); margin: 0 auto; }
+  .nav { display: flex; background: #0c1514; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); flex-shrink: 0; }
+  .nav button { flex: 1; min-width: 0; background: none; border: 0; border-radius: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 2px 7px; font-size: 11px; position: relative; }
+  .nav button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav button.on { color: var(--copper); }
+  .nav button i { position: absolute; top: 5px; right: calc(50% - 20px); width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
   .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(4,8,8,0.62);
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .modal .card { background: var(--panel); border-radius: 20px; padding: 24px; width: min(340px, 100%); text-align: center; box-sizing: border-box; }
@@ -134,26 +141,25 @@
   </div>
   <div class="row2">
     <span>İtibar <b id="rep"></b></span>
-    <span>Servis <b id="served"></b></span>
     <span class="lvl">Sv. <b id="lvl"></b><span class="xpbar"><i id="xpbar"></i></span></span>
   </div>
-  <div class="goal" id="goal"></div>
 </div>
 <div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button></div></div>
-<div class="tabs wrap" id="tabs">
-  <button data-tab="inv" class="on">Yatırım</button>
-  <button data-tab="menu">Menü</button>
-  <button data-tab="price">Fiyat</button>
-  <button data-tab="world">Dünya</button>
-  <button data-tab="ach">Başarım<i id="achdot" hidden></i></button>
-  <button data-tab="skill">Yetenek<i id="skdot" hidden></i></button>
-  <button data-tab="rank">Sıralama</button>
-  <button data-tab="cafe">Kafe</button>
-</div>
+<button class="grip" id="grip" aria-label="Paneli büyüt veya küçült" aria-expanded="false"><span></span></button>
+<div class="tabs wrap" id="tabs" hidden></div>
 <div class="shop"><div class="wrap">
-  <div id="p-inv">
-    <div id="list"></div>
+  <div id="p-home">
+    <div class="box">
+      <h4>Bugün<small id="hevent"></small></h4>
+      <div class="kv"><span>Kafe geliri</span><span id="hgelir"></span></div>
+      <div class="kv"><span>Müşteri / kaçan</span><span id="hmus"></span></div>
+      <div class="kv"><span>Toplam servis</span><span id="served"></span></div>
+      <div class="goal" id="goal"></div>
+    </div>
     <div class="item"><div class="info"><b>Zaman hızı</b><span>30 sn boyunca gün 2 kat hızlı akar.</span></div><button class="buy" id="speed">Reklam</button></div>
+  </div>
+  <div id="p-inv" hidden>
+    <div id="list"></div>
   </div>
   <div id="p-menu" hidden>
     <div class="box"><h4>Menü<small id="menucount"></small></h4><p>Yeni ürünler müşteri çeşitliliğini ve sepet tutarını artırır. Yiyecekler için pasta vitrini gerekir.</p></div>
@@ -224,8 +230,23 @@
       <div style="display:flex;margin-top:10px"><button id="cfbtn" style="flex:1;background:var(--copper);color:#1d1000;border-color:transparent">Franchise aç</button></div>
     </div>
   </div>
+  <div id="p-settings" hidden>
+    <div class="box">
+      <h4>Ses ve his</h4>
+      <label class="chk"><input type="checkbox" data-set="sound"> Ses efektleri</label>
+      <label class="chk"><input type="checkbox" data-set="music"> Hafif müzik</label>
+      <label class="chk"><input type="checkbox" data-set="haptics"> Titreşim (telefonda)</label>
+    </div>
+  </div>
   <p class="note">Reklam butonları prototipte simüle edilir.</p>
 </div></div>
+<nav class="nav" id="nav" aria-label="Ana gezinme">
+  <button data-main="home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2"/><path d="M8 3v2M12 3v2"/></svg>Kafe<i hidden></i></button>
+  <button data-main="grow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Büyüt<i hidden></i></button>
+  <button data-main="world"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Dünya<i hidden></i></button>
+  <button data-main="rew"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 13h18"/><path d="M12 8C9 8 7 7 7 5.5S9.5 3 12 8c2.5-5 5-3.5 5-2.5S15 8 12 8z"/></svg>Ödüller<i hidden></i></button>
+  <button data-main="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ben<i hidden></i></button>
+</nav>
 <div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -301,11 +322,13 @@
   var S = { money: 50, day: 1, dayT: 0, rep: 3, served: 0, lost: 0, mach: 0, bar: 1, tab: 1, cas: 0, dec: 0, room: 0,
             menu: { espresso: 1 }, pmi: {}, assets: {}, ach: {}, achc: {}, vipServed: 0, daysTotal: 0, dayPassive: 0,
             goalI: 0, dayEarn: 0, dayServed: 0, dayLost: 0, last: Date.now(),
-            name: 'Köşe Kafe', level: 1, xp: 0, pts: 0, perks: {}, stars: 0, branch: 0, runServed: 0, life: 0, ev: 0, dyn: null, dynN: 0 };
+            name: 'Köşe Kafe', level: 1, xp: 0, pts: 0, perks: {}, stars: 0, branch: 0, runServed: 0, life: 0, ev: 0, dyn: null, dynN: 0, settings: {} };
   try { var raw = localStorage.getItem('tycoon-v3'); if (raw) { var o = JSON.parse(raw); for (var k in o) S[k] = o[k]; } } catch (e) {}
   PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
   PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
   S.menu.espresso = 1;
+  var SET_DEFAULTS = { sound: true, music: false, haptics: true };
+  Object.keys(SET_DEFAULTS).forEach(function (k) { if (typeof S.settings[k] !== 'boolean') S.settings[k] = SET_DEFAULTS[k]; });
   var blockPersist = false;
   function persist() { if (blockPersist) return; S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
 
@@ -453,8 +476,17 @@
   ];
 
   /* ---------- Arayüz ---------- */
-  var TABS = ['inv', 'menu', 'price', 'world', 'ach', 'skill', 'rank', 'cafe'];
-  var tab = 'inv';
+  var NAV = [
+    { id: 'home', subs: [['home', 'Bugün']] },
+    { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat']] },
+    { id: 'world', subs: [['world', 'Varlıklar']] },
+    { id: 'rew', subs: [['ach', 'Başarım']] },
+    { id: 'me', subs: [['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
+  ];
+  var TABS = [];
+  NAV.forEach(function (n) { n.subs.forEach(function (s) { TABS.push(s[0]); }); });
+  var tab = 'home', mainTab = 'home', expanded = false;
+  var lastSub = { home: 'home', grow: 'inv', world: 'world', rew: 'ach', me: 'skill' };
   var listEl = $('list'), speedBtn = $('speed'), modal = $('modal'), mcard = $('mcard');
 
   var rows = [], menuRows = [], assetRows = [], achRows = [], priceSig = '';
@@ -505,7 +537,6 @@
   function claimable() { var n = 0; for (var i = 0; i < ACH.length; i++) if (S.ach[ACH[i].id] && !S.achc[ACH[i].id]) n++; return n; }
 
   function refreshHud() {
-    $('money').textContent = fmt(S.money);
     $('cname-hud').textContent = S.name + ' · ' + CITIES[S.branch % CITIES.length] + (S.stars ? ' · ' + (S.branch + 1) + '. şube' : '');
     $('day').innerHTML = 'Gün ' + S.day + ' · <em>' + EVENTS[S.ev].n + '</em>';
     $('daybar').style.width = Math.min(100, S.dayT / DAY_LEN * 100) + '%';
@@ -515,8 +546,7 @@
     $('xpbar').style.width = Math.min(100, S.xp / need(S.level) * 100) + '%';
     var g = currentGoal();
     $('goal').textContent = 'Hedef: ' + g.text + ' (+₺' + fmt(g.r) + ')';
-    $('skdot').hidden = S.pts <= 0;
-    $('achdot').hidden = claimable() <= 0;
+    updateDots();
     var left = Math.max(0, speedUntil - Date.now());
     speedBtn.disabled = left > 0;
     speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : 'Reklam';
@@ -538,7 +568,14 @@
 
   function refreshPanel() {
     var i;
-    if (tab === 'inv') {
+    if (tab === 'home') {
+      $('hgelir').textContent = '₺' + fmt(S.dayEarn + S.dayPassive);
+      $('hmus').textContent = S.dayServed + ' / ' + S.dayLost;
+      $('hevent').textContent = EVENTS[S.ev].n + ' · müşteri x' + EVENTS[S.ev].m;
+    } else if (tab === 'settings') {
+      var cbs = $('p-settings').querySelectorAll('input[data-set]');
+      for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
+    } else if (tab === 'inv') {
       for (i = 0; i < ITEMS.length; i++) {
         var it = ITEMS[i], r = rows[i];
         r.lv.textContent = 'Sv. ' + it.lv();
@@ -630,7 +667,7 @@
   function layoutCanvases() {
     var box = document.querySelector('.scene');
     var availW = Math.min(box.clientWidth - 32, 448);
-    var maxH = window.innerHeight * 0.36;
+    var maxH = window.innerHeight * (expanded ? 0.2 : 0.36);
     var dpr = window.devicePixelRatio || 1;
     [[cv, ctx, W, H], [wv, wctx, W, WH]].forEach(function (a) {
       var cw = Math.max(120, Math.min(availW, maxH * a[2] / a[3]));
@@ -638,23 +675,42 @@
       a[0].width = Math.round(cw * dpr); a[0].height = Math.round(cw * dpr * a[3] / a[2]);
       a[1].setTransform(a[0].width / a[2], 0, 0, a[0].width / a[2], 0, 0);
     });
-    var ah = tab === 'world' ? WH : H, cw3 = Math.max(120, Math.min(availW, maxH * W / ah)), d3 = Math.min(dpr, 2);
+    var ah = mainTab === 'world' ? WH : H, cw3 = Math.max(120, Math.min(availW, maxH * W / ah)), d3 = Math.min(dpr, 2);
     cv3.style.width = cw3 + 'px'; cv3.style.height = (cw3 * ah / W) + 'px';
     if (v3) v3.resize(Math.round(cw3 * d3), Math.round(cw3 * ah / W * d3));
   }
 
+  function mainOf(sub) {
+    for (var i = 0; i < NAV.length; i++) for (var j = 0; j < NAV[i].subs.length; j++) if (NAV[i].subs[j][0] === sub) return NAV[i];
+    return NAV[0];
+  }
+  function buildSubtabs() {
+    var nv = mainOf(tab), el = $('tabs');
+    if (nv.subs.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
+    var h = '';
+    nv.subs.forEach(function (s) { h += '<button data-tab="' + s[0] + '"' + (s[0] === tab ? ' class="on"' : '') + '>' + s[1] + '</button>'; });
+    el.innerHTML = h; el.hidden = false;
+  }
   function setTab(t) {
     tab = t;
-    var all = $('tabs').querySelectorAll('button');
-    for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i].getAttribute('data-tab') === t);
-    TABS.forEach(function (x) { $('p-' + x).hidden = x !== t; });
+    var nv = mainOf(t);
+    mainTab = nv.id; lastSub[nv.id] = t;
+    buildSubtabs();
+    var nb = $('nav').querySelectorAll('button');
+    for (var i = 0; i < nb.length; i++) nb[i].classList.toggle('on', nb[i].getAttribute('data-main') === mainTab);
+    TABS.forEach(function (x) { var el = $('p-' + x); if (el) el.hidden = x !== t; });
     applyViews();
     layoutCanvases();
     refresh();
+    var sh = document.querySelector('.shop'); if (sh) sh.scrollTop = 0;
   }
   $('tabs').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-tab]') : null;
-    if (b) setTab(b.getAttribute('data-tab'));
+    if (b) { sfx('tick'); setTab(b.getAttribute('data-tab')); }
+  });
+  $('nav').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-main]') : null;
+    if (b) { sfx('tick'); setTab(lastSub[b.getAttribute('data-main')]); }
   });
 
   listEl.addEventListener('click', function (e) {
@@ -667,6 +723,7 @@
     S.money -= c; S[it.k]++;
     if (it.k === 'room') { applyRoom(); layoutCanvases(); }
     pops.push({ x: W / 2, y: 120, t: 0, text: it.n + ' alındı', c: '#6fd6a2' });
+    bought();
     persist();
   });
   $('menulist').addEventListener('click', function (e) {
@@ -676,6 +733,7 @@
     if (S.menu[p.id] || S.level < p.req || S.money < p.cost) return;
     S.money -= p.cost; S.menu[p.id] = 1;
     pops.push({ x: W / 2, y: 120, t: 0, text: p.n + ' menüde', c: '#6fd6a2' });
+    bought();
     persist(); refresh();
   });
   $('pricelist').addEventListener('click', function (e) {
@@ -691,6 +749,7 @@
     var a = ABY[b.getAttribute('data-id')];
     if (S.assets[a.id] || S.level < a.req || S.money < a.cost) return;
     S.money -= a.cost; S.assets[a.id] = 1;
+    bought();
     persist(); refresh();
   });
   $('achlist').addEventListener('click', function (e) {
@@ -701,6 +760,7 @@
     if (!ac || !S.ach[id] || S.achc[id]) return;
     S.achc[id] = 1; S.money += ac.r; gainXp(ac.x);
     pops.push({ x: W / 2, y: 140, t: 0, text: '+₺' + fmt(ac.r), c: '#ffd23f' });
+    sfx('win'); buzz(40); burst(W / 2, 140, 24, ['#ffd23f', '#6fd6a2', '#ff9ecd'], 120);
     persist(); refresh();
   });
   $('perks').addEventListener('click', function (e) {
@@ -764,6 +824,8 @@
       S.xp -= need(S.level); S.level++; S.pts++;
       S.money += 50 * S.level;
       pops.push({ x: W / 2, y: 100, t: 0, text: 'Seviye ' + S.level + '! +1 puan', c: '#ffd23f' });
+      sfx('level'); buzz([40, 60, 40]);
+      burst(W / 2, 120, 36, ['#ffd23f', '#6fd6a2', '#e58a3d', '#4cc9f0', '#ff9ecd'], 140);
     }
   }
 
@@ -843,6 +905,8 @@
     if (am > 1.5) S.rep = Math.max(1, S.rep - 0.01 * (am - 1.5));
     else if (am < 0.9) S.rep = Math.min(5, S.rep + 0.004);
     pops.push({ x: LANES_X[c.lane], y: 78, t: 0, text: '+₺' + fmt(pay), c: c.vip ? '#ffd23f' : '#f2efe9' });
+    if (clock - audio.lastCoin > 0.15) { audio.lastCoin = clock; sfx('coin'); }
+    burst(LANES_X[c.lane], 84, c.vip ? 8 : 2, ['#ffd23f', '#ffe07a'], 40);
     lane.q.shift(); lane.cur = null; c.serving = false; c.cup = true;
     var seat = findSeat();
     if (seat) { seat.who = c; c.seat = seat; c.state = 'toSeat'; c.tx = seat.x; c.ty = seat.y; }
@@ -902,6 +966,7 @@
       if (g.f()) {
         S.money += g.r; S.goalI++; gainXp(Math.round(g.r / 10));
         pops.push({ x: W / 2, y: 150, t: 0, text: 'Hedef tamam +₺' + g.r, c: '#ffd23f' });
+        sfx('win'); buzz(40); burst(W / 2, 150, 24, ['#ffd23f', '#6fd6a2', '#ff9ecd'], 120);
         persist();
       }
     } else {
@@ -930,6 +995,7 @@
     var mult = Date.now() < speedUntil ? 2 : 1;
     dt *= mult;
     clock += dt;
+    updateParts(dt);
     if (paused) return;
     S.dayT += dt;
     var pas = passiveDaily() / DAY_LEN * dt;
@@ -1109,6 +1175,8 @@
     }
     items.sort(function (a, b) { return a.y - b.y; });
     for (i = 0; i < items.length; i++) items[i].f();
+    drawAtmosphere();
+    drawParts();
     ctx.textAlign = 'center';
     for (i = 0; i < pops.length; i++) {
       var p = pops[i];
@@ -1238,11 +1306,158 @@
     wctx.fillText(CITIES[S.branch % CITIES.length] + ' · Prestij ' + prestige(), 14, 22);
   }
 
+  /* ---------- Ses, titreşim, parçacıklar, atmosfer ---------- */
+  var shownMoney = S.money;
+  var audio = { ctx: null, master: null, musicT: 0, lastCoin: 0 };
+  function audioCtx() {
+    try {
+      if (!audio.ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audio.ctx = new AC();
+        audio.master = audio.ctx.createGain();
+        audio.master.gain.value = 0.45;
+        audio.master.connect(audio.ctx.destination);
+      }
+      if (audio.ctx.state === 'suspended') audio.ctx.resume();
+      return audio.ctx;
+    } catch (e) { return null; }
+  }
+  function tone(c, f, t0, d, type, v, f2) {
+    var o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(v, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(audio.master);
+    o.start(t); o.stop(t + d + 0.03);
+  }
+  var SFX = {
+    coin: function (c) { tone(c, 1175, 0, 0.07, 'square', 0.04); tone(c, 1568, 0.06, 0.12, 'square', 0.04); },
+    buy: function (c) { tone(c, 523, 0, 0.09, 'triangle', 0.12); tone(c, 784, 0.08, 0.16, 'triangle', 0.12); },
+    level: function (c) { [523, 659, 784, 1047].forEach(function (f, i) { tone(c, f, i * 0.1, 0.22, 'triangle', 0.13); }); },
+    win: function (c) { tone(c, 659, 0, 0.1, 'triangle', 0.11); tone(c, 988, 0.09, 0.2, 'triangle', 0.11); },
+    error: function (c) { tone(c, 220, 0, 0.2, 'sawtooth', 0.06, 140); },
+    tick: function (c) { tone(c, 900, 0, 0.03, 'square', 0.03); },
+    chest: function (c) { tone(c, 300, 0, 0.14, 'sawtooth', 0.05, 600); tone(c, 880, 0.15, 0.25, 'triangle', 0.12); tone(c, 1320, 0.28, 0.3, 'triangle', 0.1); },
+    audit: function (c) { tone(c, 440, 0, 0.15, 'square', 0.05); tone(c, 330, 0.18, 0.22, 'square', 0.05); }
+  };
+  function sfx(n) { if (!S.settings.sound) return; var c = audioCtx(); if (c && SFX[n]) SFX[n](c); }
+  function buzz(p) {
+    if (!S.settings.haptics || !navigator.vibrate) return;
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;   // dokunmadan titreşim engelli
+    try { navigator.vibrate(p); } catch (e) {}
+  }
+  var PENTA = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
+  function musicStep() {
+    var c = audioCtx(); if (!c) return;
+    var f = PENTA[Math.floor(Math.random() * PENTA.length)] / (Math.random() < 0.3 ? 2 : 1);
+    tone(c, f, 0, 1.6, 'sine', 0.025);
+    if (Math.random() < 0.4) tone(c, f * 1.5, 0.35, 1.2, 'sine', 0.015);
+  }
+  function applyMusic() {
+    if (S.settings.music) { if (!audio.musicT) { audioCtx(); audio.musicT = setInterval(musicStep, 900); } }
+    else if (audio.musicT) { clearInterval(audio.musicT); audio.musicT = 0; }
+  }
+  document.addEventListener('pointerdown', function first() {
+    document.removeEventListener('pointerdown', first);
+    if (S.settings.sound || S.settings.music) { audioCtx(); applyMusic(); }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!audio.ctx) return;
+    try { if (document.hidden) audio.ctx.suspend(); else if (S.settings.sound || S.settings.music) audio.ctx.resume(); } catch (e) {}
+  });
+  $('p-settings').addEventListener('change', function (e) {
+    var k = e.target && e.target.getAttribute ? e.target.getAttribute('data-set') : null;
+    if (!k) return;
+    S.settings[k] = e.target.checked;
+    persist();
+    if (k === 'music') applyMusic();
+    if (k === 'sound' && e.target.checked) sfx('buy');
+    if (k === 'haptics' && e.target.checked) buzz(30);
+  });
+
+  var parts = [];
+  function burst(x, y, n, cols, spread) {
+    for (var i = 0; i < n && parts.length < 160; i++) {
+      var a = Math.random() * 6.283, s = 30 + Math.random() * (spread || 90);
+      parts.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 40, life: 0.9 + Math.random() * 0.5, t: 0, c: cols[Math.floor(Math.random() * cols.length)], r: 1.6 + Math.random() * 2 });
+    }
+  }
+  function updateParts(dt) {
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var p = parts[i];
+      p.t += dt; p.vy += 160 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.t > p.life) parts.splice(i, 1);
+    }
+  }
+  function drawParts() {
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      ctx.globalAlpha = Math.max(0, 1 - p.t / p.life);
+      ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function bought() { sfx('buy'); buzz(25); burst(W / 2, 150, 18, ['#ffd23f', '#6fd6a2', '#e58a3d'], 100); }
+
+  function drawAtmosphere() {
+    var t = Math.min(S.dayT, DAY_LEN) / DAY_LEN, a = 0, col = '11,16,48';
+    if (t < 0.12) { a = (0.12 - t) / 0.12 * 0.14; col = '255,170,90'; }
+    else if (t > 0.68) a = Math.min(0.4, (t - 0.68) / 0.32 * 0.4);
+    if (S.ev === 1) { a = Math.max(a, 0.14); if (t <= 0.68) col = '20,30,60'; }
+    if (a > 0) { ctx.fillStyle = 'rgba(' + col + ',' + a.toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
+    if (S.ev === 1) {
+      ctx.strokeStyle = 'rgba(190,220,255,0.5)'; ctx.lineWidth = 1; ctx.beginPath();
+      for (var i = 0; i < 70; i++) {
+        var x = (i * 47.3) % W, y = ((clock * 240 + i * 37.7) % (H + 20)) - 10;
+        ctx.moveTo(x, y); ctx.lineTo(x - 2, y + 8);
+      }
+      ctx.stroke();
+    }
+    if (S.ev === 3) {
+      var cols = ['#e5634d', '#ffd23f', '#4cc9f0', '#7bd389', '#ff9ecd'];
+      for (var k = 0; k < W; k += 24) {
+        ctx.fillStyle = cols[(k / 24) % cols.length];
+        ctx.beginPath(); ctx.moveTo(k, 44); ctx.lineTo(k + 24, 44); ctx.lineTo(k + 12, 56 + Math.sin(clock * 3 + k) * 1.5); ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  /* ---------- Gezinme: alt çubuk, panel çekmecesi, bildirim noktaları ---------- */
+  function updateDots() {
+    var d = { grow: false, world: false, rew: false, me: false };
+    ITEMS.forEach(function (it) { if (!maxed(it) && S.level >= it.req() && S.money >= it.cost()) d.grow = true; });
+    PRODUCTS.forEach(function (p) { if (!S.menu[p.id] && S.level >= p.req && S.money >= p.cost) d.grow = true; });
+    ASSETS.forEach(function (a) { if (!S.assets[a.id] && S.level >= a.req && S.money >= a.cost) d.world = true; });
+    d.rew = claimable() > 0;
+    d.me = S.pts > 0;
+    ['grow', 'world', 'rew', 'me'].forEach(function (k) {
+      var el = document.querySelector('#nav [data-main="' + k + '"] i');
+      if (el) el.hidden = !d[k];
+    });
+  }
+  function setExpanded(v) {
+    expanded = v;
+    $('grip').setAttribute('aria-expanded', v ? 'true' : 'false');
+    layoutCanvases();
+  }
+  $('grip').addEventListener('click', function () { setExpanded(!expanded); });
+  var gripY = null;
+  $('grip').addEventListener('touchstart', function (e) { gripY = e.touches[0].clientY; }, { passive: true });
+  $('grip').addEventListener('touchend', function (e) {
+    if (gripY === null) return;
+    var dy = e.changedTouches[0].clientY - gripY; gripY = null;
+    if (dy < -30) setExpanded(true); else if (dy > 30) setExpanded(false);
+  });
+
   /* ---------- 3B görünüm (Three.js, depodaki sabit sürüm; yalnızca isteyince yüklenir) ---------- */
   var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false;
   function applyViews() {
-    cv.hidden = v3on || tab === 'world';
-    wv.hidden = v3on || tab !== 'world';
+    cv.hidden = v3on || mainTab === 'world';
+    wv.hidden = v3on || mainTab !== 'world';
     cv3.hidden = !v3on;
     $('v3d').classList.toggle('on', v3on);
     $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
@@ -1264,7 +1479,7 @@
     import('./three-view.js').then(function (m) {
       var bridge = {
         S: S, customers: customers, lanes: lanes, ROOMS: ROOMS, LANES_X: LANES_X, tablePos: tablePos,
-        getH: function () { return H; }, clock: function () { return clock; }
+        getH: function () { return H; }, clock: function () { return clock; }, dayLen: DAY_LEN
       };
       v3 = m.createView3D(cv3, bridge);
       v3on = true; v3busy = false;
@@ -1456,17 +1671,19 @@
     var dt = Math.min(0.05, (now - prev) / 1000);
     prev = now;
     update(dt);
-    if (v3on && v3) { try { v3.update(dt, tab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
-    else if (tab === 'world') drawWorld(); else draw();
+    if (v3on && v3) { try { v3.update(dt, mainTab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
+    else if (mainTab === 'world') drawWorld(); else draw();
     uiAcc += dt; saveAcc += dt;
+    var dm = S.money - shownMoney;
+    shownMoney += Math.abs(dm) < 0.5 ? dm : dm * Math.min(1, dt * 7);
+    $('money').textContent = fmt(shownMoney);
     if (uiAcc > 0.15) { uiAcc = 0; refresh(); }
     if (saveAcc > 4) { saveAcc = 0; persist(); }
     requestAnimationFrame(frame);
   }
 
-  layoutCanvases();
+  setTab('home');
   offlineCheck();
-  refresh();
   requestAnimationFrame(frame);
 })();
 </script>
