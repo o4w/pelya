@@ -77,6 +77,7 @@
   .item b em { font-style: normal; color: var(--copper); font-size: 12px; margin-left: 6px; font-family: var(--body); font-weight: 700; }
   .item span { color: var(--muted); font-size: 12px; line-height: 1.35; display: block; }
   .item button.buy { min-width: 92px; background: var(--copper); color: #1d1000; border-color: transparent; line-height: 1.2; font-size: 14px; }
+  .item button.buy small { display: block; font-weight: 500; }
   .item button.buy:disabled { background: rgba(255,255,255,0.1); color: var(--fg); }
   .item button.buy.claim { background: var(--good); }
   .box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 8px; }
@@ -280,6 +281,18 @@
       <div class="acctrow" id="chbtns"></div>
     </div>
   </div>
+  <div id="p-brand" hidden>
+    <div class="box">
+      <h4>Marka<small id="brlv"></small></h4>
+      <p>İtibar müşteri çekimini ve pasif geliri çarpar. Her gün sonunda itibarına göre Marka Değeri kazanırsın. Harcayarak itibarı yükseltir ve korursun.</p>
+      <div class="kv"><span>İtibar</span><span id="brrep"></span></div>
+      <div class="kv"><span>Pasif gelir çarpanı</span><span id="brpas"></span></div>
+      <div class="kv"><span>Marka Değeri</span><span id="brpts"></span></div>
+      <div class="kv"><span>İtibar tabanı</span><span id="brmin"></span></div>
+    </div>
+    <div class="item"><div class="info"><b>Basın kampanyası</b><span>İtibar +0.25. Günde bir kez.</span></div><button class="buy" id="brpress"></button></div>
+    <div class="item"><div class="info"><b>Marka sözleşmesi<em id="brcl"></em></b><span>Müşteri +%5 ve itibar tabanı +0.2 (kalıcı, franchise'da kalır).</span></div><button class="buy" id="brcon"></button></div>
+  </div>
   <div id="p-cities" hidden>
     <div class="box">
       <h4>Şehirlerim<small id="citysum"></small></h4>
@@ -413,7 +426,7 @@
   var S = { money: 50, day: 1, dayT: 0, rep: 3, served: 0, lost: 0, mach: 0, bar: 1, tab: 1, cas: 0, dec: 0, room: 0,
             menu: { espresso: 1 }, pmi: {}, assets: {}, ach: {}, achc: {}, vipServed: 0, daysTotal: 0, dayPassive: 0,
             goalI: 0, dayEarn: 0, dayServed: 0, dayLost: 0, last: Date.now(),
-            name: 'Köşe Kafe', level: 1, xp: 0, pts: 0, perks: {}, stars: 0, branch: 0, runServed: 0, life: 0, ev: 0, dyn: null, dynN: 0, settings: {}, dayDone: false, endRep: null, boost: { pop: 1, svc: 1 } };
+            name: 'Köşe Kafe', level: 1, xp: 0, pts: 0, perks: {}, stars: 0, branch: 0, runServed: 0, life: 0, ev: 0, dyn: null, dynN: 0, settings: {}, dayDone: false, endRep: null, brand: 0, brandLv: 0, brandDay: 0, boost: { pop: 1, svc: 1 } };
   try { var raw = localStorage.getItem('tycoon-v3'); if (raw) { var o = JSON.parse(raw); for (var k in o) S[k] = o[k]; } } catch (e) {}
   PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
   PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
@@ -475,12 +488,14 @@
   function bm() { return (1 + 0.25 * S.stars) * (1 + 0.03 * mgrLv('acct')) * (S.premium ? 1.25 : 1); }
   function prestige() { var t = 0; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].pr * (1 + 0.3 * (aLv(ABY[id]) - 1)); return t; }
   function prestMult() { return 1 + 0.5 * (1 - Math.exp(-prestige() / 100)); }
+  function repMult() { return 1 + 0.1 * (S.rep - 3); }
+  function repMin() { return 1 + 0.2 * S.brandLv; }
   function passiveDaily() {
     var t = 0, id;
     for (id in S.assets) if (S.assets[id] && ABY[id]) t += ABY[id].inc * aMult(aLv(ABY[id]));
     BIZ.forEach(function (b) { t += bizInc(b); });
     S.branches.forEach(function (br) { t += branchInc(br); });
-    return t;
+    return t * repMult();
   }
   function netWorth() { var t = S.money; for (var id in S.assets) if (S.assets[id] && ABY[id]) t += aValue(ABY[id]); return t; }
   function svcTime() { return Math.max(0.8, (4 - 0.45 * S.mach) * (1 - 0.05 * S.perks.fast) * (1 - 0.04 * mgrLv('chef')) * S.boost.svc); }
@@ -488,7 +503,7 @@
   function vipChance() { return (0.04 + 0.02 * S.perks.vip) * (wev() === 'vip' ? 2 : 1); }
   function menuCount() { return unlocked().length; }
   function popularity() {
-    return (0.6 + 0.2 * S.rep) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
+    return (0.45 + 0.25 * S.rep) * (1 + 0.05 * S.brandLv) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
       (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv()) * (wev() === 'rush' ? 1.2 : 1) * S.boost.pop;
   }
   function rush() { return 0.7 + 0.9 * Math.pow(Math.sin(Math.PI * Math.min(S.dayT, DAY_LEN) / DAY_LEN), 2); }
@@ -589,7 +604,7 @@
   var NAV = [
     { id: 'home', subs: [['home', 'Bugün']] },
     { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Yönetici']] },
-    { id: 'world', subs: [['world', 'Varlıklar'], ['career', 'Kariyer'], ['charity', 'Hayır'], ['cities', 'Şehirler']] },
+    { id: 'world', subs: [['world', 'Varlıklar'], ['career', 'Kariyer'], ['charity', 'Hayır'], ['brand', 'Marka'], ['cities', 'Şehirler']] },
     { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
     { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
   ];
@@ -951,6 +966,7 @@
   }
 
   /* Gün sonu: giderler bir kez kesilir, sonra kısa bir karar ekranı çıkar (süre dolarsa "Standart" seçilir). */
+  function brandGain() { var x = Math.max(0, S.rep - 2); return Math.round(x * x * (1 + S.level / 10)); }
   function dayCosts() {
     var rent = Math.round(4 + 3 * S.bar + 6 * S.room + 2 * S.mach + 2 * menuCount() + 0.03 * S.dayPassive);
     var stock = Math.round(0.1 * S.dayEarn);
@@ -967,7 +983,7 @@
     S.boost = { pop: 1, svc: 1 };
     if (id === 'camp') { c = Math.round(0.2 * base); S.money = Math.max(0, S.money - c); S.boost.pop = 1.25; }
     else if (id === 'prim') { c = Math.round(0.12 * base); S.money = Math.max(0, S.money - c); S.boost.svc = 0.9; S.rep = Math.min(5, S.rep + 0.1); }
-    else if (id === 'kis') { S.money += Math.round(r.cost * 0.5); S.rep = Math.max(1, S.rep - 0.1); }
+    else if (id === 'kis') { S.money += Math.round(r.cost * 0.5); S.rep = Math.max(repMin(), S.rep - 0.1); }
     track('day_decision', { d: id, day: S.day });
   }
   function endDay() {
@@ -975,8 +991,9 @@
     if (!S.dayDone) {
       var cs = dayCosts(), short = cs.total > S.money;
       S.money = Math.max(0, S.money - cs.total);
-      if (short) S.rep = Math.max(1, S.rep - 0.1);
-      S.endRep = { cost: cs.total, rent: cs.rent, stock: cs.stock, short: short, net: S.dayEarn + S.dayPassive - cs.total };
+      if (short) S.rep = Math.max(repMin(), S.rep - 0.1);
+      var bg = brandGain(); S.brand += bg;
+      S.endRep = { cost: cs.total, rent: cs.rent, stock: cs.stock, short: short, net: S.dayEarn + S.dayPassive - cs.total, brand: bg };
       S.dayDone = true;
       gainXp(10);
       S.daysTotal++;
@@ -993,7 +1010,7 @@
       '<span>Kira ve bakım</span><span>-₺' + fmt(r.rent) + '</span><span>Malzeme</span><span>-₺' + fmt(r.stock) + '</span>' +
       '<span>Net</span><span style="color:' + (r.net >= 0 ? 'var(--good,#6fd6a2)' : 'var(--bad)') + '">' + (r.net >= 0 ? '+' : '-') + '₺' + fmt(Math.abs(r.net)) + '</span>' +
       '<span>Müşteri / kaçan</span><span>' + S.dayServed + ' / ' + S.dayLost + '</span>' +
-      '<span>İtibar</span><span>★ ' + S.rep.toFixed(1) + '</span>' + extra;
+      '<span>İtibar</span><span>★ ' + S.rep.toFixed(1) + '</span>' + (r.brand ? '<span>Marka Değeri</span><span>+' + r.brand + '</span>' : '') + extra;
     var btns = '';
     ['camp', 'prim', 'kis', 'norm'].forEach(function (k) {
       btns += '<button' + (k === 'norm' ? ' class="on"' : '') + ' data-act="' + k + '">' + DECISIONS[k].n + '<small>' + DECISIONS[k].d + '</small></button>';
@@ -1044,7 +1061,7 @@
     var best = -1, bl = 99;
     for (var i = 0; i < S.bar; i++) if (lanes[i].q.length < bl) { bl = lanes[i].q.length; best = i; }
     if (best < 0 || bl >= QMAX) {
-      S.dayLost++; S.rep = Math.max(1, S.rep - 0.02);
+      S.dayLost++; S.rep = Math.max(repMin(), S.rep - 0.02);
       pops.push({ x: DOOR.x, y: H - 40, t: 0, text: 'Dolu!', c: '#ff7a66' });
       return;
     }
@@ -1058,7 +1075,7 @@
 
   function leave(c, unhappy) {
     c.state = 'leave'; c.tx = DOOR.x; c.ty = DOOR.y; c.serving = false;
-    if (unhappy) { S.rep = Math.max(1, S.rep - 0.04); S.dayLost++; pops.push({ x: c.x, y: c.y - 24, t: 0, text: 'Bekledi...', c: '#ff7a66' }); }
+    if (unhappy) { S.rep = Math.max(repMin(), S.rep - 0.04); S.dayLost++; pops.push({ x: c.x, y: c.y - 24, t: 0, text: 'Bekledi...', c: '#ff7a66' }); }
   }
 
   function findSeat() {
@@ -1074,7 +1091,7 @@
     if (c.vip) { S.vipServed++; if (Math.random() < 0.15) giveChest('b'); }
     gainXp(c.vip ? 3 : 1);
     var am = avgMult();
-    if (am > 1.5) S.rep = Math.max(1, S.rep - 0.01 * (am - 1.5));
+    if (am > 1.5) S.rep = Math.max(repMin(), S.rep - 0.01 * (am - 1.5));
     else if (am < 0.9) S.rep = Math.min(5, S.rep + 0.004);
     pops.push({ x: LANES_X[c.lane], y: 78, t: 0, text: '+₺' + fmt(pay), c: c.vip ? '#ffd23f' : '#f2efe9' });
     if (clock - audio.lastCoin > 0.15) { audio.lastCoin = clock; sfx('coin'); }
@@ -1082,7 +1099,7 @@
     lane.q.shift(); lane.cur = null; c.serving = false; c.cup = true;
     var seat = findSeat();
     if (seat) { seat.who = c; c.seat = seat; c.state = 'toSeat'; c.tx = seat.x; c.ty = seat.y; }
-    else { leave(c, false); S.rep = Math.max(1, S.rep - 0.01); }
+    else { leave(c, false); S.rep = Math.max(repMin(), S.rep - 0.01); }
   }
 
   function updateCustomers(dt) {
@@ -1846,7 +1863,7 @@
               enqueue(function () { showModal('<h2>Denetimi geçtin!</h2><div class="big">+₺' + fmt(win) + '</div><div class="row"><button class="on" data-act="ok">Süper</button></div>', {}); });
             } else {
               track('audit', { r: 'fail' });
-              S.money = Math.max(0, S.money - fine); S.rep = Math.max(1, S.rep - 0.15);
+              S.money = Math.max(0, S.money - fine); S.rep = Math.max(repMin(), S.rep - 0.15);
               sfx('error'); buzz(120);
               done();
               enqueue(function () { showModal('<h2>Ceza yedin</h2><div class="big">-₺' + fmt(fine) + '</div><p>İtibarın biraz düştü. Hazırlığını artır.</p><div class="row"><button class="on" data-act="ok">Tamam</button></div>', {}); });
@@ -1916,6 +1933,26 @@
     burst(W / 2, 140, 22, ['#ff9ecd', '#ffd23f', '#ffffff'], 110);
     pops.push({ x: W / 2, y: 130, t: 0, text: 'Bağış: ₺' + fmt(amt), c: '#ff9ecd' });
     if (charityLv() > before) pops.push({ x: W / 2, y: 100, t: 0, text: 'Hayırsever kademe ' + charityLv() + '!', c: '#ffd23f' });
+    persist();
+  }
+
+  // Marka
+  var BRAND_MAX = 5;
+  function pressCost() { return Math.max(50, Math.round(estPerMin().rate * DAY_LEN / 60 * 0.5)); }
+  function pressBrand() { return 8; }
+  function contractBrand() { return 10 * (S.brandLv + 1) * (S.brandLv + 1); }
+  function buyPress() {
+    if (S.brandDay === S.day || S.rep >= 5 || S.brand < pressBrand() || S.money < pressCost()) { sfx('error'); return; }
+    S.brand -= pressBrand(); S.money -= pressCost(); S.brandDay = S.day; S.rep = Math.min(5, S.rep + 0.25);
+    sfx('win'); buzz(40); track('brand_press', { day: S.day });
+    pops.push({ x: W / 2, y: 130, t: 0, text: 'Basın kampanyası: itibar +0.25', c: '#ffd23f' });
+    persist();
+  }
+  function buyContract() {
+    if (S.brandLv >= BRAND_MAX || S.brand < contractBrand()) { sfx('error'); return; }
+    S.brand -= contractBrand(); S.brandLv++; if (S.rep < repMin()) S.rep = repMin();
+    sfx('level'); buzz([40, 60, 40]); track('brand_contract', { lv: S.brandLv });
+    pops.push({ x: W / 2, y: 130, t: 0, text: 'Marka sözleşmesi ' + S.brandLv + '/' + BRAND_MAX, c: '#ffd23f' });
     persist();
   }
 
@@ -2018,6 +2055,21 @@
       });
       return true;
     }
+    if (tab === 'brand') {
+      $('brlv').textContent = 'sözleşme ' + S.brandLv + '/' + BRAND_MAX;
+      $('brrep').textContent = '★ ' + S.rep.toFixed(2);
+      $('brpas').textContent = 'x' + repMult().toFixed(2);
+      $('brpts').textContent = fmt(S.brand);
+      $('brmin').textContent = '★ ' + repMin().toFixed(1);
+      $('brcl').textContent = ' ' + S.brandLv + '/' + BRAND_MAX;
+      var bp = $('brpress'), bc = $('brcon');
+      if (S.brandDay === S.day) { bp.textContent = 'Bugün yapıldı'; bp.disabled = true; }
+      else if (S.rep >= 5) { bp.textContent = 'İtibar tam'; bp.disabled = true; }
+      else { bp.innerHTML = 'Yap<small>' + pressBrand() + ' marka · ₺' + fmt(pressCost()) + '</small>'; bp.disabled = S.brand < pressBrand() || S.money < pressCost(); }
+      if (S.brandLv >= BRAND_MAX) { bc.textContent = 'Tamam'; bc.disabled = true; }
+      else { bc.innerHTML = 'Yükselt<small>' + contractBrand() + ' marka</small>'; bc.disabled = S.brand < contractBrand(); }
+      return true;
+    }
     if (tab === 'charity') {
       var lvC = charityLv(), nxt = null;
       for (i = 0; i < CHARITY_TIERS.length; i++) if (S.charity.given < CHARITY_TIERS[i]) { nxt = CHARITY_TIERS[i]; break; }
@@ -2106,6 +2158,8 @@
     S.money -= bizCost(biz); S.biz[biz.id] = bizLv(biz) + 1;
     bought(); persist(); refresh();
   });
+  $('brpress').addEventListener('click', function () { buyPress(); refresh(); });
+  $('brcon').addEventListener('click', function () { buyContract(); refresh(); });
   $('chbtns').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-f]') : null;
     if (b && !b.disabled) { donate(parseFloat(b.getAttribute('data-f'))); refresh(); }
@@ -2259,6 +2313,7 @@
     PRODUCTS.forEach(function (p) { if (!S.menu[p.id] && S.level >= p.req && S.money >= p.cost) d.grow = true; });
     ASSETS.forEach(function (a) { if (!S.assets[a.id] && S.level >= a.req && S.money >= a.cost) d.world = true; });
     MGRS.forEach(function (m) { if (canUpMgr(m)) d.grow = true; });
+    if (S.brandLv < BRAND_MAX && S.brand >= contractBrand()) d.world = true;
     d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable();
     d.me = S.pts > 0;
     ['grow', 'world', 'rew', 'me'].forEach(function (k) {

@@ -48,6 +48,11 @@ Gün bitince giderler **bir kez** kesilir: kira ve bakım (kafe büyüklüğü +
 
 Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenilemek gideri ikinci kez kesmez.
 
+### Marka ve itibar
+İtibar (1-5) müşteri çekimini `0.45 + 0.25 x itibar` ile çarpar ve pasif geliri `1 + 0.1 x (itibar - 3)` ile çarpar. Gün sonunda `(itibar - 2)^2 x (1 + seviye/10)` kadar **Marka Değeri** kazanılır. Dünya > Marka sekmesinde harcanır:
+- **Basın kampanyası:** 8 marka + yarım günlük gelir, itibar +0.25, günde bir kez.
+- **Marka sözleşmesi** (5 seviye, 10/40/90/160/250 marka): müşteri +%5 ve itibar tabanı +0.2. Marka Değeri ve sözleşmeler franchise'da kalır.
+
 ## Sistemler
 
 ### Kafe (sahne)
