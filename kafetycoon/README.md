@@ -225,6 +225,15 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - `manifest.webmanifest`, `sw.js` ve simgeler sayesinde oyun ana ekrana eklenebilir ve çevrimdışı açılabilir. Sayfa istekleri önce ağdan denenir, çevrimdışıysa önbellekten gelir. **Yeni sürümde `sw.js` içindeki `CACHE` adını artır.**
 - **Bildirimler (isteğe bağlı):** Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterilir. **Uygulama tamamen kapalıyken bildirim gelmez.** Bunun için sunucudan push bildirimi gerekir (VAPID anahtarı, abonelik tablosu, zamanlanmış bir Edge Function). E-posta hatırlatması da bir e-posta sağlayıcısı gerektirir. İkisi de henüz kurulmadı.
 
+## Erişilebilirlik ve arayüz denetimi
+Web Interface Guidelines ile denetlendi:
+- Pinch zoom geri açıldı (`maximum-scale` kaldırıldı; çift dokunma zoom'u `touch-action: manipulation` ile engelli).
+- Atlama bağlantısı, `h1`, `main`, düzgün başlık sırası (h1→h4), `aria-live` durum mesajları.
+- Pencereler `role="dialog"`: odak ilk düğmeye gider, Escape kapatır. Aktif sekme `aria-current`.
+- Şehir haritası klavyeyle gezilir (oklar, +/-) ve gizli işletme listesi vardır.
+- "Hareketi azalt" ayarı (sistem tercihine uyar): animasyonlar ve şehirdeki araçlar durur.
+- Form alanlarına `name`/`aria-label`/`spellcheck`, `…` karakteri, `tabular-nums`, `overscroll-behavior`, `preconnect`, açıklama meta'sı.
+
 ## Prototip notları
 
 - Ekonomi sayıları ilk denemedir, oynanış testine göre ayarlanmalıdır.

@@ -363,6 +363,7 @@ export function createHub(canvas, bridge) {
     if (as !== assetSig) { assetSig = as; buildAssets(); }
     updateBalloons();
     mobiles.forEach((m) => {
+      if (api.reduced) return;
       if (m.kind === 'car') {
         const span = GRID * TILE + 2, v = ((clock * m.sp + m.off) % span) - span / 2;
         if (m.horiz) { m.o.position.set(v * m.dir, 0.12, m.lane); m.o.rotation.y = m.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
@@ -372,7 +373,7 @@ export function createHub(canvas, bridge) {
       } else if (m.kind === 'yacht') { m.o.position.y = -0.95 + Math.sin(clock * 1.5) * 0.06; m.o.rotation.z = Math.sin(clock * 1.2) * 0.03; }
     });
     cars.forEach((c) => {
-      if (!c.o) return;
+      if (!c.o || api.reduced) return;
       const v = ((clock * c.sp + c.off) % c.span) - c.span / 2;
       if (c.horiz) { c.o.position.set(v * c.dir, 0.12, c.lane); c.o.rotation.y = c.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
       else { c.o.position.set(c.lane, 0.12, v * c.dir); c.o.rotation.y = c.dir > 0 ? 0 : Math.PI; }
@@ -427,7 +428,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { reduced: false, nudge(dx, dy) { panBy(dx, dy); }, zoomBy(f) { view.zoom = Math.max(0.75, Math.min(1.6, view.zoom * f)); fitCamera(); }, update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }

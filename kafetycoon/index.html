@@ -2,8 +2,12 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Köşe Kafe Tycoon</title>
+<meta name="description" content="Şehrinde kafeler ve restoranlar kur, işletmeni büyüt, rakiplerle yarış.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -113,10 +117,10 @@
   .item button.buy:disabled { --c1: #cfd3dd; --c2: #a6acba; --bd: #6c7283; }
   .item button.buy.claim { --c1: #ffe14a; --c2: #ffb300; --bd: #a86a00; color: #4a2a00; text-shadow: none; }
   .box { background: var(--pi); border: 2px solid rgba(255,255,255,0.8); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; box-shadow: 0 3px 0 rgba(30,26,77,0.2); }
-  .box h4 { font-family: var(--display); font-weight: 400; font-size: calc(20px * var(--fs)); letter-spacing: 0.01em; color: var(--ink); margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .box h4 small { font-family: var(--body); font-size: calc(14px * var(--fs)); color: var(--muted); font-weight: 600; letter-spacing: 0; }
+  .box h3 { font-family: var(--display); font-weight: 400; font-size: calc(20px * var(--fs)); letter-spacing: 0.01em; color: var(--ink); margin: 0 0 4px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .box h3 small { font-family: var(--body); font-size: calc(14px * var(--fs)); color: var(--muted); font-weight: 600; letter-spacing: 0; }
   .box p { margin: 0; color: var(--muted); font-size: calc(14px * var(--fs)); line-height: 1.4; }
-  h5 { font-family: var(--display); font-weight: 400; font-size: calc(15px * var(--fs)); letter-spacing: 0.06em; text-transform: uppercase; color: var(--txt); text-shadow: none; margin: 12px 4px 8px; }
+  h4 { font-family: var(--display); font-weight: 400; font-size: calc(15px * var(--fs)); letter-spacing: 0.06em; text-transform: uppercase; color: var(--txt); text-shadow: none; margin: 12px 4px 8px; }
   .stepper { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
   .stepper button { width: 52px; font-size: calc(22px * var(--fs)); padding: 4px 0; }
   .stepper .val { flex: 1; text-align: center; font-family: var(--display); font-size: calc(28px * var(--fs)); font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -300,25 +304,39 @@
   .mgres .row { display: flex; gap: 8px; margin-top: 12px; }
   .mgres .row button { flex: 1; }
   @media (prefers-reduced-motion: reduce) { .mgstack .ly, .mgstackwrap.shake { animation: none; } }
+  /* erişilebilirlik */
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .skip { position: absolute; left: 8px; top: -60px; z-index: 30; padding: 8px 14px; background: #fff; color: var(--ink); border-radius: 12px; font-weight: 700; }
+  .skip:focus { top: 8px; }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  .modal p, .item span, .box p { overflow-wrap: anywhere; }
+  .shop, .tabs, .modal .card, .mgcard { overscroll-behavior: contain; }
+  @media (hover: hover) { button:hover:not(:disabled) { filter: brightness(1.07); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+  html.rm *, html.rm *::before, html.rm *::after { animation: none !important; transition: none !important; }
+  .hubcv:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
+  .kv span, .stats span, .pc, .item button, .mgtop, .nextbar { font-variant-numeric: tabular-nums; }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
 <style>[hidden]{display:none!important}</style>
 </head>
 <body>
-<div class="hud"><div class="wrap">
+<a class="skip" href="#main">Ana içeriğe geç</a>
+<noscript>Bu oyun JavaScript gerektirir.</noscript>
+<div class="hud"><h1 class="sr">Köşe Kafe Tycoon</h1><div class="wrap">
   <div class="row1">
     <div class="pill coin"><span class="ico">₺</span><div class="money"><span id="money">0</span></div><small class="inc" id="incps"></small></div>
     <div class="pill star"><span class="ico">★</span><b id="rep"></b></div>
     <div class="pill lvl"><span class="ico">Sv</span><b id="lvl"></b><span class="xpbar"><i id="xpbar"></i></span></div>
   </div>
   <div class="row2">
-    <button class="backbtn" id="back" hidden>‹ Şehir</button><span class="cafename" id="cname-hud"></span>
+    <button class="backbtn" id="back" hidden>‹ Şehir</button><span class="cafename" id="cname-hud" translate="no"></span>
     <div class="day"><span id="day"></span><div class="daybar"><i id="daybar"></i></div></div>
   </div>
 </div></div>
 <div class="nextwrap wrap"><button id="nextbar" class="nextbar" hidden></button></div>
-<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div></div><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
+<div class="scene wrap"><div class="stagebox"><canvas id="cv" role="img" aria-label="Kafe sahnesi"></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası. Oklarla kaydır, artı ve eksi ile yakınlaştır. İşletmelere gizli listeden de ulaşabilirsin." tabindex="0" hidden></canvas><div class="sr" id="hublist" role="group" aria-label="Şehir işletmeleri"></div><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" role="status" aria-live="polite" hidden></div></div><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" role="status" aria-live="polite" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
     <button data-go="collect" class="hubonly" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22" aria-label="Para balonlarını topla"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.500 9.500C9.500 8.400 10.600 8 12 8s2.500.5 2.500 1.600c0 2.200-5 1.200-5 3.600 0 1.100 1.100 1.600 2.500 1.600s2.500-.5 2.500-1.600"/></svg><i hidden></i></button>
     <button data-go="game" style="--c1:#7fdcff;--c2:#3aaaf0;--bd:#0b5bb0" aria-label="Mini oyun"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M8 10v5M5.5 12.500h5M16 11h.01M18.500 13.500h.01"/></svg><i hidden></i></button>
     <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
@@ -328,10 +346,10 @@
   </div><button id="boost" class="boost" title="Hızlandır">Hızlan x2<small>30 sn</small></button></div></div>
 <button class="grip" id="grip" aria-label="Paneli büyüt veya küçült" aria-expanded="false"><span></span></button>
 <div class="tabs wrap" id="tabs" hidden></div>
-<div class="shop"><div class="wrap">
+<div class="shop" id="main" role="main" tabindex="-1"><div class="wrap">
   <div id="p-home">
     <div class="box">
-      <h4>Bugün<small id="hevent"></small></h4>
+      <h3>Bugün<small id="hevent"></small></h3>
       <div class="kv"><span>Kafe geliri</span><span id="hgelir"></span></div>
       <div class="kv"><span>Müşteri / kaçan</span><span id="hmus"></span></div>
       <div class="kv"><span>Toplam servis</span><span id="served"></span></div>
@@ -344,22 +362,22 @@
     <div id="list"></div>
   </div>
   <div id="p-menu" hidden>
-    <div class="box"><h4>Menü<small id="menucount"></small></h4><p>Yeni ürünler müşteri çeşitliliğini ve sepet tutarını artırır. Yiyecekler için pasta vitrini gerekir.</p></div>
+    <div class="box"><h3>Menü<small id="menucount"></small></h3><p>Yeni ürünler müşteri çeşitliliğini ve sepet tutarını artırır. Yiyecekler için pasta vitrini gerekir.</p></div>
     <div id="menulist"></div>
   </div>
   <div id="p-market" hidden>
     <div class="box">
-      <h4>Pazar payı<small id="mkmult"></small></h4>
+      <h3>Pazar payı<small id="mkmult"></small></h3>
       <p>Müşteriler fiyat, kalite ve itibara bakıp seçer. Payın %25'ten yüksekse sana daha çok müşteri gelir.</p>
       <div id="mkbars"></div>
       <div class="hint" id="mkadvice"></div>
     </div>
     <div id="mkrivals"></div>
-    <div class="box"><h4>Haberler</h4><p id="mknews"></p></div>
+    <div class="box"><h3>Haberler</h3><p id="mknews"></p></div>
   </div>
   <div id="p-game" hidden>
     <div class="box">
-      <h4>Burger Dizme<small id="mgplays"></small></h4>
+      <h3>Burger Dizme<small id="mgplays"></small></h3>
       <p>Siparişteki malzemeleri sırayla dokunarak diz. 30 saniyede ne kadar çok burger yaparsan o kadar çok ödül kazanırsın. Yanlış malzeme süre ve seri kaybettirir.</p>
       <div class="kv"><span>En iyi skor</span><span id="mgbest"></span></div>
       <div class="kv"><span>Ödül (bugünkü ilk 3 oyun)</span><span id="mgprize"></span></div>
@@ -368,7 +386,7 @@
   </div>
   <div id="p-price" hidden>
     <div class="box">
-      <h4>Fiyat politikası</h4>
+      <h3>Fiyat politikası</h3>
       <p>Ucuz satarsan müşteri artar, pahalı satarsan kaçar. Adil fiyat; makine, vitrin, dekor ve itibara göre belirlenir.</p>
       <div class="kv"><span>Müşteri talebi (ortalama)</span><span id="pdem"></span></div>
       <div class="meter"><i id="pdembar"></i></div>
@@ -379,7 +397,7 @@
   </div>
   <div id="p-world" hidden>
     <div class="box">
-      <h4>Şehirdeki servetin<small id="wprest"></small></h4>
+      <h3>Şehirdeki servetin<small id="wprest"></small></h3>
       <div class="kv"><span>Net servet</span><span id="wnet"></span></div>
       <div class="kv"><span>Pasif gelir</span><span id="wpas"></span></div>
       <div class="kv"><span>Müşteri çekim gücü</span><span id="wpm"></span></div>
@@ -388,12 +406,12 @@
     <div id="assetlist"></div>
   </div>
   <div id="p-ach" hidden>
-    <div class="box"><h4>Başarımlar<small id="achcount"></small></h4><p>Hedefleri tamamla, ödülünü topla.</p></div>
+    <div class="box"><h3>Başarımlar<small id="achcount"></small></h3><p>Hedefleri tamamla, ödülünü topla.</p></div>
     <div id="achlist"></div>
   </div>
   <div id="p-skill" hidden>
     <div class="box">
-      <h4>Seviye <span id="sklvl"></span></h4>
+      <h3>Seviye <span id="sklvl"></span></h3>
       <p id="skxp"></p>
       <div class="meter"><i id="skbar"></i></div>
       <div class="kv"><span>Yetenek puanı</span><span id="skpts"></span></div>
@@ -402,11 +420,11 @@
   </div>
   <div id="p-rank" hidden>
     <div class="box">
-      <h4>Hesap<small id="acctstate"></small></h4>
+      <h3>Hesap<small id="acctstate"></small></h3>
       <div id="acct"></div>
     </div>
     <div class="box">
-      <h4>Liderlik tablosu<small>İlk 20</small></h4>
+      <h3>Liderlik tablosu<small>İlk 20</small></h3>
       <div class="segs"><button data-sort="net_worth" class="on">Net servet</button><button data-sort="customers">Müşteri</button><button data-sort="week">Bu hafta</button></div>
       <div id="lbbody"></div>
       <p style="margin-top:8px">Kafe adı ve şehir herkese açık görünür. E-posta asla gösterilmez.</p>
@@ -414,26 +432,26 @@
   </div>
   <div id="p-cafe" hidden>
     <div class="box">
-      <h4>Kafe adı</h4>
+      <h3>Kafe adı</h3>
       <p>Tabelada görünür.</p>
-      <input type="text" id="cname" maxlength="14" placeholder="Kafe adı" autocomplete="off">
+      <input type="text" id="cname" name="cafename" maxlength="14" placeholder="Örn. Köşe Kafe…" aria-label="Kafe adı" autocomplete="off" spellcheck="false">
     </div>
     <div class="box">
-      <h4>Şube bilgisi</h4>
+      <h3>Şube bilgisi</h3>
       <div class="kv"><span>Mekan</span><span id="croom"></span></div>
       <div class="kv"><span>Şehir</span><span id="cbranch"></span></div>
       <div class="kv"><span>Marka değeri</span><span id="cbrand"></span></div>
       <div class="kv"><span>Toplam müşteri</span><span id="clife"></span></div>
     </div>
     <div class="box">
-      <h4>Franchise</h4>
+      <h3>Franchise</h3>
       <p id="cfp"></p>
       <div style="display:flex;margin-top:10px"><button id="cfbtn" style="flex:1">Franchise aç</button></div>
     </div>
   </div>
   <div id="p-mgr" hidden>
     <div class="box">
-      <h4>Personel</h4>
+      <h3>Personel</h3>
       <p>Kart topla, personelini yükselt. Kartlar sandıklardan, çarktan ve kart paketinden gelir.</p>
       <div class="acctrow"><button id="packbtn" class="on"></button></div>
     </div>
@@ -441,23 +459,23 @@
   </div>
   <div id="p-wheel" hidden>
     <div class="box">
-      <h4>Günlük çark<small id="wheelinfo"></small></h4>
+      <h3>Günlük çark<small id="wheelinfo"></small></h3>
       <div style="display:flex;justify-content:center;margin:10px 0"><canvas id="wheelc" width="260" height="260" style="width:240px;height:240px;border-radius:50%;background:none"></canvas></div>
       <div class="acctrow"><button class="on" id="spinfree">Ücretsiz çevir</button><button id="spinad">Reklamla çevir</button></div>
       <p style="margin-top:8px">Ödüller: para, personel kartı, hız, deneyim ve sandık. Reklam butonu prototipte simüle edilir (günde 3 kez).</p>
     </div>
   </div>
   <div id="p-chest" hidden>
-    <div class="box"><h4>Sandıklar</h4><p>VIP müşteriler, seviye atlama ve başarımlardan sandık düşer. İçinden para, personel kartı, deneyim ve bazen hız çıkar.</p></div>
+    <div class="box"><h3>Sandıklar</h3><p>VIP müşteriler, seviye atlama ve başarımlardan sandık düşer. İçinden para, personel kartı, deneyim ve bazen hız çıkar.</p></div>
     <div id="chestlist"></div>
   </div>
   <div id="p-career" hidden>
-    <div class="box"><h4>İşletmeler<small id="careerinc"></small></h4><p>Kafe dışında gelir kolları kur. Her biri 10 seviyeye kadar yükselir ve her gün pasif gelir getirir.</p></div>
+    <div class="box"><h3>İşletmeler<small id="careerinc"></small></h3><p>Kafe dışında gelir kolları kur. Her biri 10 seviyeye kadar yükselir ve her gün pasif gelir getirir.</p></div>
     <div id="bizlist"></div>
   </div>
   <div id="p-charity" hidden>
     <div class="box">
-      <h4>Hayır<small id="charlv"></small></h4>
+      <h3>Hayır<small id="charlv"></small></h3>
       <p>Bağış yaptıkça hayırsever kademen yükselir. Her kademe kafene gelen müşteriyi %2 artırır.</p>
       <div class="kv"><span>Toplam bağış</span><span id="chgiven"></span></div>
       <div class="kv"><span>Müşteri bonusu</span><span id="chbonus"></span></div>
@@ -468,7 +486,7 @@
   </div>
   <div id="p-brand" hidden>
     <div class="box">
-      <h4>Marka<small id="brlv"></small></h4>
+      <h3>Marka<small id="brlv"></small></h3>
       <p>İtibar müşteri çekimini ve pasif geliri çarpar. Her gün sonunda itibarına göre Marka Değeri kazanırsın. Harcayarak itibarı yükseltir ve korursun.</p>
       <div class="kv"><span>İtibar</span><span id="brrep"></span></div>
       <div class="kv"><span>Pasif gelir çarpanı</span><span id="brpas"></span></div>
@@ -480,7 +498,7 @@
   </div>
   <div id="p-cities" hidden>
     <div class="box">
-      <h4>Şubelerim<small id="citysum"></small></h4>
+      <h3>Şubelerim<small id="citysum"></small></h3>
       <div class="kv"><span>Aktif şube</span><span id="cityactive"></span></div>
       <p style="margin-top:6px">Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır ve her gün pasif gelir getirir. Şubeleri yükselterek gelirini artırabilirsin.</p>
     </div>
@@ -488,45 +506,46 @@
   </div>
   <div id="p-avatar" hidden>
     <div class="box">
-      <h4>Karakter<small id="avtitle"></small></h4>
+      <h3>Karakter<small id="avtitle"></small></h3>
       <div style="display:flex;justify-content:center;margin:6px 0"><canvas id="avc" width="200" height="200" style="width:200px;height:200px;border-radius:14px;background:#1d3834"></canvas></div>
     </div>
     <div id="avopts"></div>
   </div>
   <div id="p-event" hidden>
-    <div class="box"><h4 id="wevname"></h4><p id="wevdesc"></p><div class="kv"><span>Etkinlik bitimine</span><span id="wevleft"></span></div></div>
+    <div class="box"><h3 id="wevname"></h3><p id="wevdesc"></p><div class="kv"><span>Etkinlik bitimine</span><span id="wevleft"></span></div></div>
     <div class="box">
-      <h4>Haftalık hedef<small id="wgoalinfo"></small></h4>
+      <h3>Haftalık hedef<small id="wgoalinfo"></small></h3>
       <p>Bu hafta yeterince müşteri ağırla: para, deneyim ve altın sandık kazan.</p>
       <div class="meter"><i id="wgbar"></i></div>
       <div class="kv"><span>Bu haftaki kafe geliri</span><span id="wgearn"></span></div>
       <div class="acctrow"><button id="wclaim" class="on">Ödülü al</button></div>
     </div>
-    <div class="box"><h4>Haftalık sıralama</h4><p>Sıralamayı Ben &gt; Sıralama &gt; Bu hafta bölümünde görebilirsin. Sıralamaya girmek için e-postayla giriş yapmalısın, misafirler giremez.</p></div>
+    <div class="box"><h3>Haftalık sıralama</h3><p>Sıralamayı Ben &gt; Sıralama &gt; Bu hafta bölümünde görebilirsin. Sıralamaya girmek için e-postayla giriş yapmalısın, misafirler giremez.</p></div>
   </div>
   <div id="p-settings" hidden>
     <div class="box">
-      <h4>Ses ve his</h4>
+      <h3>Ses ve his</h3>
       <label class="chk"><input type="checkbox" data-set="sound"> Ses efektleri</label>
       <label class="chk"><input type="checkbox" data-set="music"> Hafif müzik</label>
       <label class="chk"><input type="checkbox" data-set="haptics"> Titreşim (telefonda)</label>
+      <label class="chk"><input type="checkbox" data-set="rm"> Hareketi azalt</label>
     </div>
     <div class="box">
-      <h4>Yazı boyutu</h4>
+      <h3>Yazı boyutu</h3>
       <div class="segs" id="fsegs"><button data-fs="0">Normal</button><button data-fs="1">Büyük</button><button data-fs="2">Çok büyük</button></div>
     </div>
     <div class="box">
-      <h4>Bildirimler</h4>
+      <h3>Bildirimler</h3>
       <label class="chk"><input type="checkbox" data-set="notif"> Tarayıcı bildirimleri</label>
       <p style="margin-top:6px">Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterir. Uygulama tamamen kapalıyken bildirim gelmez.</p>
     </div>
     <div class="box">
-      <h4>Gizlilik</h4>
+      <h3>Gizlilik</h3>
       <label class="chk"><input type="checkbox" data-set="telemetry"> Anonim kullanım verisi gönder</label>
       <p style="margin-top:6px">Kimlik içermez: ad, e-posta ve kayıt içeriği toplanmaz. Yalnızca hangi adımların yapıldığı sayılır.</p>
     </div>
     <div class="box">
-      <h4>Premium (simülasyon)</h4>
+      <h3>Premium (simülasyon)</h3>
       <p>Prototip: gerçek ödeme yoktur. Premium açıkken reklam bekleme süresi atlanır ve kafe gelirin %25 artar.</p>
       <div class="acctrow"><button id="prembtn"></button></div>
     </div>
@@ -550,8 +569,8 @@
   </div>
   <div class="mgres" id="mgres" hidden></div>
 </div></div>
-<div class="tut" id="tut" hidden><div class="tuthole" id="tuthole"></div><svg class="tuthand" id="tuthand" viewBox="0 0 48 48" aria-hidden="true"><path d="M20 4c2 0 3 1.5 3 3.5V22l2-.5c1.5-.4 3 .3 3.500 1.800l1.800-.3c1.500-.2 2.800.8 3 2.200l1.600-.2c1.600-.1 2.800 1.100 2.800 2.600v6.500c0 5.500-4.500 10-10 10h-3.500c-3.200 0-5.800-1.400-7.500-3.800L9 34c-1-1.400-.7-3.300.7-4.200 1.200-.8 2.700-.5 3.700.5L17 33V7.500C17 5.500 18 4 20 4z" fill="#fff" stroke="#1d3f9a" stroke-width="2.500" stroke-linejoin="round"/></svg><div class="tutcard" id="tutcard"><b id="tuttitle"></b><span id="tuttext"></span><div class="row"><button id="tutskip" style="--c1:#c9cfe0;--c2:#9aa3be;--bd:#5d6688">Atla</button><button id="tutok" class="on" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Tamam</button></div></div></div>
-<div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
+<div class="tut" id="tut" hidden><div class="tuthole" id="tuthole"></div><svg class="tuthand" id="tuthand" viewBox="0 0 48 48" aria-hidden="true"><path d="M20 4c2 0 3 1.5 3 3.5V22l2-.5c1.5-.4 3 .3 3.500 1.800l1.800-.3c1.500-.2 2.800.8 3 2.200l1.600-.2c1.600-.1 2.800 1.100 2.800 2.600v6.500c0 5.500-4.500 10-10 10h-3.500c-3.200 0-5.800-1.400-7.500-3.800L9 34c-1-1.400-.7-3.300.7-4.200 1.200-.8 2.700-.5 3.700.5L17 33V7.500C17 5.500 18 4 20 4z" fill="#fff" stroke="#1d3f9a" stroke-width="2.500" stroke-linejoin="round"/></svg><div class="tutcard" id="tutcard" role="status" aria-live="polite"><b id="tuttitle"></b><span id="tuttext"></span><div class="row"><button id="tutskip" style="--c1:#c9cfe0;--c2:#9aa3be;--bd:#5d6688">Atla</button><button id="tutok" class="on" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Tamam</button></div></div></div>
+<div class="modal" id="modal" hidden><div class="card" id="mcard" role="dialog" aria-modal="true"></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -630,12 +649,14 @@
   PERKS.forEach(function (p) { if (typeof S.perks[p.k] !== 'number') S.perks[p.k] = 0; });
   PRODUCTS.forEach(function (p) { if (typeof S.pmi[p.id] !== 'number') S.pmi[p.id] = 1; });
   S.menu.espresso = 1;
-  var SET_DEFAULTS = { sound: true, music: false, haptics: true, telemetry: true, notif: false, telNotice: false };
+  var SET_DEFAULTS = { sound: true, music: false, haptics: true, telemetry: true, notif: false, telNotice: false, rm: !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) };
   Object.keys(SET_DEFAULTS).forEach(function (k) { if (typeof S.settings[k] !== 'boolean') S.settings[k] = SET_DEFAULTS[k]; });
   var FS_SCALES = [1, 1.12, 1.25];
   if (typeof S.settings.fs !== 'number' || S.settings.fs < 0 || S.settings.fs > 2) S.settings.fs = 0;
   function applyFs() { document.documentElement.style.setProperty('--fs', FS_SCALES[S.settings.fs]); document.documentElement.setAttribute('data-fs', S.settings.fs); }
   applyFs();
+  function applyRm() { document.documentElement.classList.toggle('rm', !!S.settings.rm); if (typeof hub !== 'undefined' && hub) hub.reduced = !!S.settings.rm; }
+  applyRm();
   if (!S.chests) S.chests = { b: 0, s: 0, g: 0 };
   if (!S.wheel) S.wheel = { day: '', ads: 0 };
   if (!S.avatar) S.avatar = { skin: 0, hair: 0, hstyle: 0, shirt: 0, hat: 0, acc: 0 };
@@ -884,7 +905,7 @@
     html = ''; var cat = '';
     for (i = 0; i < ASSETS.length; i++) {
       var a = ASSETS[i];
-      if (a.cat !== cat) { cat = a.cat; html += '<h5>' + cat + '</h5>'; }
+      if (a.cat !== cat) { cat = a.cat; html += '<h4>' + cat + '</h4>'; }
       html += '<div class="item"><div class="info"><b>' + a.n + '<em></em></b><span>+₺' + fmt(a.inc) + '/gün · prestij +' + a.pr + '</span></div><button class="buy" data-id="' + a.id + '"></button></div>';
     }
     $('assetlist').innerHTML = html;
@@ -929,7 +950,8 @@
     nextCur = nextStep();
     renderNext();
     var ips = incomePerSec(); $('incps').textContent = '+₺' + (ips < 10 ? ips.toFixed(1) : fmt(ips)) + '/sn';
-    var incEl = $('incps'); incEl.style.visibility = ''; if (incEl.scrollWidth > incEl.clientWidth + 1) incEl.style.visibility = 'hidden';
+    var incEl = $('incps'), incKey = incEl.textContent + '|' + S.settings.fs;
+    if (incKey !== refreshHud.incKey) { refreshHud.incKey = incKey; incEl.style.visibility = ''; if (incEl.scrollWidth > incEl.clientWidth + 1) incEl.style.visibility = 'hidden'; }
     if (bizActive()) {
       var bb = bizDef(bizSel), bl = bizLv(bb), bc = bizCost(bb), bm = bizMgrCost(bb), bmax = bl >= BIZ_MAX;
       $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ müdür' : '');
@@ -947,7 +969,7 @@
     var html = '';
     us.forEach(function (p) {
       var lock = p.type === 'food' && S.cas < 1;
-      html += '<div class="box" data-id="' + p.id + '"><h4>' + p.n + '<small class="pd"></small></h4>' +
+      html += '<div class="box" data-id="' + p.id + '"><h3>' + p.n + '<small class="pd"></small></h3>' +
         (lock ? '<p>Satış için pasta vitrini gerekli.</p>' : '') +
         '<div class="stepper"><button data-id="' + p.id + '" data-d="-1" aria-label="Fiyatı düşür">−</button><div class="val"><span class="pv"></span><small class="pm"></small></div><button data-id="' + p.id + '" data-d="1" aria-label="Fiyatı artır">+</button></div></div>';
     });
@@ -1092,7 +1114,7 @@
     var nv = mainOf(tab), el = $('tabs');
     if (nv.subs.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
     var h = '';
-    nv.subs.forEach(function (s) { h += '<button data-tab="' + s[0] + '"' + (s[0] === tab ? ' class="on"' : '') + '>' + s[1] + '</button>'; });
+    nv.subs.forEach(function (s) { h += '<button data-tab="' + s[0] + '"' + (s[0] === tab ? ' class="on" aria-current="true"' : '') + '>' + s[1] + '</button>'; });
     el.innerHTML = h; el.hidden = false;
   }
   function setTab(t) {
@@ -1101,7 +1123,7 @@
     mainTab = nv.id; lastSub[nv.id] = t;
     buildSubtabs();
     var nb = $('nav').querySelectorAll('button');
-    for (var i = 0; i < nb.length; i++) nb[i].classList.toggle('on', nb[i].getAttribute('data-main') === mainTab);
+    for (var i = 0; i < nb.length; i++) { var on = nb[i].getAttribute('data-main') === mainTab; nb[i].classList.toggle('on', on); if (on) nb[i].setAttribute('aria-current', 'page'); else nb[i].removeAttribute('aria-current'); }
     TABS.forEach(function (x) { var el = $('p-' + x); if (el) el.hidden = x !== t; });
     if (!telSeen[t]) { telSeen[t] = 1; track('tab_view', { t: t }); }
     applyViews();
@@ -1203,7 +1225,10 @@
     var th = /bitti/.test(html) ? 'orange' : /Belediye|Ceza|Hangi kay/.test(html) ? 'red' : /Hoş geldin|Anonim|Haftalık|Denetimi geçtin/.test(html) ? 'blue' : /Reklam|Çark|<h2>[^<]*(sandık|Sandık)/.test(html) ? 'purple' : /Franchise|Satılsın/.test(html) ? 'pink' : '';
     mcard.className = 'card' + (th ? ' t-' + th : '');
     mcard.innerHTML = html + (html.indexOf('data-act="no"') >= 0 ? '<button class="xbtn" data-act="no" aria-label="Kapat">✕</button>' : '');
+    var hh = mcard.querySelector('h2'); mcard.setAttribute('aria-label', hh ? hh.textContent : 'Pencere');
     modal.hidden = false;
+    var f0 = mcard.querySelector('button.on:not(:disabled)') || mcard.querySelector('button:not(:disabled):not(.xbtn)');
+    if (f0) { try { f0.focus({ preventScroll: true }); } catch (err) {} }
     mcard.onclick = function (e) {
       var bt = e.target && e.target.closest ? e.target.closest('[data-act]') : null, id = bt ? bt.getAttribute('data-act') : null;
       if (!id) return;
@@ -1212,6 +1237,11 @@
       nextModal();
     };
   }
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || modal.hidden) return;
+    var c = mcard.querySelector('[data-act="no"]');
+    if (c) c.click();
+  });
   function nextModal() { if (!modal.hidden) return; var f = queueFns.shift(); if (f) f(); }
   function enqueue(f) { queueFns.push(f); nextModal(); }
 
@@ -1372,7 +1402,7 @@
 
   function leave(c, unhappy) {
     c.state = 'leave'; c.tx = DOOR.x; c.ty = DOOR.y; c.serving = false;
-    if (unhappy) { S.rep = Math.max(repMin(), S.rep - 0.04); S.dayLost++; pops.push({ x: c.x, y: c.y - 24, t: 0, text: 'Bekledi...', c: '#ff7a66' }); }
+    if (unhappy) { S.rep = Math.max(repMin(), S.rep - 0.04); S.dayLost++; pops.push({ x: c.x, y: c.y - 24, t: 0, text: 'Bekledi…', c: '#ff7a66' }); }
   }
 
   function findSeat() {
@@ -2141,7 +2171,7 @@
 
     h = '';
     function row(label, cat, list, kind) {
-      h += '<div class="box"><h4>' + label + '</h4><div class="avrow">';
+      h += '<div class="box"><h3>' + label + '</h3><div class="avrow">';
       list.forEach(function (it, idx) {
         if (kind === 'sw') h += '<button class="sw" data-cat="' + cat + '" data-i="' + idx + '" style="background:' + (Array.isArray(it) ? it[0] : it) + '" aria-label="' + label + ' ' + (idx + 1) + '"></button>';
         else h += '<button data-cat="' + cat + '" data-i="' + idx + '">' + (Array.isArray(it) ? it[0] : it) + '<small></small></button>';
@@ -2410,6 +2440,7 @@
     persist();
     if (k === 'notif' && e.target.checked) notifEnable(e.target);
     if (k === 'telemetry' && !e.target.checked) telQ.length = 0;
+    if (k === 'rm') applyRm();
     if (k === 'music') applyMusic();
     if (k === 'sound' && e.target.checked) sfx('buy');
     if (k === 'haptics' && e.target.checked) buzz(30);
@@ -2569,6 +2600,7 @@
     hubBusy = true;
     import('./three-hub.js').then(function (m) {
       hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo, getRivals: getRivalsInfo });
+      hub.reduced = !!S.settings.rm;
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
         if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
@@ -2613,6 +2645,29 @@
     BIZ.forEach(function (b) { sum += collectBalloon(b.id); });
     if (sum > 0) { hubMsg('+₺' + fmt(sum) + ' toplandı'); persist(); } else { sfx('error'); hubMsg('Toplanacak para yok'); }
   }
+  var hubListSig = '';
+  function syncHubList() {
+    if (!hubActive()) return;
+    var ls = getLots(), sig = ls.map(function (l) { return l.id + l.lv + l.locked; }).join();
+    if (sig === hubListSig) return;
+    hubListSig = sig;
+    $('hublist').innerHTML = ls.map(function (l) {
+      return '<button data-lot="' + l.id + '">' + esc(l.name) + (l.locked ? ', kilitli, seviye ' + l.req : l.lv ? ', seviye ' + l.lv : '') + (l.balloon ? ', toplanacak para var' : '') + '</button>';
+    }).join('');
+  }
+  $('hublist').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-lot]') : null;
+    if (b) openLot(b.getAttribute('data-lot'));
+  });
+  hubCv.addEventListener('keydown', function (e) {
+    if (!hub) return;
+    var k = e.key, st = 60;
+    if (k === 'ArrowLeft') hub.nudge(st, 0); else if (k === 'ArrowRight') hub.nudge(-st, 0);
+    else if (k === 'ArrowUp') hub.nudge(0, st); else if (k === 'ArrowDown') hub.nudge(0, -st);
+    else if (k === '+' || k === '=') hub.zoomBy(1.15); else if (k === '-') hub.zoomBy(1 / 1.15);
+    else return;
+    e.preventDefault();
+  });
   function enterCafe() { view = 'cafe'; setTab('home'); }
   function openLot(id) {
     if (id === 'cafe') { enterCafe(); return; }
@@ -3006,9 +3061,9 @@
       $('acctstate').textContent = 'giriş yok';
       el.innerHTML = '<p>Giriş yaparsan ilerlemen bulutta saklanır ve başka cihazda devam edebilirsin. Sıralamaya girmek için de giriş gerekir.</p>' +
         oauthHtml() +
-        '<input type="email" id="lbemail" placeholder="E-posta adresin" autocomplete="email">' +
+        '<input type="email" id="lbemail" name="email" inputmode="email" placeholder="ornek@eposta.com…" aria-label="E-posta adresi" autocomplete="email" spellcheck="false">' +
         '<div class="acctrow"><button class="on" data-act="link">Giriş bağlantısı gönder</button><button data-act="guest">Misafir devam et</button></div>' +
-        '<div class="acctmsg" id="acctmsg"></div>';
+        '<div class="acctmsg" id="acctmsg" role="status" aria-live="polite"></div>';
       return;
     }
     var who = user.is_anonymous ? 'Misafir' : (user.email || 'Giriş yapıldı');
@@ -3017,7 +3072,7 @@
       (user.is_anonymous ? '<p style="margin-top:6px">Misafir hesabı bu tarayıcıya bağlıdır. Çıkış yaparsan kaydına geri dönemezsin. Misafirler sıralamaya giremez, sıralama için e-postayla giriş yap.</p>' : '') +
       '<label class="chk"><input type="checkbox" id="showrank"' + (S.showRank === false ? '' : ' checked') + '> Sıralamada göster</label>' +
       '<div class="acctrow"><button data-act="sync">Şimdi kaydet</button><button data-act="logout">Çıkış yap</button></div>' +
-      '<div class="acctmsg" id="acctmsg">' + esc(syncErr) + '</div>';
+      '<div class="acctmsg" id="acctmsg" role="status" aria-live="polite">' + esc(syncErr) + '</div>';
   }
 
   function decide(cloud) {
@@ -3127,7 +3182,7 @@
       var prov = b.getAttribute('data-p');
       if (location.protocol === 'file:') { acctMsg('Giriş için oyunu http(s) adresinden aç (yerel dosya olmaz).'); return; }
       track('login_start', { p: prov });
-      acctMsg('Yönlendiriliyor...');
+      acctMsg('Yönlendiriliyor…');
       sb.auth.signInWithOAuth({ provider: prov, options: { redirectTo: location.origin + location.pathname } }).then(function (r) {
         if (r.error) acctMsg('Giriş başlatılamadı: ' + r.error.message);
       }, function () { acctMsg('Bağlantı hatası.'); });
@@ -3135,12 +3190,12 @@
       var em = ($('lbemail').value || '').trim();
       if (!/^\S+@\S+\.\S+$/.test(em)) { acctMsg('Geçerli bir e-posta yaz.'); return; }
       if (location.protocol === 'file:') { acctMsg('Giriş bağlantısı için oyunu http(s) adresinden aç (yerel dosya olmaz).'); return; }
-      acctMsg('Gönderiliyor...');
+      acctMsg('Gönderiliyor…');
       sb.auth.signInWithOtp({ email: em, options: { emailRedirectTo: location.origin + location.pathname } }).then(function (r) {
         acctMsg(r.error ? 'Gönderilemedi: ' + r.error.message : 'Bağlantı gönderildi. E-postanı kontrol et ve bağlantıya dokun.');
       }, function () { acctMsg('Bağlantı hatası.'); });
     } else if (act === 'guest') {
-      acctMsg('Giriş yapılıyor...');
+      acctMsg('Giriş yapılıyor…');
       sb.auth.signInAnonymously().then(function (r) {
         if (r.error) acctMsg('Misafir girişi kapalı veya başarısız: ' + r.error.message);
       }, function () { acctMsg('Bağlantı hatası.'); });
@@ -3188,7 +3243,7 @@
     wheelTick(now);
     if (bizActive()) { if (biz3) { try { biz3.update(dt); } catch (e) { bizFailed(); } } else ensureBiz(); }
     else if (document.body.classList.contains('noscene')) { /* sahne yok: çizim yapma */ }
-    else if (hubActive()) { if (hub) { try { hub.update(dt); } catch (e) { hubFailed('Şehir hatası'); } } else ensureHub(); }
+    else if (hubActive()) { if (hub) { syncHubList(); try { hub.update(dt); } catch (e) { hubFailed('Şehir hatası'); } } else ensureHub(); }
     else if (v3on && v3) { try { v3.update(dt, 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
     else draw();
     uiAcc += dt; saveAcc += dt;
