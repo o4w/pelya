@@ -184,6 +184,20 @@
   .modal .row.col > button { text-align: left; padding: 10px 14px; }
   .modal .row.col > button small { display: block; font-family: var(--body); font-weight: 500; font-size: 13px; opacity: 0.95; margin-top: 2px; text-shadow: 0 1px 0 var(--bd); }
   .modal .cd { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  /* ızgara kartlar: menü ve yöneticiler. Renk, sıraya göre nadirlik gibi değişir. */
+  #menulist, #mgrlist, #bizlist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  #menulist .item, #mgrlist .item, #bizlist .item { flex-direction: column; align-items: stretch; text-align: center; margin-bottom: 0; padding: 12px 8px 10px; gap: 8px; --pi: #cfe9ff; }
+  #menulist .item .info, #mgrlist .item .info, #bizlist .item .info { flex: 1; }
+  #menulist .item button.buy, #mgrlist .item button.buy, #bizlist .item button.buy { min-width: 0; width: 100%; }
+  #menulist .item:nth-child(n+4), #mgrlist .item:nth-child(n+4), #bizlist .item:nth-child(n+4) { --pi: #e4cfff; }
+  #menulist .item:nth-child(n+7), #mgrlist .item:nth-child(n+7), #bizlist .item:nth-child(n+7) { --pi: #ffe0b0; }
+  #menulist .item:nth-child(n+10), #mgrlist .item:nth-child(n+10), #bizlist .item:nth-child(n+10) { --pi: #ffd3ea; }
+  #menulist .item.done, #mgrlist .item.done, #bizlist .item.done { background: #dcffd2; }
+  /* sahne yanındaki kısayol sütunu */
+  .rail { position: absolute; right: 10px; top: 52px; display: flex; flex-direction: column; gap: 8px; line-height: 1; }
+  .rail button { width: 46px; height: 46px; padding: 0; border-radius: 14px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .rail button svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
+  .rail button i { position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
   .xbtn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -201,7 +215,11 @@
     <div class="day"><span id="day"></span><div class="daybar"><i id="daybar"></i></div></div>
   </div>
 </div></div>
-<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><button id="boost" class="boost" title="Hızlandır">Hızlan x2<small>30 sn</small></button></div></div>
+<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
+    <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
+    <button data-go="chest" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300" aria-label="Sandık"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 13v3M5 9a7 7 0 0 1 14 0"/></svg><i hidden></i></button>
+    <button data-go="event" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f" aria-label="Etkinlik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><i hidden></i></button>
+  </div><button id="boost" class="boost" title="Hızlandır">Hızlan x2<small>30 sn</small></button></div></div>
 <button class="grip" id="grip" aria-label="Paneli büyüt veya küçült" aria-expanded="false"><span></span></button>
 <div class="tabs wrap" id="tabs" hidden></div>
 <div class="shop"><div class="wrap">
@@ -874,11 +892,15 @@
     TABS.forEach(function (x) { var el = $('p-' + x); if (el) el.hidden = x !== t; });
     if (!telSeen[t]) { telSeen[t] = 1; track('tab_view', { t: t }); }
     applyViews();
-    boostBtn.hidden = mainTab === 'world';
+    boostBtn.hidden = mainTab === 'world'; $('rail').hidden = mainTab === 'world';
     layoutCanvases();
     refresh();
     var sh = document.querySelector('.shop'); if (sh) sh.scrollTop = 0;
   }
+  $('rail').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-go]') : null;
+    if (b) { sfx('tick'); setTab(b.getAttribute('data-go')); }
+  });
   $('tabs').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-tab]') : null;
     if (b) { sfx('tick'); setTab(b.getAttribute('data-tab')); }
@@ -1568,7 +1590,19 @@
   ];
   function wevIdx() { var m = /W(\d+)/.exec(weekId()); return (parseInt(m[1], 10) || 0) % W_EVENTS.length; }
   function wev() { return W_EVENTS[wevIdx()].id; }
-  function ensureWeek() { var id = weekId(); if (S.week.id !== id) S.week = { id: id, served: 0, earn: 0, claimed: false }; }
+  function ensureWeek() {
+    var id = weekId(), old = S.week.id;
+    if (old === id) return;
+    S.week = { id: id, served: 0, earn: 0, claimed: false };
+    if (!old) return;
+    var ev = W_EVENTS[wevIdx()];
+    track('week_popup', { e: ev.id });
+    enqueue(function () {
+      showModal('<h2>Yeni etkinlik başladı!</h2><div class="big" style="font-size:30px">' + ev.n + '</div><p>' + ev.d + '</p><p>Haftalık hedefi tamamla, altın sandık kazan.</p>' +
+        '<div class="row"><button data-act="later">Sonra</button><button class="on" data-act="see">Şimdi bak</button></div>',
+        { see: function () { setTab('event'); } });
+    });
+  }
   function weekGoal() { return 100 + 15 * S.level; }
   function weekClaimable() { return S.week.id !== '' && !S.week.claimed && S.week.served >= weekGoal(); }
   function daysLeftInWeek() { var d = new Date().getDay() || 7; return 8 - d; }
@@ -2365,6 +2399,11 @@
     if (S.brandLv < BRAND_MAX && S.brand >= contractBrand()) d.world = true;
     d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable();
     d.me = S.pts > 0;
+    var rd = { wheel: wheelReady(), chest: chestCount() > 0, event: weekClaimable() };
+    ['wheel', 'chest', 'event'].forEach(function (k) {
+      var rel = document.querySelector('#rail [data-go="' + k + '"] i');
+      if (rel) rel.hidden = !rd[k];
+    });
     ['grow', 'world', 'rew', 'me'].forEach(function (k) {
       var el = document.querySelector('#nav [data-main="' + k + '"] i');
       if (el) el.hidden = !d[k];
