@@ -15,6 +15,9 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Yayın:** Klasörü olduğu gibi bir statik sunucuya koyabilirsin (Vercel için Root Directory: `kafetycoon`).
 - `index.html` dosyasına çift tıklayarak da açılır, ama **3B görünüm, e-posta girişi ve çevrimdışı önbellek `file://` ile çalışmaz.** Bunlar için http(s) gerekir.
 
+## Arayüz teması
+Arayüz parlak, kalın ve oyuncak tarzında: üstte yeşil çubukta hap biçimli göstergeler (para, itibar, seviye), altta kalın turuncu ikon düğmeleri (aktif olan mavi), krem renkli kartlar ve pencereler. Düğmeler basınca aşağı çöker. İptal edilebilen pencerelerde sağ üstte kırmızı çarpı çıkar. Sahnenin altındaki mavi **Hızlan x2** düğmesi (Dünya haritası dışında) 30 saniyelik hız artışını başlatır. Renkler ve kalınlık `:root` içindeki değişkenlerle ayarlanır. Yazı tipi Fredoka (Google Fonts), yüklenemezse sistemin yuvarlak yazı tipi kullanılır.
+
 ## Ekranlar
 
 Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile panel arasındaki tutamaçla paneli büyütüp sahneyi küçültebilirsin. Kırmızı noktalar yapılabilecek bir şey olduğunu gösterir.
