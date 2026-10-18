@@ -2274,6 +2274,23 @@
   function esc(t) {
     return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
+
+  // Hangi giriş sağlayıcıları Supabase'de açık? Yalnızca açık olanların düğmesi gösterilir.
+  var providers = {};
+  function oauthHtml() {
+    var h = '';
+    if (providers.google) h += '<button data-act="oauth" data-p="google">Google ile giriş</button>';
+    if (providers.apple) h += '<button data-act="oauth" data-p="apple">Apple ile giriş</button>';
+    return h ? '<div class="acctrow">' + h + '</div><p style="margin-top:8px">veya e-posta ile:</p>' : '';
+  }
+  if (sb) {
+    try {
+      fetch(SUPABASE_URL + '/auth/v1/settings', { headers: { apikey: SUPABASE_KEY } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { if (j && j.external) { providers = j.external; renderAccount(); } })
+        .catch(function () {});
+    } catch (e) {}
+  }
   function getMeta() { try { return JSON.parse(localStorage.getItem('tycoon-sync-v1')) || null; } catch (e) { return null; } }
   function setMeta(life) { try { localStorage.setItem('tycoon-sync-v1', JSON.stringify({ uid: user.id, life: life })); } catch (e) {} }
   function summ(st) { return 'Sv. ' + (st.level || 1) + ' · ' + (st.life || 0) + ' müşteri · Gün ' + (st.day || 1); }
@@ -2285,6 +2302,7 @@
     if (!user) {
       $('acctstate').textContent = 'giriş yok';
       el.innerHTML = '<p>Giriş yaparsan ilerlemen bulutta saklanır ve başka cihazda devam edebilirsin. Sıralamaya girmek için de giriş gerekir.</p>' +
+        oauthHtml() +
         '<input type="email" id="lbemail" placeholder="E-posta adresin" autocomplete="email">' +
         '<div class="acctrow"><button class="on" data-act="link">Giriş bağlantısı gönder</button><button data-act="guest">Misafir devam et</button></div>' +
         '<div class="acctmsg" id="acctmsg"></div>';
@@ -2402,7 +2420,15 @@
     var b = e.target.closest ? e.target.closest('button[data-act]') : null;
     if (!b || !sb) return;
     var act = b.getAttribute('data-act');
-    if (act === 'link') {
+    if (act === 'oauth') {
+      var prov = b.getAttribute('data-p');
+      if (location.protocol === 'file:') { acctMsg('Giriş için oyunu http(s) adresinden aç (yerel dosya olmaz).'); return; }
+      track('login_start', { p: prov });
+      acctMsg('Yönlendiriliyor...');
+      sb.auth.signInWithOAuth({ provider: prov, options: { redirectTo: location.origin + location.pathname } }).then(function (r) {
+        if (r.error) acctMsg('Giriş başlatılamadı: ' + r.error.message);
+      }, function () { acctMsg('Bağlantı hatası.'); });
+    } else if (act === 'link') {
       var em = ($('lbemail').value || '').trim();
       if (!/^\S+@\S+\.\S+$/.test(em)) { acctMsg('Geçerli bir e-posta yaz.'); return; }
       if (location.protocol === 'file:') { acctMsg('Giriş bağlantısı için oyunu http(s) adresinden aç (yerel dosya olmaz).'); return; }

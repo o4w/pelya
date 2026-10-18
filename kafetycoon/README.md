@@ -97,7 +97,7 @@ Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer. Kafe sekmelerinde 3B kafe,
 
 | Özellik | Nasıl çalışır |
 |---|---|
-| Giriş | E-posta ile giriş bağlantısı (magic link) veya misafir (anonim) hesap |
+| Giriş | E-posta ile giriş bağlantısı (magic link), **Google ile giriş**, **Apple ile giriş** veya misafir (anonim) hesap. Google ve Apple düğmeleri yalnızca Supabase'de o sağlayıcı açıksa görünür |
 | Bulut kaydı | `saves` tablosu, kullanıcı başına tek satır. Her 30 saniyede ve sayfa gizlenince yazılır |
 | Çakışma | Yeni cihaz boşsa bulut kaydı iner. İki tarafta da farklı ilerleme varsa "Hangi kayıt kalsın?" diye sorar |
 | Liderlik | `leaderboard`: net servet ve müşteri sayısı, ilk 20 |
@@ -119,6 +119,13 @@ Güvenlik kuralları gerçek veritabanında denendi: başkasının satırı yaz�
 1. **Authentication → URL Configuration:** Site URL ve Redirect URLs listesine oyunun yayın adresini ekle.
 2. **Authentication → Sign In / Providers:** Misafir girişi için "Allow anonymous sign-ins" seçeneğini aç.
 3. **E-posta:** Yerleşik e-posta servisi saatlik gönderimle sınırlıdır. Gerçek kullanıcılar için kendi SMTP sağlayıcını bağla (Authentication → SMTP).
+4. **Google ile giriş (ücretsiz, SMTP gerektirmez):**
+   - Google Cloud Console → APIs & Services → OAuth consent screen'i yapılandır, sonra Credentials → Create credentials → OAuth client ID → "Web application".
+   - Authorized redirect URI olarak `https://<proje-kodu>.supabase.co/auth/v1/callback` adresini ekle (bu projede `https://jsweeupxworydfpihlgd.supabase.co/auth/v1/callback`).
+   - Üretilen Client ID ve Client secret değerlerini Supabase'de Authentication → Sign In / Providers → Google bölümüne gir ve etkinleştir.
+5. **Apple ile giriş (ücretli Apple Developer hesabı gerekir, yılda 99 $):** Apple Developer'da bir Services ID ve Sign in with Apple anahtarı (.p8) oluşturup Supabase'de Authentication → Sign In / Providers → Apple bölümüne gir. Apple'ın istemci gizli anahtarı (JWT) en çok 6 ay geçerlidir, süresi dolmadan yenilenmelidir. Oyun native iOS uygulamasına sarılırsa, başka üçüncü taraf girişler sunulduğunda Apple ile girişi de sunmak App Store kuralıdır.
+
+Sağlayıcıyı açtıktan sonra oyunda kod değişikliği gerekmez: **Ben > Sıralama** ekranında ilgili düğme kendiliğinden görünür.
 
 ### Bilinen sınırlamalar
 - **Hile:** Skorlar istemciden yazıldığı için oyunu kurcalayan biri sahte skor gönderebilir. Ciddi bir yarışma için skorların sunucuda doğrulanması gerekir.
