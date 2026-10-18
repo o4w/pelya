@@ -1,7 +1,9 @@
 // Köşe Kafe Tycoon: 3B görünümler (kafe ve şehir).
-// Three.js, depodaki sabit sürümden (vendor/three) yüklenir. Dışarıdan hiçbir model, doku veya betik çekilmez.
+// Three.js, depodaki sabit sürümden (vendor/three) yüklenir. Modeller de depodan gelir (assets/kaykit-restaurant, CC0).
+// Dışarıdan hiçbir model, doku veya betik çekilmez. Modeller yüklenemezse kafe kodla üretilen şekillerle çizilir.
 // Oyun durumunu yalnızca okur; hiçbir şeyi değiştirmez.
 import * as THREE from 'three';
+import { GLTFLoader } from './vendor/three/loaders/GLTFLoader.js';
 
 const U = 20;            // 1 birim = 20 piksel (2B sahnenin ölçeği)
 const MACH_COL = ['#aeb4bd', '#c9a36a', '#d28a3c', '#e6b94a', '#5fb7d9', '#b07ae0', '#f0f0f0'];
@@ -30,7 +32,7 @@ function disposeGroup(g) {
   g.traverse((o) => {
     if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose();
     const ms = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
-    ms.forEach((m) => { if (m.map) m.dispose(); });
+    ms.forEach((m) => { if (m.map && !m.userData.shared) m.dispose(); });
   });
   (g.userData.tex || []).forEach((t) => t.dispose());
 }
@@ -55,6 +57,47 @@ const G = {
   warn: shared(new THREE.SphereGeometry(0.1, 8, 6)),
 };
 
+/* ---------- Model kiti (KayKit Restaurant Bits, CC0) ---------- */
+const KIT_URL = new URL('./assets/kaykit-restaurant/', import.meta.url).href;
+const KIT_NAMES = ['table_round_A', 'chair_A', 'chair_B', 'kitchencounter_straight_A', 'kitchencounter_straight_B', 'kitchencounter_sink',
+  'stove_single', 'stove_multi', 'oven', 'fridge_A', 'fridge_B', 'pot_A', 'pan_A', 'plate', 'food_burger', 'cuttingboard', 'knife', 'menu', 'crate'];
+const kit = { ready: false, started: false, tpl: {} };
+function loadKit() {
+  if (kit.started) return;
+  kit.started = true;
+  const loader = new GLTFLoader();
+  Promise.all(KIT_NAMES.map((n) => loader.loadAsync(KIT_URL + n + '.gltf').then((gl) => [n, gl.scene])))
+    .then((list) => {
+      let atlas = null, material = null;
+      list.forEach(([n, root]) => {
+        root.traverse((o) => {
+          if (!o.isMesh) return;
+          if (!atlas) {
+            atlas = o.material.map;
+            material = new THREE.MeshLambertMaterial({ map: atlas });
+            material.userData.shared = true;
+          }
+          o.material = material;
+          o.geometry.userData.shared = true;
+        });
+        kit.tpl[n] = root;
+      });
+      kit.ready = true;
+    })
+    .catch((e) => { console.warn('3B model kiti yüklenemedi, kodla çizim kullanılıyor:', e && e.message); });
+}
+// Modelin kopyası. Geometri ve malzeme ortaktır; ölçek x, y, z ayrı verilebilir.
+function kitPlace(parent, name, x, y, z, sx, sy = sx, sz = sx, ry = 0) {
+  const t = kit.tpl[name];
+  if (!t) return null;
+  const o = t.clone(true);
+  o.position.set(x, y, z);
+  o.scale.set(sx, sy, sz);
+  o.rotation.y = ry;
+  parent.add(o);
+  return o;
+}
+
 /* ---------- Ana fonksiyon ---------- */
 export function createView3D(canvas, bridge, options = {}) {
   let renderer;
@@ -64,6 +107,7 @@ export function createView3D(canvas, bridge, options = {}) {
     throw new Error('WebGL kullanılamıyor');
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  if (options.models !== false) loadKit();
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(36, 1.1, 0.1, 200);
@@ -153,8 +197,32 @@ export function createView3D(canvas, bridge, options = {}) {
     g.add(sign);
 
     // tezgah
-    box(g, 10, 0.95, 1.1, '#a86f3f', wx(130), 0.475, wz(86));
-    box(g, 10.2, 0.1, 1.3, '#e8cfa6', wx(130), 1.0, wz(84));
+    if (kit.ready) {
+      for (let i = 0; i < 5; i++) {
+        const nm = i === 3 ? 'kitchencounter_sink' : (i % 2 ? 'kitchencounter_straight_B' : 'kitchencounter_straight_A');
+        const o = kitPlace(g, nm, wx(130) - 4 + i * 2, 0, wz(86), 1, 0.95, 0.55);
+        if (nm === 'kitchencounter_sink') o.scale.y = 0.55;
+      }
+      kitPlace(g, 'cuttingboard', wx(130) - 3.4, 0.95, wz(86), 0.5, 0.5, 0.5, 0.2);
+      kitPlace(g, 'knife', wx(130) - 3.0, 1.0, wz(86), 0.4, 0.4, 0.4, 1.3).rotation.x = Math.PI / 2;
+      for (let k = 0; k < 3; k++) kitPlace(g, 'plate', wx(130) + 3.6, 0.95 + k * 0.05, wz(86), 0.7);
+      kitPlace(g, 'food_burger', wx(130) + 3.6, 1.1, wz(86), 0.45);
+    } else {
+      box(g, 10, 0.95, 1.1, '#a86f3f', wx(130), 0.475, wz(86));
+      box(g, 10.2, 0.1, 1.3, '#e8cfa6', wx(130), 1.0, wz(84));
+    }
+    // mutfak hattı (arka duvar): seviyeye göre büyür
+    if (kit.ready) {
+      const kz = -D / 2 + 1.0;
+      kitPlace(g, 'stove_single', -7.9, 0, kz, 0.8);
+      kitPlace(g, 'pot_A', -7.9, 0.95, kz, 0.55, 0.55, 0.55, 0.4);
+      if (S.mach >= 2) kitPlace(g, 'oven', -6.1, 0, kz, 0.75);
+      if (S.mach >= 4) kitPlace(g, 'stove_multi', -4.3, 0, kz, 0.8);
+      if (S.cas > 0) kitPlace(g, 'fridge_B', 7.9, 0, kz, 0.6);
+      if (S.mach >= 3) kitPlace(g, 'fridge_A', 6.2, 0, kz, 0.6);
+      kitPlace(g, 'menu', 2.0, 0, D / 2 - 0.9, 1.4, 1.4, 1.4, -0.4);
+      if (S.dec >= 2) kitPlace(g, 'crate', -8.2, 0, D / 2 - 1.1, 0.45);
+    }
 
     // baristalar ve makineler
     for (let i = 0; i < 3; i++) {
@@ -203,6 +271,11 @@ export function createView3D(canvas, bridge, options = {}) {
         const ring = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.12, 28), ghost('#ffffff', 0.3));
         ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.02, z);
         g.add(ring);
+        continue;
+      }
+      if (kit.ready) {
+        kitPlace(g, 'table_round_A', x, 0, z, 0.78);
+        for (const s of [-1, 1]) kitPlace(g, t % 2 ? 'chair_B' : 'chair_A', x + s * 1.45, 0, z, 0.95, 0.95, 0.95, -s * Math.PI / 2);
         continue;
       }
       add(g, new THREE.CylinderGeometry(0.12, 0.12, 0.75, 8), mat('#c9a074'), x, 0.375, z);
@@ -459,7 +532,7 @@ export function createView3D(canvas, bridge, options = {}) {
   /* ---------- Güncelleme ve çizim ---------- */
   function signatureCafe() {
     const S = bridge.S;
-    return [S.tab, S.bar, S.mach, S.cas, S.dec, S.room, S.name, JSON.stringify(S.avatar || {})].join('|');
+    return [S.tab, S.bar, S.mach, S.cas, S.dec, S.room, S.name, JSON.stringify(S.avatar || {}), kit.ready ? 'k' : ''].join('|');
   }
   function signatureCity() {
     const S = bridge.S;

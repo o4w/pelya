@@ -10,14 +10,14 @@ description: Köşe Kafe Tycoon projesinde Three.js (3B) kodu yazarken veya değ
 ## Kaynak ve güvenlik
 - Three.js **yalnızca** `kafetycoon/vendor/three/` içinden yüklenir (importmap ile `three` adı buraya bağlanır). CDN kullanma.
 - Sürümü değiştirmek için `kafetycoon/vendor/VENDOR.md` içindeki adımları izle: npm bütünlük değerini doğrula, SHA-256'ları güncelle.
-- Dışarıdan model, doku, font veya betik yükleme (URL'den GLTF, HDR, uzak görsel yok). Her şey kodla üretilir (basit geometri, `CanvasTexture`). Depoya model eklenecekse kullanıcıdan onay al ve boyutunu belirt.
+- Dışarıdan (çalışma anında) model, doku, font veya betik yükleme yok: URL'den GLTF, HDR, uzak görsel kullanma. Modeller yalnızca depodaki `kafetycoon/assets/` altından yüklenir. Şu an `assets/kaykit-restaurant` (KayKit Restaurant Bits, CC0) var; kaynak, lisans ve SHA-256 değerleri orada `SOURCE.md` ve `SHA256SUMS` içinde. Yeni model paketi eklemeden önce kullanıcıdan onay al, lisansın CC0 (veya eşdeğeri) olduğunu resmi kaynaktan doğrula, boyutu söyle ve aynı belgeleri yaz. Modeller yüklenemezse kafe kodla üretilen şekillerle çizilmelidir (yedek yol kalsın). Diğer görseller kodla üretilir (basit geometri, `CanvasTexture`).
 - Kullanıcıdan gelen metin (kafe adı vb.) yalnızca canvas'a `fillText` ile çizilir. Hiçbir zaman `innerHTML` ile sayfaya yazılmaz.
 - `eval`, `new Function`, `setTimeout(string)` kullanma.
 - 3B modül oyun durumunu **salt okunur** köprü (`bridge`) üzerinden okur: `S`, `customers`, `lanes`, `ROOMS`, `LANES_X`, `tablePos`, `getH()`, `clock()`. 3B kod oyun durumunu değiştirmez.
 
 ## Kaynak yönetimi ve performans (mobil öncelikli)
 - `renderer.setPixelRatio(Math.min(devicePixelRatio, 2))`. Gölge haritası kullanma, gerekirse yuvarlak "blob" gölge çiz.
-- `MeshLambertMaterial` kullan, malzemeleri renge göre önbelleğe al. Müşteri geometrileri ortaktır (`shared`).
+- Model malzemeleri tek ortak `MeshLambertMaterial` olarak değiştirilir (`userData.shared`), geometriler ortaktır; `disposeGroup` bunları silmez. `MeshLambertMaterial` kullan, malzemeleri renge göre önbelleğe al. Müşteri geometrileri ortaktır (`shared`).
 - Statik sahne yalnızca imza (`signature*`) değişince yeniden kurulur. Her yeniden kurulumda eski grubun geometrilerini ve dokularını `disposeGroup` ile temizle.
 - 3B kapatılınca `dispose()` çağır (`renderer.dispose()` ve `forceContextLoss()`). Sekme gizliyken `requestAnimationFrame` zaten durur, ek döngü kurma.
 - `powerPreference: 'low-power'` ve düşük poligon (kapsül, küre, kutu). Müşteri başına birkaç mesh, çizim çağrısı sayısını düşük tut.

@@ -107,6 +107,9 @@ Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer. Kafe sekmelerinde 3B kafe,
 
 **Güvenlik:** Three.js CDN'den değil, depodaki sabit sürümden (`vendor/three`, 0.170.0) yüklenir. Paketin bütünlüğü npm kaydıyla doğrulanmış, dosya özetleri `vendor/VENDOR.md` içinde. Dışarıdan model, doku veya betik çekilmez. Projeye özel kurallar `.claude/skills/threejs/SKILL.md` içindedir.
 
+### Model kiti
+Kafe 3B görünümünde mobilya ve mutfak, KayKit Restaurant Bits (CC0, Kay Lousberg) modelleriyle çizilir: masa, sandalye, tezgâh, lavabo, ocak, fırın, buzdolabı, tabak, tencere. Modeller `assets/kaykit-restaurant/` içindedir (yaklaşık 760 KB, tek doku). Mutfak hattı makine ve vitrin seviyesine göre büyür. Modeller yüklenemezse kafe eski kodla üretilen şekillerle çizilir. Kaynak ve özetler için `assets/kaykit-restaurant/SOURCE.md`.
+
 ## Hesap, bulut kaydı ve sıralama (Supabase)
 
 | Özellik | Nasıl çalışır |
