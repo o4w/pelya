@@ -15,6 +15,9 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Yayın:** Klasörü olduğu gibi bir statik sunucuya koyabilirsin (Vercel için Root Directory: `kafetycoon`).
 - `index.html` dosyasına çift tıklayarak da açılır, ama **3B görünüm, e-posta girişi ve çevrimdışı önbellek `file://` ile çalışmaz.** Bunlar için http(s) gerekir.
 
+## Alım kartları ve gelir göstergesi
+Üstteki para göstergesinin yanında tahmini gelir (`+₺1.5/sn`, kafe + pasif gelir) görünür. Alım kartlarında (Kafe > Yükselt, Menü, Servet > İşletmeler) parası yetmeyen düğmenin altında **"₺X eksik"** yazar ve açıklamanın altında bir ilerleme çubuğu çıkar. Oyunun şimdi önerdiği alım (`pickBuy()`) **Önerilen** rozetiyle sarı çerçeveli işaretlenir: hedefle ilgili alınabilir olan, yoksa parası yeten en ucuz, yoksa biriktirilecek en ucuz. Liste sırası değişmez, böylece dokunurken kartlar kaymaz.
+
 ## Gezinme adları
 Alt çubuk: **Şehir** (harita), **Kafe** (yükselt, menü, fiyat, personel), **Servet** (mülkler, işletmeler, hayır, marka, şubeler), **Ödüller** (çark, sandık, etkinlik, başarım), **Ben** (karakter, yetenek, sıralama, ayarlar, kafem). Kafedeki yardımcılar **personel** (kartla yükselir), şehirdeki işletmelerin yöneticisi **müdür** diye anılır.
 

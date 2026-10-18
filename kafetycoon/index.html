@@ -253,6 +253,10 @@
   .tutcard b { font-family: var(--display); font-weight: 400; color: #b4470a; font-size: 18px; display: block; margin-bottom: 2px; }
   .tutcard .row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
   .tutcard .row button { padding: 7px 16px; font-size: 16px; }
+  .pill .inc { font-family: var(--body); font-size: 12px; font-weight: 600; color: #9fe8a8; margin-left: 6px; white-space: nowrap; }
+  .meter.mini { height: 8px; margin-top: 6px; }
+  .item.rec { border-color: #ffe36a; box-shadow: 0 0 0 3px rgba(255,227,106,0.9), 0 3px 0 rgba(30,26,77,0.2); }
+  .item.rec b::after { content: 'Önerilen'; display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #ffe36a; color: #5a3400; font-family: var(--body); font-size: 11px; font-weight: 700; vertical-align: middle; }
   .xbtn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -261,7 +265,7 @@
 <body>
 <div class="hud"><div class="wrap">
   <div class="row1">
-    <div class="pill coin"><span class="ico">₺</span><div class="money"><span id="money">0</span></div></div>
+    <div class="pill coin"><span class="ico">₺</span><div class="money"><span id="money">0</span></div><small class="inc" id="incps"></small></div>
     <div class="pill star"><span class="ico">★</span><b id="rep"></b></div>
     <div class="pill lvl"><span class="ico">Sv</span><b id="lvl"></b><span class="xpbar"><i id="xpbar"></i></span></div>
   </div>
@@ -797,7 +801,10 @@
     speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : (S.premium ? 'Başlat' : 'Reklam');
     boostBtn.disabled = left > 0;
     $('back').hidden = !(mainTab === 'home' && (view === 'cafe' || view === 'biz'));
+    recNow = pickBuy();
+    nextCur = nextStep();
     renderNext();
+    var ips = incomePerSec(); $('incps').textContent = '+₺' + (ips < 10 ? ips.toFixed(1) : fmt(ips)) + '/sn';
     if (bizActive()) {
       var bb = bizDef(bizSel), bl = bizLv(bb), bc = bizCost(bb), bm = bizMgrCost(bb), bmax = bl >= BIZ_MAX;
       $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ müdür' : '');
@@ -841,7 +848,8 @@
         r.d.textContent = it.d();
         if (maxed(it)) { r.b.textContent = 'Maks'; r.b.disabled = true; }
         else if (S.level < it.req()) { r.b.innerHTML = 'Seviye ' + it.req(); r.b.disabled = true; }
-        else { var c = it.cost(); r.b.innerHTML = '₺' + fmt(c); r.b.disabled = S.money < c; }
+        else { var c = it.cost(); buyLabel(r.b, '₺' + fmt(c), c); markRec(r.b, 'item', it.k); }
+        if (maxed(it) || S.level < it.req()) { fundsUI(r.b, 1, false); markRec(r.b, '', ''); }
       }
     } else if (tab === 'menu') {
       $('menucount').textContent = menuCount() + ' / ' + PRODUCTS.length;
@@ -850,7 +858,8 @@
         mr.d.textContent = 'Adil fiyat ₺' + money1(fairOf(p)) + (p.type === 'food' && S.cas < 1 ? ' · vitrin gerekli' : '');
         if (own) { mr.b.textContent = 'Menüde'; mr.b.disabled = true; mr.el.classList.add('done'); }
         else if (S.level < p.req) { mr.b.innerHTML = 'Seviye ' + p.req; mr.b.disabled = true; }
-        else { mr.b.innerHTML = '₺' + fmt(p.cost); mr.b.disabled = S.money < p.cost; }
+        else { buyLabel(mr.b, '₺' + fmt(p.cost), p.cost); markRec(mr.b, 'menu', p.id); }
+        if (own || S.level < p.req) { fundsUI(mr.b, 1, false); markRec(mr.b, '', ''); }
       }
     } else if (tab === 'price') {
       buildPriceList();
@@ -2222,7 +2231,8 @@
         r.d.textContent = b.d + ' · ₺' + fmt(bizIncAt(b, Math.max(1, lv), S.bizMgr[b.id])) + '/gün' + (lv ? '' : ' (1. seviyede)');
         if (lv >= BIZ_MAX) { r.b.textContent = 'Maks'; r.b.disabled = true; }
         else if (!lv && S.level < b.req) { r.b.textContent = 'Seviye ' + b.req; r.b.disabled = true; }
-        else { r.b.innerHTML = (lv ? 'Yükselt' : 'Kur') + '<small>₺' + fmt(bizCost(b)) + '</small>'; r.b.disabled = S.money < bizCost(b); }
+        else { var bc2 = bizCost(b), sh = bc2 - S.money; r.b.innerHTML = (lv ? 'Yükselt' : 'Kur') + '<small>₺' + fmt(bc2) + (sh > 0 ? ' · ₺' + fmt(sh) + ' eksik' : '') + '</small>'; r.b.disabled = sh > 0; fundsUI(r.b, bc2, sh > 0); markRec(r.b, 'biz', b.id); }
+        if (lv >= BIZ_MAX || (!lv && S.level < b.req)) { fundsUI(r.b, 1, false); markRec(r.b, '', ''); }
       });
       return true;
     }
@@ -2689,8 +2699,40 @@
     out.sort(function (a, b) { return a.cost - b.cost; });
     return out;
   }
+  // Yetmeyen alımlarda eksik tutar ve ilerleme çubuğu; önerilen kartı işaretle
+  function fundsUI(btn, cost, show) {
+    var item = btn.closest ? btn.closest('.item') : null;
+    if (!item) return;
+    var m = item._m;
+    if (!m) { m = document.createElement('div'); m.className = 'meter mini'; m.innerHTML = '<i></i>'; var inf = item.querySelector('.info'); if (inf) inf.appendChild(m); item._m = m; }
+    m.hidden = !show;
+    if (show) m.firstChild.style.width = Math.max(2, Math.min(100, S.money / cost * 100)) + '%';
+  }
+  function buyLabel(btn, label, cost) {
+    var short = cost - S.money;
+    btn.innerHTML = label + (short > 0 ? '<small>₺' + fmt(short) + ' eksik</small>' : '');
+    btn.disabled = short > 0;
+    fundsUI(btn, cost, short > 0);
+  }
+  function markRec(btn, kind, k) {
+    var item = btn.closest ? btn.closest('.item') : null, rc = recNow && (recNow.cand || recNow.tgt);
+    if (item) item.classList.toggle('rec', !!(rc && rc.kind === kind && rc.k === k));
+  }
   function goCand(c) { if (c.kind === 'item') goBuy(c.k); else if (c.kind === 'menu') goMenu(c.k); else goBiz(c.k); }
   function candText(c) { return (c.kind === 'menu' ? 'Menüye ' + c.n + ' ekle' : c.kind === 'biz' ? c.n + ' kur' : c.n + ' al') + ' · ₺' + fmt(c.cost); }
+  // Alım önerisi: hedefle ilgili alınabilir olan, yoksa parası yeten en ucuz, yoksa biriktirilecek en ucuz
+  var recNow = null;
+  function pickBuy() {
+    var cands = itemCandidates(), gi = S.goalI, i, c;
+    var want = gi < GOALS.length ? { 0: 'tab', 2: 'bar', 4: 'mach' }[gi] : null, wantMenu = gi === 3;
+    for (i = 0; i < cands.length; i++) {
+      c = cands[i];
+      if (c.cost <= S.money && ((want && c.kind === 'item' && c.k === want) || (wantMenu && c.kind === 'menu'))) return { cand: c, goal: true };
+    }
+    for (i = 0; i < cands.length; i++) if (cands[i].cost <= S.money) return { cand: cands[i] };
+    for (i = 0; i < cands.length; i++) if (cands[i].cost > S.money) return { tgt: cands[i] };
+    return {};
+  }
   // Oyuncunun şimdi yapması en mantıklı şey
   function nextStep() {
     if (weekClaimable()) return { t: 'Haftalık etkinlik ödülünü al', hot: true, go: function () { setTab('event'); } };
@@ -2701,18 +2743,18 @@
     var want = gi < GOALS.length ? { 0: 'tab', 2: 'bar', 4: 'mach' }[gi] : null, wantMenu = gi === 3;
     for (i = 0; i < cands.length; i++) {
       var c = cands[i];
-      if (c.cost <= S.money && ((want && c.kind === 'item' && c.k === want) || (wantMenu && c.kind === 'menu'))) return { t: candText(c), sub: 'hedef için', hot: true, go: function () { goCand(c); } };
+      if (c.cost <= S.money && ((want && c.kind === 'item' && c.k === want) || (wantMenu && c.kind === 'menu'))) return { t: candText(c), sub: 'hedef için', hot: true, cand: c, go: function () { goCand(c); } };
     }
     for (i = 0; i < cands.length; i++) {
-      if (cands[i].cost <= S.money) { (function (c) { nextStep.last = { t: candText(c), hot: true, go: function () { goCand(c); } }; })(cands[i]); return nextStep.last; }
+      if (cands[i].cost <= S.money) { (function (c) { nextStep.last = { t: candText(c), hot: true, cand: c, go: function () { goCand(c); } }; })(cands[i]); return nextStep.last; }
     }
     // alınabilecek bir şey yok: biriktir ya da hedefe ilerle
     var g = currentGoal(), tgt = null;
     for (i = 0; i < cands.length; i++) { if (cands[i].cost > S.money) { tgt = cands[i]; break; } }
     var counts = { 1: 25, 5: 100, 7: 500 };
-    if (gi < GOALS.length && counts[gi]) return { t: 'Müşteri ağırla: ' + Math.min(S.runServed, counts[gi]) + '/' + counts[gi], sub: tgt ? '₺' + fmt(tgt.cost - S.money) + ' ' + tgt.n + ' için ' + etaText(tgt.cost - S.money) : '', hot: false, go: function () { view = 'cafe'; setTab('home'); } };
+    if (gi < GOALS.length && counts[gi]) return { t: 'Müşteri ağırla: ' + Math.min(S.runServed, counts[gi]) + '/' + counts[gi], sub: tgt ? '₺' + fmt(tgt.cost - S.money) + ' ' + tgt.n + ' için ' + etaText(tgt.cost - S.money) : '', hot: false, tgt: tgt, go: function () { view = 'cafe'; setTab('home'); } };
     if (gi === 6) return { t: 'İtibarı 4.0\'a çıkar: dekor al, fiyatı dengele', hot: false, go: function () { setTab('price'); } };
-    if (tgt) return { t: '₺' + fmt(tgt.cost - S.money) + ' biriktir: ' + tgt.n, sub: etaText(tgt.cost - S.money), hot: false, go: function () { view = 'cafe'; setTab('home'); } };
+    if (tgt) return { t: '₺' + fmt(tgt.cost - S.money) + ' biriktir: ' + tgt.n, sub: etaText(tgt.cost - S.money), hot: false, tgt: tgt, go: function () { view = 'cafe'; setTab('home'); } };
     return { t: g.text, hot: false, go: function () { view = 'cafe'; setTab('home'); } };
   }
   var nextCur = null, nextSig = '';
@@ -2721,8 +2763,7 @@
     var show = mainTab === 'home' && view !== 'biz' && S.tut >= TUT.length - 1;
     el.hidden = !show;
     if (!show) return;
-    var ns = nextStep();
-    nextCur = ns;
+    var ns = nextCur;
     var sig = ns.t + '|' + (ns.sub || '') + '|' + (ns.hot ? 1 : 0);
     if (sig === nextSig) return;
     nextSig = sig;
