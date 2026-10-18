@@ -39,6 +39,15 @@ Müşteri gelir → kuyruğa girer → barista sipariş hazırlar → masaya otu
    Her şey maksimuma gelince franchise: yeni şehirde başla, eski şuben otomatik çalışmaya devam eder
 ```
 
+### Gün sonu
+Gün bitince giderler **bir kez** kesilir: kira ve bakım (kafe büyüklüğü + pasif gelirin %3'ü) ve malzeme (kafe gelirinin %10'u). Para yetmezse itibar -0.1 düşer. Ardından 15 saniyelik karar ekranı açılır:
+- **Kampanya:** gelirin %20'si gider, ertesi gün müşteri x1.25.
+- **Personele prim:** gelirin %12'si gider, ertesi gün hizmet %10 hızlanır, itibar +0.1.
+- **Maliyet kıs:** günün giderinin yarısı iade edilir, itibar -0.1.
+- **Standart gün:** değişiklik yok. Süre dolarsa bu seçilir, oyun takılı kalmaz.
+
+Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenilemek gideri ikinci kez kesmez.
+
 ## Sistemler
 
 ### Kafe (sahne)
