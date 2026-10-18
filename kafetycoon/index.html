@@ -222,6 +222,33 @@
   .hubbar .big { flex: 1.5; padding-block: 10px 8px; font-size: 20px; }
   .hubbar button i { position: absolute; top: -6px; right: -3px; width: 16px; height: 16px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
   .backbtn { padding: 3px 10px; font-size: 14px; border-radius: 12px; margin-right: 8px; flex: 0 0 auto; }
+  /* Sıradaki adım çubuğu */
+  .nextwrap { padding-top: 8px; padding-bottom: 6px; }
+  .nextbar { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-align: left; --c1: #ffffff; --c2: #eef5ff; --bd: #1d3f9a;
+    color: var(--ink); text-shadow: none; font-family: var(--body); font-weight: 600; font-size: 15px; line-height: 1.2; padding: 7px 10px; border-radius: 16px; }
+  .nextbar .ni { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #9aa3be; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2); }
+  .nextbar .ni svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .nextbar.hot .ni { background: #1fb83f; }
+  .nextbar .nt { flex: 1; min-width: 0; }
+  .nextbar .nt small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #b4470a; text-shadow: none; }
+  .nextbar .nt span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nextbar .nc { flex: 0 0 auto; font-family: var(--display); color: #1d3f9a; font-size: 20px; }
+  .nextbar.hot { animation: nbpulse 1.6s ease-in-out infinite; }
+  @keyframes nbpulse { 0%, 100% { box-shadow: 0 4px 0 var(--bd), 0 0 0 0 rgba(31,184,63,0.55); } 50% { box-shadow: 0 4px 0 var(--bd), 0 0 0 7px rgba(31,184,63,0); } }
+  #hubgoal { display: none; }
+  .pulse { animation: btnpulse 0.8s ease-in-out 4; }
+  @keyframes btnpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @media (prefers-reduced-motion: reduce) { .nextbar.hot, .pulse, .tuthole, .tuthand { animation: none !important; } }
+  /* ilk açılış rehberi */
+  .tut { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
+  .tuthole { position: absolute; border-radius: 18px; border: 4px solid #ffe36a; box-shadow: 0 0 0 9999px rgba(10,20,70,0.6); transition: left 0.25s, top 0.25s, width 0.25s, height 0.25s; animation: tutglow 1.2s ease-in-out infinite; }
+  @keyframes tutglow { 0%, 100% { border-color: #ffe36a; } 50% { border-color: #ffffff; } }
+  .tuthand { position: absolute; width: 44px; height: 44px; margin: -6px 0 0 -22px; transition: left 0.25s, top 0.25s; animation: handbob 0.9s ease-in-out infinite; filter: drop-shadow(0 3px 0 rgba(0,0,0,0.35)); }
+  @keyframes handbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .tutcard { position: absolute; left: 14px; right: 14px; max-width: 420px; margin: 0 auto; pointer-events: auto; background: #fff; color: var(--ink); border: 4px solid #1d3f9a; border-radius: 22px; padding: 14px 16px 12px; box-shadow: 0 6px 0 rgba(18,40,107,0.5); font-size: 16px; font-weight: 600; line-height: 1.35; }
+  .tutcard b { font-family: var(--display); font-weight: 400; color: #b4470a; font-size: 18px; display: block; margin-bottom: 2px; }
+  .tutcard .row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+  .tutcard .row button { padding: 7px 16px; font-size: 16px; }
   .xbtn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -239,6 +266,7 @@
     <div class="day"><span id="day"></span><div class="daybar"><i id="daybar"></i></div></div>
   </div>
 </div></div>
+<div class="nextwrap wrap"><button id="nextbar" class="nextbar" hidden></button></div>
 <div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
     <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
     <button data-go="chest" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300" aria-label="Sandık"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 13v3M5 9a7 7 0 0 1 14 0"/></svg><i hidden></i></button>
@@ -435,6 +463,7 @@
   <button data-main="rew"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 13h18"/><path d="M12 8C9 8 7 7 7 5.5S9.5 3 12 8c2.5-5 5-3.5 5-2.5S15 8 12 8z"/></svg>Ödüller<i hidden></i></button>
   <button data-main="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ben<i hidden></i></button>
 </nav>
+<div class="tut" id="tut" hidden><div class="tuthole" id="tuthole"></div><svg class="tuthand" id="tuthand" viewBox="0 0 48 48" aria-hidden="true"><path d="M20 4c2 0 3 1.5 3 3.5V22l2-.5c1.5-.4 3 .3 3.500 1.800l1.800-.3c1.500-.2 2.800.8 3 2.200l1.600-.2c1.600-.1 2.800 1.100 2.800 2.600v6.500c0 5.500-4.500 10-10 10h-3.500c-3.200 0-5.800-1.400-7.500-3.800L9 34c-1-1.400-.7-3.300.7-4.200 1.200-.8 2.700-.5 3.700.5L17 33V7.500C17 5.500 18 4 20 4z" fill="#fff" stroke="#1d3f9a" stroke-width="2.500" stroke-linejoin="round"/></svg><div class="tutcard" id="tutcard"><b id="tuttitle"></b><span id="tuttext"></span><div class="row"><button id="tutskip" style="--c1:#c9cfe0;--c2:#9aa3be;--bd:#5d6688">Atla</button><button id="tutok" class="on" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Tamam</button></div></div></div>
 <div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -524,6 +553,7 @@
   if (!Array.isArray(S.branches)) S.branches = [];
   if (!S.week) S.week = { id: '', served: 0, earn: 0, claimed: false };
   S.premium = !!S.premium;
+  if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
   if (!S.boost || typeof S.boost.pop !== 'number') S.boost = { pop: 1, svc: 1 };
   ['mgr', 'biz', 'avOwn', 'bizMgr'].forEach(function (k) { if (!S[k]) S[k] = {}; });
   var blockPersist = false;
@@ -763,6 +793,7 @@
     var hbb = $('hbboost'); hbb.disabled = left > 0;
     hbb.innerHTML = left > 0 ? 'x2 hız<small>' + Math.ceil(left / 1000) + ' sn</small>' : 'Hızlan x2<small>' + (S.premium ? 'ücretsiz' : 'reklam izle') + ' · 30 sn</small>';
     $('back').hidden = !(mainTab === 'home' && (view === 'cafe' || view === 'biz'));
+    renderNext();
     if (bizActive()) {
       var bb = bizDef(bizSel), bl = bizLv(bb), bc = bizCost(bb), bm = bizMgrCost(bb), bmax = bl >= BIZ_MAX;
       $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ yönetici' : '');
@@ -2411,7 +2442,7 @@
     }
     ctx.globalAlpha = 1;
   }
-  function bought() { track('purchase', { t: tab }); sfx('buy'); buzz(25); burst(W / 2, 150, 18, ['#ffd23f', '#6fd6a2', '#e58a3d'], 100); }
+  function bought() { TUT_BOUGHT++; track('purchase', { t: tab }); sfx('buy'); buzz(25); burst(W / 2, 150, 18, ['#ffd23f', '#6fd6a2', '#e58a3d'], 100); }
 
   function drawAtmosphere() {
     var t = Math.min(S.dayT, DAY_LEN) / DAY_LEN, a = 0, col = '11,16,48';
@@ -2630,6 +2661,120 @@
       });
     }
   });
+
+  /* ---------- Sıradaki adım ve ilk açılış rehberi ---------- */
+  function incomePerSec() { return estPerMin().rate / 60 + passiveDaily() / DAY_LEN; }
+  function etaText(need) {
+    var r = incomePerSec();
+    if (need <= 0 || r <= 0) return '';
+    var sec = Math.ceil(need / r);
+    return sec < 90 ? '~' + sec + ' sn' : '~' + Math.ceil(sec / 60) + ' dk';
+  }
+  function pulseBtn(el) { if (!el) return; el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); setTimeout(function () { el.classList.remove('pulse'); }, 3500); }
+  function goBuy(k) {
+    setTab('inv');
+    ITEMS.forEach(function (it, i) { if (it.k === k && rows[i]) pulseBtn(rows[i].b); });
+  }
+  function goMenu(id) {
+    setTab('menu');
+    PRODUCTS.forEach(function (p, i) { if (p.id === id && menuRows[i]) pulseBtn(menuRows[i].b); });
+  }
+  function goBiz(id) { view = 'city'; setTab('home'); setTimeout(function () { openLot(id); }, 450); }
+  function itemCandidates() {
+    var out = [];
+    ITEMS.forEach(function (it) {
+      if (it.lv() >= it.max()) return;
+      var cost = it.cost(), req = it.req();
+      if (typeof cost !== 'number' || S.level < req) return;
+      out.push({ kind: 'item', k: it.k, n: it.n, cost: cost });
+    });
+    PRODUCTS.forEach(function (p) { if (!S.menu[p.id] && S.level >= p.req) out.push({ kind: 'menu', k: p.id, n: p.n, cost: p.cost }); });
+    BIZ.forEach(function (b) { if (!bizLv(b) && S.level >= b.req) out.push({ kind: 'biz', k: b.id, n: b.n, cost: bizCost(b) }); });
+    out.sort(function (a, b) { return a.cost - b.cost; });
+    return out;
+  }
+  function goCand(c) { if (c.kind === 'item') goBuy(c.k); else if (c.kind === 'menu') goMenu(c.k); else goBiz(c.k); }
+  function candText(c) { return (c.kind === 'menu' ? 'Menüye ' + c.n + ' ekle' : c.kind === 'biz' ? c.n + ' kur' : c.n + ' al') + ' · ₺' + fmt(c.cost); }
+  // Oyuncunun şimdi yapması en mantıklı şey
+  function nextStep() {
+    if (weekClaimable()) return { t: 'Haftalık etkinlik ödülünü al', hot: true, go: function () { setTab('event'); } };
+    if (chestCount() > 0) return { t: 'Sandığını aç', hot: true, go: function () { setTab('chest'); } };
+    if (wheelReady()) return { t: 'Günlük ücretsiz çarkı çevir', hot: true, go: function () { setTab('wheel'); } };
+    var cands = itemCandidates(), gi = S.goalI, i;
+    // hedefle ilgili alım (varsa ve alınabiliyorsa)
+    var want = gi < GOALS.length ? { 0: 'tab', 2: 'bar', 4: 'mach' }[gi] : null, wantMenu = gi === 3;
+    for (i = 0; i < cands.length; i++) {
+      var c = cands[i];
+      if (c.cost <= S.money && ((want && c.kind === 'item' && c.k === want) || (wantMenu && c.kind === 'menu'))) return { t: candText(c), sub: 'hedef için', hot: true, go: function () { goCand(c); } };
+    }
+    for (i = 0; i < cands.length; i++) {
+      if (cands[i].cost <= S.money) { (function (c) { nextStep.last = { t: candText(c), hot: true, go: function () { goCand(c); } }; })(cands[i]); return nextStep.last; }
+    }
+    // alınabilecek bir şey yok: biriktir ya da hedefe ilerle
+    var g = currentGoal(), tgt = null;
+    for (i = 0; i < cands.length; i++) { if (cands[i].cost > S.money) { tgt = cands[i]; break; } }
+    var counts = { 1: 25, 5: 100, 7: 500 };
+    if (gi < GOALS.length && counts[gi]) return { t: 'Müşteri ağırla: ' + Math.min(S.runServed, counts[gi]) + '/' + counts[gi], sub: tgt ? '₺' + fmt(tgt.cost - S.money) + ' ' + tgt.n + ' için ' + etaText(tgt.cost - S.money) : '', hot: false, go: function () { view = 'cafe'; setTab('home'); } };
+    if (gi === 6) return { t: 'İtibarı 4.0\'a çıkar: dekor al, fiyatı dengele', hot: false, go: function () { setTab('price'); } };
+    if (tgt) return { t: '₺' + fmt(tgt.cost - S.money) + ' biriktir: ' + tgt.n, sub: etaText(tgt.cost - S.money), hot: false, go: function () { view = 'cafe'; setTab('home'); } };
+    return { t: g.text, hot: false, go: function () { view = 'cafe'; setTab('home'); } };
+  }
+  var nextCur = null, nextSig = '';
+  function renderNext() {
+    var el = $('nextbar');
+    var show = mainTab === 'home' && view !== 'biz' && S.tut >= TUT.length - 1;
+    el.hidden = !show;
+    if (!show) return;
+    var ns = nextStep();
+    nextCur = ns;
+    var sig = ns.t + '|' + (ns.sub || '') + '|' + (ns.hot ? 1 : 0);
+    if (sig === nextSig) return;
+    nextSig = sig;
+    el.className = 'nextbar' + (ns.hot ? ' hot' : '');
+    el.innerHTML = '<span class="ni"><svg viewBox="0 0 24 24" aria-hidden="true">' + (ns.hot ? '<path d="M5 12l5 5 9-10"/>' : '<circle cx="12" cy="12" r="3"/>') + '</svg></span>' +
+      '<span class="nt"><small>Sıradaki adım</small><span>' + esc2(ns.t) + (ns.sub ? ' <em style="font-style:normal;color:var(--muted)">· ' + esc2(ns.sub) + '</em>' : '') + '</span></span><span class="nc">›</span>';
+  }
+  $('nextbar').addEventListener('click', function () { if (nextCur) { sfx('tick'); track('next_step', { t: nextCur.t.slice(0, 24) }); nextCur.go(); } });
+
+  // İlk açılış rehberi: yumuşak (dokunmalar engellenmez), her adım hedefi vurgular
+  var TUT_BOUGHT = 0;
+  var TUT = [
+    { title: 'Hoş geldin!', text: 'Kafen şehirde. Ona dokun ve içeri gir.', target: function () { var q = hub && hub.screenPos('cafe'); return q ? { x: q.x - 46, y: q.y - 46, w: 92, h: 92 } : null; }, done: function () { return view !== 'city' || mainTab !== 'home'; }, ok: false },
+    { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', target: function () { return rectOf($('cv')); }, done: null, ok: true },
+    { title: 'Büyüt', text: 'Parayı yatırıma çevir. Büyüt sekmesine dokun.', target: function () { return rectOf(document.querySelector('#nav [data-main="grow"]')); }, done: function () { return mainTab === 'grow'; }, ok: false },
+    { title: 'İlk yükseltme', text: 'Yeşil düğmeye basıp ilk yükseltmeni al. Parası yetmiyorsa biraz bekle, müşteriler sattıkça para birikir.', target: function () { var b = document.querySelector('#list .item button.buy:not([disabled])') || document.querySelector('#list .item button.buy'); return rectOf(b); }, done: function () { return TUT_BOUGHT > 0; }, ok: false, stay: true },
+    { title: 'Şehre dön', text: 'Şehir sekmesiyle haritaya dönersin. Yeni işletmeler seviyeyle açılır.', target: function () { return rectOf(document.querySelector('#nav [data-main="home"]')); }, done: function () { return hubActive(); }, ok: false },
+    { title: 'Hazırsın!', text: 'Takılırsan üstteki "Sıradaki adım" çubuğuna dokun, seni doğru yere götürür.', target: function () { return rectOf($('nextbar')); }, done: null, ok: true, last: true }
+  ];
+  function rectOf(el) { if (!el || el.hidden) return null; var r = el.getBoundingClientRect(); return r.width > 0 ? { x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8 } : null; }
+  var tutIdx = -1;
+  function tutEnd(skip) {
+    S.tut = 99; $('tut').hidden = true; tutIdx = -1;
+    if (!skip) { S.money += 50; pops.push({ x: W / 2, y: 150, t: 0, text: 'Rehber tamam +₺50', c: '#ffd23f' }); sfx('win'); }
+    track(skip ? 'tut_skip' : 'tut_done', { i: S.tut }); persist(); refresh();
+  }
+  function tutTick() {
+    var box = $('tut');
+    if (S.tut >= 99) { if (!box.hidden) box.hidden = true; return; }
+    if (S.tut >= TUT.length) { tutEnd(false); return; }
+    if (modal && !modal.hidden) { box.hidden = true; return; }
+    var st = TUT[S.tut];
+    if (tutIdx !== S.tut) { tutIdx = S.tut; track('tut_step', { i: S.tut }); $('tuttitle').textContent = st.title; $('tuttext').textContent = st.text; $('tutok').hidden = !st.ok; $('tutok').textContent = st.last ? 'Başla' : 'Tamam'; }
+    if (st.done && st.done()) { if (st.stay) { /* adım hemen ilerler */ } S.tut++; persist(); return; }
+    var r = st.target();
+    if (!r) { box.hidden = true; return; }
+    box.hidden = false;
+    var h = $('tuthole'); h.style.left = r.x + 'px'; h.style.top = r.y + 'px'; h.style.width = r.w + 'px'; h.style.height = r.h + 'px';
+    var below = r.y + r.h / 2 < window.innerHeight * 0.55;
+    var hand = $('tuthand');
+    hand.style.left = (r.x + r.w / 2) + 'px'; hand.style.top = (below ? r.y + r.h - 4 : r.y - 40) + 'px';
+    hand.style.rotate = below ? '0deg' : '180deg';
+    var card = $('tutcard'), cy = below ? Math.min(window.innerHeight - 190, r.y + r.h + 56) : Math.max(70, r.y - 56 - card.offsetHeight);
+    card.style.top = cy + 'px';
+  }
+  $('tutok').addEventListener('click', function () { if (S.tut < TUT.length) { if (TUT[S.tut].last) { tutEnd(false); } else { S.tut++; persist(); } } });
+  $('tutskip').addEventListener('click', function () { tutEnd(true); });
+  setInterval(tutTick, 250);
 
   /* ---------- 3B görünüm (Three.js, depodaki sabit sürüm; yalnızca isteyince yüklenir) ---------- */
   var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false;

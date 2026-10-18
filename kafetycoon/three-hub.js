@@ -306,6 +306,18 @@ export function createHub(canvas, bridge) {
     return null;
   }
 
+  // Bir parselin ekrandaki (client) konumu; rehber ve vurgu için
+  const tmp = new THREE.Vector3();
+  function screenPos(id) {
+    const n = lotNodes.get(id);
+    if (!n) return null;
+    n.group.getWorldPosition(tmp);
+    tmp.y += n.hgt * 0.5;
+    tmp.project(camera);
+    const r = canvas.getBoundingClientRect();
+    return { x: r.left + (tmp.x + 1) / 2 * r.width, y: r.top + (1 - tmp.y) / 2 * r.height };
+  }
+
   function resize(w, h) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
@@ -319,7 +331,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { update, resize, dispose, pick, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }
