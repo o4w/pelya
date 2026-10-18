@@ -15,20 +15,23 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Yayın:** Klasörü olduğu gibi bir statik sunucuya koyabilirsin (Vercel için Root Directory: `kafetycoon`).
 - `index.html` dosyasına çift tıklayarak da açılır, ama **3B görünüm, e-posta girişi ve çevrimdışı önbellek `file://` ile çalışmaz.** Bunlar için http(s) gerekir.
 
+## Gezinme adları
+Alt çubuk: **Şehir** (harita), **Kafe** (yükselt, menü, fiyat, personel), **Servet** (mülkler, işletmeler, hayır, marka, şubeler), **Ödüller** (çark, sandık, etkinlik, başarım), **Ben** (karakter, yetenek, sıralama, ayarlar, kafem). Kafedeki yardımcılar **personel** (kartla yükselir), şehirdeki işletmelerin yöneticisi **müdür** diye anılır.
+
 ## Rehber ve "Sıradaki adım"
 - **İlk açılış rehberi:** yeni oyuncuya 6 adımda yol gösterir: kafeye gir, nasıl çalıştığını gör, Büyüt'e git, ilk yükseltmeyi al, Şehir'e dön, "Sıradaki adım"ı tanı. Hedefi vurgular ve parmak işaretiyle gösterir. Yumuşak bir rehberdir: dokunmalar engellenmez, "Atla" ile kapatılır. Bitirince +₺50 verilir. İlerleme kayıtta `tut` alanında tutulur (99 = bitti). Eski oyuncular (seviye 1'den ileride) rehberi görmez.
 - **Sıradaki adım çubuğu** (Şehir ve kafe ekranlarının üstünde): şimdi yapılacak en mantıklı şeyi yazar ve dokununca doğru ekrana götürür. Öncelik: haftalık ödül, sandık, günlük çark, hedefle ilgili alım, parası yeten en ucuz alım (yükseltme, menü ürünü, işletme kurma), yoksa "₺X biriktir" ve tahmini süre. Alım için götürdüğü düğme kısa süre atlayıp vurgulanır. Mantık `nextStep()` içindedir.
 
 ## Arayüz teması
-Arayüz parlak, kalın ve oyuncak tarzında: üstte hap biçimli göstergeler (para, itibar, seviye), altta renkli kalın ikon düğmeleri, açık renkli kartlar ve pencereler. Düğmeler basınca aşağı çöker. İptal edilebilen pencerelerde sağ üstte kırmızı çarpı çıkar. Sahnenin altındaki mavi **Hızlan x2** düğmesi (Dünya haritası dışında) 30 saniyelik hız artışını başlatır. Zemin gökyüzü mavisi. Her sekme kendi renginde çerçeveli bir paneldir (`#p-...` kuralları, `--pf` çerçeve, `--pd` koyu kenar, `--pi` iç zemin). Düğme renkleri `--c1`, `--c2`, `--bd` değişkenleriyle verilir. Pencerelerde renkli başlık bandı vardır, renk içeriğe göre seçilir (gün sonu turuncu, denetim kırmızı vb.). Menü, yönetici ve kariyer listeleri iki sütunlu kart ızgarasıdır. Sahnenin sağındaki kısayol sütunu çark, sandık ve etkinliğe götürür, hazır olanlarda kırmızı nokta yanar. Yeni hafta başlayınca etkinlik penceresi çıkar. Renkler ve kalınlık `:root` içindeki değişkenlerle ayarlanır. Yazı tipi Fredoka (Google Fonts), yüklenemezse sistemin yuvarlak yazı tipi kullanılır.
+Arayüz parlak, kalın ve oyuncak tarzında: üstte hap biçimli göstergeler (para, itibar, seviye), altta renkli kalın ikon düğmeleri, açık renkli kartlar ve pencereler. Düğmeler basınca aşağı çöker. İptal edilebilen pencerelerde sağ üstte kırmızı çarpı çıkar. Sahnenin altındaki mavi **Hızlan x2** düğmesi (Servet'teki eski harita dışında) 30 saniyelik hız artışını başlatır. Zemin gökyüzü mavisi. Her sekme kendi renginde çerçeveli bir paneldir (`#p-...` kuralları, `--pf` çerçeve, `--pd` koyu kenar, `--pi` iç zemin). Düğme renkleri `--c1`, `--c2`, `--bd` değişkenleriyle verilir. Pencerelerde renkli başlık bandı vardır, renk içeriğe göre seçilir (gün sonu turuncu, denetim kırmızı vb.). Menü, personel ve işletme listeleri iki sütunlu kart ızgarasıdır. Yeni hafta başlayınca etkinlik penceresi çıkar. Renkler ve kalınlık `:root` içindeki değişkenlerle ayarlanır. Yazı tipi Fredoka (Google Fonts), yüklenemezse sistemin yuvarlak yazı tipi kullanılır.
 
 ## Şehir ana ekranı
 Oyun artık izometrik bir şehir haritasıyla açılır (`three-hub.js`, Three.js, ortografik kamera). Harita 7x7 karelik bir adadır: parmakla kaydırılır, iki parmakla yakınlaştırılır. Binalar işletmelerdir: Köşe Kafe, Toptan kahve, Burger Dükkânı, Online sipariş, Tatlıcı, Catering, Restoran, Kahve markası (seviye 3, 4, 6, 8, 10, 12, 15'te açılır). Seviyesi yetmeyenler gri ve kilitli görünür.
 - **Kafe binası:** dokununca kafenin içine girersin (müşteri, fiyat, menü, gün sonu kararı aynen çalışır). Üstteki **‹ Şehir** düğmesi veya alttaki Şehir sekmesi haritaya döndürür. Sen şehirdeyken kafe arka planda çalışmaya devam eder.
-- **Diğer işletmeler:** dokununca kart açılır (seviye, günlük gelir, kur/yükselt, yönetici). Bu işletmeler Servet > Kariyer ile aynı sistemdir. Seviye 4 ve 8'de işletmenin geliri x2 olur. **Yönetici** (kurulum maliyetinin 6 katı) geliri %50 artırır ve para balonlarını kendisi toplar. Yönetici olan işletmenin etiketinde ★ görünür. Gelir her işletme için `inc x seviye x kilometre taşı x yönetici` günlük, çevrimdışı kazanca da dahildir.
-- **İç mekân (`three-biz.js`):** kurulu bir işletmeye dokununca içine girilir (kafe gibi). Burger, Tatlıcı ve Restoran'da müşteriler kapıdan girip masaya oturur, çalışanlar mutfakta çalışır. Toptan, Online sipariş, Catering ve Kahve markası'nda çalışanlar ve koliler görünür. Seviye arttıkça masa sayısı, mutfak ekipmanı, koli ve çalışan artar. Yönetici varsa bir müdür de görünür. Üzerindeki yeşil "+₺" yazıları görseldir; değerleri işletmenin gerçek saniyelik gelirinden türetilir. Yükselt ve Yönetici düğmeleri içeride de vardır. Henüz kurulmamış işletmeye dokununca kart açılır, Kur'a basınca içeri girilir.
+- **Diğer işletmeler:** dokununca kart açılır (seviye, günlük gelir, kur/yükselt, müdür). Bu işletmeler Servet > İşletmeler ile aynı sistemdir. Seviye 4 ve 8'de işletmenin geliri x2 olur. **Müdür** (kurulum maliyetinin 6 katı) geliri %50 artırır ve para balonlarını kendisi toplar. Müdürü olan işletmenin etiketinde ★ görünür. Gelir her işletme için `inc x seviye x kilometre taşı x müdür` günlük, çevrimdışı kazanca da dahildir.
+- **İç mekân (`three-biz.js`):** kurulu bir işletmeye dokununca içine girilir (kafe gibi). Burger, Tatlıcı ve Restoran'da müşteriler kapıdan girip masaya oturur, çalışanlar mutfakta çalışır. Toptan, Online sipariş, Catering ve Kahve markası'nda çalışanlar ve koliler görünür. Seviye arttıkça masa sayısı, mutfak ekipmanı, koli ve çalışan artar. Müdür varsa ortada yıldızlı bir müdür de görünür. Üzerindeki yeşil "+₺" yazıları görseldir; değerleri işletmenin gerçek saniyelik gelirinden türetilir. Yükselt ve Müdür tut düğmeleri içeride de vardır. Henüz kurulmamış işletmeye dokununca kart açılır, Kur'a basınca içeri girilir.
 - **Para balonları:** kurulu her işletmenin üstünde yaklaşık her 30 oyun saniyesinde bir yeşil balon çıkar. Dokununca ya da alttaki **Topla** düğmesiyle toplanır. Değeri o süredeki gelirin %25'idir (ek bonus). Balonlar kaydedilmez.
-- **Alt çubuk:** Çark, Hızlan x2, Elite (premium simülasyonu), Topla.
+- **Kısayollar:** sağdaki küçük düğmeler: Topla (para balonları), Çark, Sandık, Etkinlik, Elite (premium simülasyonu). Hazır olanlarda kırmızı nokta yanar. Altta yalnızca gezinme çubuğu vardır; ortada küçük bir **Hızlan x2** düğmesi durur.
 - Modeller `assets/kaykit-city/` içindedir (KayKit City Builder Bits, CC0, yaklaşık 1.8 MB disk, tek doku). Kaynak ve özetler `SOURCE.md` ve `SHA256SUMS` dosyalarında. WebGL yoksa veya modeller yüklenemezse oyun kafe görünümüne düşer.
 - Ekran 3B çizimi pil için en çok yaklaşık 30 kare/sn ile sınırlıdır.
 
@@ -39,7 +42,7 @@ Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile 
 | Ana sekme | Alt sekmeler |
 |---|---|
 | **Kafe** | Bugün (gelir, müşteri, hedef, unvan, zaman hızı) |
-| **Büyüt** | Yatırım, Menü, Fiyat, Yönetici |
+| **Kafe** | Yükselt, Menü, Fiyat, Personel |
 | **Dünya** | Varlıklar, Kariyer, Hayır, Şehirler |
 | **Ödüller** | Çark, Sandık, Etkinlik, Başarım |
 | **Ben** | Karakter, Yetenek, Sıralama, Ayarlar, Kafe |
@@ -49,7 +52,7 @@ Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile 
 ```
 Müşteri gelir → kuyruğa girer → barista sipariş hazırlar → masaya oturur → bahşiş bırakır
         ↓
-   Para kazanılır → menüye, mekana, yöneticilere harcanır → seviye atlanır → sandık ve kart düşer
+   Para kazanılır → menüye, mekana, personele harcanır → seviye atlanır → sandık ve kart düşer
         ↓
    Fazla para Dünya'da varlığa, işe ve hayra yatırılır → pasif gelir + prestij → kafeye daha çok müşteri
         ↓
@@ -83,7 +86,7 @@ Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenileme
 - **Yatırım:** Masa (15'e kadar), Mekan genişletme (4 mekan: Köşe kafe 6 masa → Geniş salon 9 → Teras katı 12 → Büyük kafe 15), Barista (3), Espresso makinesi (7), Pasta vitrini (4), Dekor (6). Gelişmiş yatırımlar oyuncu seviyesi ister.
 - **Menü:** 5 içecek ve 5 yiyecek. Yiyecekler için vitrin gerekir. Menü çeşitlendikçe müşteri artar.
 - **Fiyat:** Her ürünün fiyatı ayarlanır (adil fiyatın %50'si ile %300'ü). Ucuz satmak müşteriyi artırır, pahalı satmak azaltır ve çok pahalıda itibar düşer. Servis kapasitesi doluysa fiyat artırmak kazancı yükseltir.
-- **Yönetici:** 6 yönetici (Baristabaşı, Salon müdürü, Muhasebeci, Pazarlamacı, Şef, Denetim uzmanı). Kart toplanır, her biri 10 seviyeye kadar yükselir. Kartlar sandıktan, çarktan ve kart paketinden (para karşılığı) gelir.
+- **Personel:** 6 personel (Baristabaşı, Salon müdürü, Muhasebeci, Pazarlamacı, Şef, Denetim uzmanı). Kart toplanır, her biri 10 seviyeye kadar yükselir. Kartlar sandıktan, çarktan ve kart paketinden (para karşılığı) gelir.
 
 ### Dünya
 - **Varlıklar:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. **Haritadaki her yere dokunarak** yönetim penceresini açabilirsin (2B ve 3B). Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
@@ -94,7 +97,7 @@ Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenileme
 
 ### Ödüller
 - **Çark:** Günde bir ücretsiz çevirme (para, kart, hız, deneyim, sandık). Reklamla günde 3 ek çevirme.
-- **Sandık:** Bronz, gümüş ve altın. VIP müşteri, seviye atlama, başarım ve denetimden düşer. İçinden para, yönetici kartı, deneyim ve bazen hız çıkar.
+- **Sandık:** Bronz, gümüş ve altın. VIP müşteri, seviye atlama, başarım ve denetimden düşer. İçinden para, personel kartı, deneyim ve bazen hız çıkar.
 - **Etkinlik:** Haftalık etkinlik herkes için aynıdır (Kahve haftası, Tatlı festivali, Yoğun hafta, Cömert müşteriler, VIP haftası) ve gelire etki eder. Haftalık müşteri hedefine ulaşınca para, deneyim ve altın sandık verir.
 - **Başarım:** 22 başarım, ödül manuel toplanır.
 

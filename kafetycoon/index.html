@@ -209,12 +209,16 @@
   body.hubmode .grip, body.hubmode .tabs, body.hubmode .shop { display: none; }
   body.hubmode .scene { flex: 1; min-height: 0; padding: 0; }
   body.hubmode .stagebox { width: 100%; height: 100%; }
-  body.hubmode .v3d, body.hubmode .boost, body.hubmode .rail { display: none; }
+  body.hubmode .v3d { display: none; }
+  body.bizmode .boost, body.bizmode .rail { display: none; }
+  .rail .hubonly { display: none; }
+  body.cityview .rail .hubonly { display: flex; }
+  body.hubmode .rail { top: 10px; }
   .hubui { position: absolute; inset: 0; pointer-events: none; line-height: 1.15; }
   .hubui > * { pointer-events: auto; }
   .hubgoal { position: absolute; left: 10px; right: 10px; top: 8px; background: #fff; color: var(--ink); border: 3px solid #1d3f9a; border-radius: 16px; padding: 7px 12px; font-weight: 600; font-size: 13px; box-shadow: 0 3px 0 rgba(18,40,107,0.5); }
   .hubgoal b { font-family: var(--display); font-weight: 400; color: #b4470a; margin-right: 6px; }
-  .hubmsg { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); background: rgba(18,40,107,0.9); color: #fff; font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 14px; pointer-events: none; white-space: nowrap; }
+  .hubmsg { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); background: rgba(18,40,107,0.9); color: #fff; font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 14px; pointer-events: none; white-space: nowrap; }
   .hubbar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 8px; align-items: flex-end; }
   .hubbar button { position: relative; flex: 1; min-width: 0; padding: 7px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 14px; border-radius: 18px; line-height: 1.05; }
   .hubbar button svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
@@ -267,10 +271,12 @@
   </div>
 </div></div>
 <div class="nextwrap wrap"><button id="nextbar" class="nextbar" hidden></button></div>
-<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
+<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div></div><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
+    <button data-go="collect" class="hubonly" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22" aria-label="Para balonlarını topla"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.500 9.500C9.500 8.400 10.600 8 12 8s2.500.5 2.500 1.600c0 2.200-5 1.200-5 3.600 0 1.100 1.100 1.600 2.500 1.600s2.500-.5 2.500-1.600"/></svg><i hidden></i></button>
     <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
     <button data-go="chest" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300" aria-label="Sandık"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 13v3M5 9a7 7 0 0 1 14 0"/></svg><i hidden></i></button>
     <button data-go="event" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f" aria-label="Etkinlik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><i hidden></i></button>
+    <button data-go="elite" class="hubonly" style="--c1:#ffe14a;--c2:#ffb300;--bd:#a86a00" aria-label="Elite"><svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:#fff"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg></button>
   </div><button id="boost" class="boost" title="Hızlandır">Hızlan x2<small>30 sn</small></button></div></div>
 <button class="grip" id="grip" aria-label="Paneli büyüt veya küçült" aria-expanded="false"><span></span></button>
 <div class="tabs wrap" id="tabs" hidden></div>
@@ -360,8 +366,8 @@
   </div>
   <div id="p-mgr" hidden>
     <div class="box">
-      <h4>Yöneticiler</h4>
-      <p>Kart topla, yöneticileri yükselt. Kartlar sandıklardan, çarktan ve kart paketinden gelir.</p>
+      <h4>Personel</h4>
+      <p>Kart topla, personelini yükselt. Kartlar sandıklardan, çarktan ve kart paketinden gelir.</p>
       <div class="acctrow"><button id="packbtn" class="on"></button></div>
     </div>
     <div id="mgrlist"></div>
@@ -371,15 +377,15 @@
       <h4>Günlük çark<small id="wheelinfo"></small></h4>
       <div style="display:flex;justify-content:center;margin:10px 0"><canvas id="wheelc" width="260" height="260" style="width:240px;height:240px;border-radius:50%;background:none"></canvas></div>
       <div class="acctrow"><button class="on" id="spinfree">Ücretsiz çevir</button><button id="spinad">Reklamla çevir</button></div>
-      <p style="margin-top:8px">Ödüller: para, yönetici kartı, hız, deneyim ve sandık. Reklam butonu prototipte simüle edilir (günde 3 kez).</p>
+      <p style="margin-top:8px">Ödüller: para, personel kartı, hız, deneyim ve sandık. Reklam butonu prototipte simüle edilir (günde 3 kez).</p>
     </div>
   </div>
   <div id="p-chest" hidden>
-    <div class="box"><h4>Sandıklar</h4><p>VIP müşteriler, seviye atlama ve başarımlardan sandık düşer. İçinden para, yönetici kartı, deneyim ve bazen hız çıkar.</p></div>
+    <div class="box"><h4>Sandıklar</h4><p>VIP müşteriler, seviye atlama ve başarımlardan sandık düşer. İçinden para, personel kartı, deneyim ve bazen hız çıkar.</p></div>
     <div id="chestlist"></div>
   </div>
   <div id="p-career" hidden>
-    <div class="box"><h4>Kariyer<small id="careerinc"></small></h4><p>Kafe dışında gelir kolları kur. Her biri 10 seviyeye kadar yükselir ve her gün pasif gelir getirir.</p></div>
+    <div class="box"><h4>İşletmeler<small id="careerinc"></small></h4><p>Kafe dışında gelir kolları kur. Her biri 10 seviyeye kadar yükselir ve her gün pasif gelir getirir.</p></div>
     <div id="bizlist"></div>
   </div>
   <div id="p-charity" hidden>
@@ -407,7 +413,7 @@
   </div>
   <div id="p-cities" hidden>
     <div class="box">
-      <h4>Şehirlerim<small id="citysum"></small></h4>
+      <h4>Şubelerim<small id="citysum"></small></h4>
       <div class="kv"><span>Aktif şube</span><span id="cityactive"></span></div>
       <p style="margin-top:6px">Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır ve her gün pasif gelir getirir. Şubeleri yükselterek gelirini artırabilirsin.</p>
     </div>
@@ -458,7 +464,7 @@
 </div></div>
 <nav class="nav" id="nav" aria-label="Ana gezinme">
   <button data-main="home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Şehir<i hidden></i></button>
-  <button data-main="grow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Büyüt<i hidden></i></button>
+  <button data-main="grow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2"/><path d="M8 3v2M12 3v2"/></svg>Kafe<i hidden></i></button>
   <button data-main="world"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>Servet<i hidden></i></button>
   <button data-main="rew"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 13h18"/><path d="M12 8C9 8 7 7 7 5.5S9.5 3 12 8c2.5-5 5-3.5 5-2.5S15 8 12 8z"/></svg>Ödüller<i hidden></i></button>
   <button data-main="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ben<i hidden></i></button>
@@ -717,10 +723,10 @@
   /* ---------- Arayüz ---------- */
   var NAV = [
     { id: 'home', subs: [['home', 'Bugün']] },
-    { id: 'grow', subs: [['inv', 'Yatırım'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Yönetici']] },
-    { id: 'world', subs: [['world', 'Varlıklar'], ['career', 'Kariyer'], ['charity', 'Hayır'], ['brand', 'Marka'], ['cities', 'Şehirler']] },
+    { id: 'grow', subs: [['inv', 'Yükselt'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Personel']] },
+    { id: 'world', subs: [['world', 'Mülkler'], ['career', 'İşletmeler'], ['charity', 'Hayır'], ['brand', 'Marka'], ['cities', 'Şubeler']] },
     { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
-    { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafe']] }
+    { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafem']] }
   ];
   var TABS = [];
   NAV.forEach(function (n) { n.subs.forEach(function (s) { TABS.push(s[0]); }); });
@@ -790,20 +796,15 @@
     speedBtn.disabled = left > 0;
     speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : (S.premium ? 'Başlat' : 'Reklam');
     boostBtn.disabled = left > 0;
-    var hbb = $('hbboost'); hbb.disabled = left > 0;
-    hbb.innerHTML = left > 0 ? 'x2 hız<small>' + Math.ceil(left / 1000) + ' sn</small>' : 'Hızlan x2<small>' + (S.premium ? 'ücretsiz' : 'reklam izle') + ' · 30 sn</small>';
     $('back').hidden = !(mainTab === 'home' && (view === 'cafe' || view === 'biz'));
     renderNext();
     if (bizActive()) {
       var bb = bizDef(bizSel), bl = bizLv(bb), bc = bizCost(bb), bm = bizMgrCost(bb), bmax = bl >= BIZ_MAX;
-      $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ yönetici' : '');
+      $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ müdür' : '');
       var u = $('bzup'); u.disabled = bmax || S.money < bc; u.innerHTML = bmax ? 'En üst seviye' : 'Yükselt<small>₺' + fmt(bc) + (bl + 1 === 4 || bl + 1 === 8 ? ' · gelir x2' : '') + '</small>';
-      var g2 = $('bzmgr'); g2.disabled = !!S.bizMgr[bb.id] || S.money < bm; g2.innerHTML = S.bizMgr[bb.id] ? 'Yönetici var<small>+%50 gelir</small>' : 'Yönetici<small>₺' + fmt(bm) + ' · +%50 gelir</small>';
+      var g2 = $('bzmgr'); g2.disabled = !!S.bizMgr[bb.id] || S.money < bm; g2.innerHTML = S.bizMgr[bb.id] ? 'Müdür var<small>+%50 gelir</small>' : 'Müdür tut<small>₺' + fmt(bm) + ' · +%50 gelir</small>';
     }
     var gl = currentGoal(); $('hubgoal').innerHTML = '<b>Hedef</b>' + esc2(gl.text) + ' (+₺' + fmt(gl.r) + ')';
-    var anyBal = false; BIZ.forEach(function (b) { if (bal[b.id] && bal[b.id].v) anyBal = true; });
-    var cdot = document.querySelector('#hubbar [data-hb="collect"] i'); if (cdot) cdot.hidden = !anyBal;
-    var wdot = document.querySelector('#hubbar [data-hb="wheel"] i'); if (wdot) wdot.hidden = !wheelReady();
     boostBtn.innerHTML = left > 0 ? 'x2 hız<small>' + Math.ceil(left / 1000) + ' sn</small>' : 'Hızlan x2<small>' + (S.premium ? 'ücretsiz' : 'reklam izle') + ' · 30 sn</small>';
   }
 
@@ -969,7 +970,16 @@
   }
   $('rail').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-go]') : null;
-    if (b) { sfx('tick'); setTab(b.getAttribute('data-go')); }
+    if (!b) return;
+    var k = b.getAttribute('data-go');
+    sfx('tick');
+    if (k === 'collect') collectAll();
+    else if (k === 'elite') {
+      enqueue(function () {
+        showModal('<h2>Elite</h2><p>Kafe gelirin %25 artar ve reklam beklemezsin.</p><p>Prototip: gerçek ödeme yok.</p><div class="row"><button data-act="no">Kapat</button><button class="on" data-act="tog">' + (S.premium ? 'Elite\'i kapat' : 'Elite\'i dene') + '</button></div>',
+          { tog: function () { S.premium = !S.premium; track('premium', { on: S.premium }); sfx(S.premium ? 'level' : 'tick'); persist(); refresh(); } });
+      });
+    } else setTab(k);
   });
   $('tabs').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-tab]') : null;
@@ -1921,7 +1931,7 @@
     var names = cards.map(mgrName).join(', ');
     enqueue(function () {
       showModal('<h2>' + c.n + '</h2><div class="big">+₺' + fmt(money) + '</div>' +
-        '<div class="stats"><span>Yönetici kartı</span><span>' + esc2(names) + '</span><span>Deneyim</span><span>+' + c.xp + '</span><span>Hız</span><span>' + (boost ? '30 sn x2' : '-') + '</span></div>' +
+        '<div class="stats"><span>Personel kartı</span><span>' + esc2(names) + '</span><span>Deneyim</span><span>+' + c.xp + '</span><span>Hız</span><span>' + (boost ? '30 sn x2' : '-') + '</span></div>' +
         '<div class="row"><button data-act="ad">Reklam izle: para x2</button><button class="on" data-act="ok">Tamam</button></div>',
         { ad: function () { watchAd('chest', function () { S.money += money; persist(); sfx('coin'); }); } });
     });
@@ -2477,8 +2487,9 @@
     if (S.brandLv < BRAND_MAX && S.brand >= contractBrand()) d.world = true;
     d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable();
     d.me = S.pts > 0;
-    var rd = { wheel: wheelReady(), chest: chestCount() > 0, event: weekClaimable() };
-    ['wheel', 'chest', 'event'].forEach(function (k) {
+    var anyBal = false; BIZ.forEach(function (b) { if (bal[b.id] && bal[b.id].v) anyBal = true; });
+    var rd = { wheel: wheelReady(), chest: chestCount() > 0, event: weekClaimable(), collect: anyBal };
+    ['wheel', 'chest', 'event', 'collect'].forEach(function (k) {
       var rel = document.querySelector('#rail [data-go="' + k + '"] i');
       if (rel) rel.hidden = !rd[k];
     });
@@ -2592,7 +2603,7 @@
       o.t += dt;
       if (o.t >= 30) {
         o.v = Math.max(1, Math.round(bizInc(b) * 30 / DAY_LEN * 0.25));
-        if (S.bizMgr[b.id]) { S.money += o.v; S.dayPassive += o.v; o.v = 0; o.t = 0; }   // yönetici balonu kendisi toplar
+        if (S.bizMgr[b.id]) { S.money += o.v; S.dayPassive += o.v; o.v = 0; o.t = 0; }   // müdür balonu kendisi toplar
       }
     });
   }
@@ -2631,9 +2642,9 @@
       showModal('<h2>' + esc2(biz.n) + '</h2><p>' + esc2(biz.d) + '</p><div class="stats"><span>Seviye</span><span>' + lv + '/' + BIZ_MAX + '</span><span>Günlük gelir</span><span>₺' + fmt(bizInc(biz)) + '</span>' +
         (max ? '' : '<span>Sonraki seviye</span><span>+₺' + fmt(bizIncAt(biz, lv + 1, mgr) - bizInc(biz)) + '</span>') +
         (nextMs ? '<span>Seviye ' + nextMs + '\'te</span><span>gelir x2</span>' : '') +
-        '<span>Yönetici</span><span>' + (mgr ? 'var (+%50)' : 'yok') + '</span></div>' +
+        '<span>Müdür</span><span>' + (mgr ? 'var (+%50)' : 'yok') + '</span></div>' +
         '<div class="row col">' + (max ? '' : '<button class="on" data-act="up"' + (S.money < cost ? ' disabled' : '') + '>' + (lv ? 'Yükselt' : 'Kur') + ' ₺' + fmt(cost) + '</button>') +
-        (!mgr && lv ? '<button data-act="mgr"' + (S.money < mcost ? ' disabled' : '') + '>Yönetici işe al ₺' + fmt(mcost) + '<small>Gelir +%50, balonları kendisi toplar</small></button>' : '') +
+        (!mgr && lv ? '<button data-act="mgr"' + (S.money < mcost ? ' disabled' : '') + '>Müdür tut ₺' + fmt(mcost) + '<small>Gelir +%50, balonları kendisi toplar</small></button>' : '') +
         '<button data-act="no">Kapat</button></div>',
         { up: function () { if (upgradeBiz(biz) && bizLv(biz) === 1 && !bizFail) enterBiz(biz.id); }, mgr: function () { hireMgr(biz); } });
     });
@@ -2646,21 +2657,6 @@
     if (r.kind === 'balloon') { var v = collectBalloon(r.id); if (v) hubMsg('+₺' + fmt(v)); } else openLot(r.id);
   });
   $('back').addEventListener('click', function () { view = 'city'; setTab('home'); });
-  $('hubbar').addEventListener('click', function (e) {
-    var b = e.target.closest ? e.target.closest('button[data-hb]') : null;
-    if (!b || b.disabled) return;
-    var k = b.getAttribute('data-hb');
-    sfx('tick');
-    if (k === 'wheel') setTab('wheel');
-    else if (k === 'boost') startBoost();
-    else if (k === 'collect') collectAll();
-    else if (k === 'elite') {
-      enqueue(function () {
-        showModal('<h2>Elite</h2><p>Kafe gelirin %25 artar ve reklam beklemezsin.</p><p>Prototip: gerçek ödeme yok.</p><div class="row"><button data-act="no">Kapat</button><button class="on" data-act="tog">' + (S.premium ? 'Elite\'i kapat' : 'Elite\'i dene') + '</button></div>',
-          { tog: function () { S.premium = !S.premium; track('premium', { on: S.premium }); sfx(S.premium ? 'level' : 'tick'); persist(); refresh(); } });
-      });
-    }
-  });
 
   /* ---------- Sıradaki adım ve ilk açılış rehberi ---------- */
   function incomePerSec() { return estPerMin().rate / 60 + passiveDaily() / DAY_LEN; }
@@ -2741,7 +2737,7 @@
   var TUT = [
     { title: 'Hoş geldin!', text: 'Kafen şehirde. Ona dokun ve içeri gir.', target: function () { var q = hub && hub.screenPos('cafe'); return q ? { x: q.x - 46, y: q.y - 46, w: 92, h: 92 } : null; }, when: function () { return hubActive(); }, done: function () { return view === 'cafe' && mainTab === 'home'; }, ok: false },
     { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', when: function () { return mainTab === 'home' && view === 'cafe'; }, target: function () { return rectOf($('cv')); }, done: null, ok: true },
-    { title: 'Büyüt', text: 'Parayı yatırıma çevir. Büyüt sekmesine dokun.', target: function () { return rectOf(document.querySelector('#nav [data-main="grow"]')); }, done: function () { return mainTab === 'grow'; }, ok: false },
+    { title: 'Kafeni yükselt', text: 'Parayı kafene yatır. Kafe sekmesine dokun.', target: function () { return rectOf(document.querySelector('#nav [data-main="grow"]')); }, done: function () { return mainTab === 'grow'; }, ok: false },
     { title: 'İlk yükseltme', text: 'Yeşil düğmeye basıp ilk yükseltmeni al. Parası yetmiyorsa biraz bekle, müşteriler sattıkça para birikir.', target: function () { var b = document.querySelector('#list .item button.buy:not([disabled])') || document.querySelector('#list .item button.buy'); return rectOf(b); }, when: function () { return mainTab === 'grow' && tab === 'inv'; }, done: function () { return TUT_BOUGHT > 0; }, ok: false },
     { title: 'Şehre dön', text: 'Şehir sekmesiyle haritaya dönersin. Yeni işletmeler seviyeyle açılır.', target: function () { return rectOf(document.querySelector('#nav [data-main="home"]')); }, done: function () { return hubActive(); }, ok: false },
     { title: 'Hazırsın!', text: 'Takılırsan üstteki "Sıradaki adım" çubuğuna dokun, seni doğru yere götürür.', when: function () { return mainTab === 'home' && view !== 'biz'; }, target: function () { return rectOf($('nextbar')); }, done: null, ok: true, last: true }
@@ -2782,6 +2778,8 @@
   function applyViews() {
     var hubOn = hubActive(), bizOn = bizActive(), full = hubOn || bizOn;
     document.body.classList.toggle('hubmode', full);
+    document.body.classList.toggle('bizmode', bizOn);
+    document.body.classList.toggle('cityview', hubOn);
     hubCv.hidden = !hubOn; $('hubui').hidden = !hubOn;
     bizCv.hidden = !bizOn; $('bizui').hidden = !bizOn;
     if (hubOn) ensureHub();
