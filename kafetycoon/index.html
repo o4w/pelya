@@ -88,7 +88,9 @@
   }
   button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--bd), inset 0 2px 0 rgba(255,255,255,0.45); }
   button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 6px #1d3f9a; }
-  button:disabled { --c1: #cfd3dd; --c2: #a6acba; --bd: #6c7283; cursor: default; }
+  /* kullanılamayan düğme her zaman gri: .on, .buy gibi renk sınıflarının üstüne çıkar */
+  button:disabled { --c1: #cfd3dd !important; --c2: #a6acba !important; --bd: #6c7283 !important; color: #fff; cursor: default; }
+  .item button.buy.claim:disabled { color: #fff; text-shadow: 0 2px 0 var(--bd), 1px 1px 0 var(--bd), -1px 1px 0 var(--bd); }
   .shop { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; padding-bottom: 24px; }
   /* her sekme: renkli çerçeveli panel */
   .shop .wrap > div[id^="p-"] { background: var(--pf); border: 3px solid var(--pd); border-radius: 26px; padding: 10px 10px 2px; box-shadow: 0 6px 0 var(--pd); margin-bottom: 14px; }
@@ -197,6 +199,7 @@
   #menulist .item:nth-child(n+10), #mgrlist .item:nth-child(n+10), #bizlist .item:nth-child(n+10) { --pi: #ffd3ea; }
   #menulist .item.done, #mgrlist .item.done, #bizlist .item.done { background: #dcffd2; }
   /* sahne yanındaki kısayol sütunu */
+  body.exp .rail, body.exp .boost { display: none; }
   .rail { position: absolute; right: 10px; top: 52px; display: flex; flex-direction: column; gap: 8px; line-height: 1; }
   .rail button { width: 46px; height: 46px; padding: 0; border-radius: 14px; position: relative; display: flex; align-items: center; justify-content: center; }
   .rail button svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
@@ -2414,6 +2417,7 @@
   }
   function setExpanded(v) {
     expanded = v;
+    document.body.classList.toggle('exp', v);
     $('grip').setAttribute('aria-expanded', v ? 'true' : 'false');
     layoutCanvases();
   }
