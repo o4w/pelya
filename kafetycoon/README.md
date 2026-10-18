@@ -235,6 +235,9 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Ayarlar > Grafik kalitesi: Otomatik (şehirde ~2 sn ölçüm, yavaşsa çözünürlüğü düşürür), Düşük, Yüksek.
 - Şehir açılırken yükleme yüzdesi gösterilir.
 
+## Kafe ekranı (sahnesiz)
+Kafeye girince üstteki 2B/3B sahne kapalıdır; alt düğmeler ve listeler tüm alanı kullanır. Hızlan düğmesi ve hızlı düğmeler (mini oyun, çark, sandık, etkinlik) ince bir şerit olarak üstte durur. 3B kafe görünümü kodda duruyor ama arayüzden açılmıyor.
+
 ## Şehir ekranı etkileşimi
 - Sahip olunan işletmeye dokununca altta bir sayfa açılır: seviye, günlük gelir, hızlı "Yükselt", "Müdür" ve "İçeri gir". Yükseltmek için içeri girmek gerekmez.
 - Balon zinciri: balonları 3,5 sn içinde art arda toplarsan her biri +%10 ek kazandırır (en çok +%50). "Hepsini topla" düğmesi zincir saymaz.
