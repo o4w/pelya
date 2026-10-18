@@ -119,22 +119,9 @@ export function createView3D(canvas, bridge, options = {}) {
   const bgColor = new THREE.Color();
   scene.background = bgColor;
 
-  // Yağmur (yağmurlu gün olayında şehir görünümünde)
-  const rain = (() => {
-    const n = 160, pos = new Float32Array(n * 6), seed = [];
-    for (let i = 0; i < n; i++) seed.push([(Math.random() - 0.5) * 22, Math.random() * 8, (Math.random() - 0.5) * 14]);
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xbfe0ff, transparent: true, opacity: 0.5 }));
-    ls.frustumCulled = false; ls.visible = false;
-    scene.add(ls);
-    return { ls, pos, seed, n };
-  })();
-
-  let mode = 'cafe';
   let autoCamera = options.autoCamera !== false;
-  let cafeGroup = null, cityGroup = null, cafeSig = '', citySig = '';
-  const dyn = { baristas: [], steam: [], cars: [], heli: null, yacht: null };
+  let cafeGroup = null, cafeSig = '';
+  const dyn = { baristas: [], steam: [] };
   const custMap = new Map();
   const customerLayer = new THREE.Group();
   scene.add(customerLayer);
@@ -333,146 +320,6 @@ export function createView3D(canvas, bridge, options = {}) {
     return g;
   }
 
-  /* ---------- Şehir ---------- */
-  const CITY_Z = (y) => (y - 125) / U;
-  const CITY_X = (x) => (x - 180) / U;
-
-  function building(parent, texList, xPx, basePx, wPx, hPx, color, roof, id, lv) {
-    const w = wPx / U, h = hPx / U, d = Math.max(1.4, w * 0.85);
-    const x = CITY_X(xPx), z = CITY_Z(basePx) - d / 2;
-    const rows = Math.max(1, Math.floor(h / 0.7)), cols = Math.max(1, Math.floor(w / 0.6));
-    const winTex = canvasTex(cols * 16, rows * 16, (c, cw, ch) => {
-      c.fillStyle = color; c.fillRect(0, 0, cw, ch);
-      c.fillStyle = 'rgba(255,240,170,0.9)';
-      for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) c.fillRect(k * 16 + 4, r * 16 + 4, 8, 8);
-    });
-    texList.push(winTex);
-    const side = mat(color);
-    const front = new THREE.MeshLambertMaterial({ map: winTex });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, side, side, front, side]);
-    body.position.set(x, h / 2, z);
-    if (id) body.userData.assetId = id;
-    parent.add(body);
-    if (roof === 'gable') {
-      const r = new THREE.Mesh(new THREE.CylinderGeometry(0, d * 0.78, 0.6, 4), mat('#9b4a3a'));
-      r.rotation.y = Math.PI / 4; r.scale.set(w / d * 1.0, 1, 1);
-      r.position.set(x, h + 0.3, z);
-      parent.add(r);
-    } else {
-      add(parent, new THREE.BoxGeometry(w + 0.1, 0.12, d + 0.1), mat('#40454f'), x, h + 0.06, z);
-    }
-    // seviye yıldızları (döşeme/yenileme seviyesi)
-    const stars = Math.max(0, (lv || 1) - 1);
-    for (let j = 0; j < stars; j++) add(parent, new THREE.OctahedronGeometry(0.16), mat('#ffd23f'), x + (j - (stars - 1) / 2) * 0.4, h + (roof === 'gable' ? 1.0 : 0.6), z);
-    return body;
-  }
-  function slotBox(parent, xPx, basePx, wPx, hPx, id) {
-    const w = wPx / U, h = hPx / U, d = Math.max(1.4, w * 0.85);
-    const e = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
-      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
-    e.position.set(CITY_X(xPx), h / 2, CITY_Z(basePx) - d / 2);
-    parent.add(e);
-    if (id) {   // dokunma için görünmez kutu
-      const pk = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false }));
-      pk.position.copy(e.position); pk.userData.assetId = id;
-      parent.add(pk);
-    }
-  }
-
-  function buildCity() {
-    const S = bridge.S, has = S.assets || {};
-    const g = new THREE.Group();
-    g.userData.tex = [];
-    dyn.cars = []; dyn.heli = null; dyn.yacht = null;
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(26, 14), mat('#4a8d5c'));
-    ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.01, 0.5);
-    g.add(ground);
-    // yol
-    box(g, 26, 0.04, 1.4, '#3a3d48', 0, 0.02, 0.05);
-    for (let i = -12; i < 13; i += 1.4) box(g, 0.7, 0.045, 0.07, '#d8d8d8', i, 0.025, 0.05);
-    box(g, 26, 0.06, 0.2, '#b9b4a5', 0, 0.03, -0.75);
-    box(g, 26, 0.06, 0.2, '#b9b4a5', 0, 0.03, 0.85);
-    // deniz
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 5.4), new THREE.MeshLambertMaterial({ color: '#3a8fbd' }));
-    water.rotation.x = -Math.PI / 2; water.position.set(CITY_X(310) + 0.4, 0.005, CITY_Z(200));
-    g.add(water);
-    box(g, 0.2, 0.15, 5.4, '#8a7350', CITY_X(262), 0.08, CITY_Z(200));
-    // tepeler
-    for (const [hx, hz, hs] of [[-7, -5.2, 3.2], [3, -5.8, 4], [9, -5.0, 2.6]]) {
-      const hill = new THREE.Mesh(new THREE.SphereGeometry(hs, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat('#5f9a7a'));
-      hill.scale.y = 0.45; hill.position.set(hx, 0, hz);
-      g.add(hill);
-    }
-
-    const T = g.userData.tex;
-    const def = [
-      ['studio', 34, 106, 28, 26, '#c9a27a', 'flat'], ['flat', 88, 106, 34, 42, '#9fb3c8', 'flat'],
-      ['house', 148, 106, 42, 32, '#d98f6a', 'gable'], ['villa', 222, 106, 58, 40, '#ece6d6', 'flat'],
-      ['mansion', 312, 106, 72, 56, '#d6c7a8', 'gable'], ['land', 34, 214, 40, 10, '#c7b183', 'flat'],
-      ['office', 96, 214, 34, 84, '#6b8fb3', 'flat'], ['mall', 188, 214, 96, 46, '#b69fd0', 'flat'],
-    ];
-    def.forEach(([id, x, base, w, h, col, roof]) => { if (has[id]) building(g, T, x, base, w, h, col, roof, id, has[id]); else slotBox(g, x, base, w, h, id); });
-    // yola dokununca araç seçimi için görünmez şerit
-    const roadPick = new THREE.Mesh(new THREE.PlaneGeometry(26, 1.4), new THREE.MeshBasicMaterial({ visible: false }));
-    roadPick.rotation.x = -Math.PI / 2; roadPick.position.set(0, 0.06, 0.05); roadPick.userData.assetId = 'road';
-    g.add(roadPick);
-    if (!has.yacht) slotBox(g, 310, 215, 70, 24, 'yacht');
-    if (!has.heli) {
-      const hp = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.0, 1.4), new THREE.MeshBasicMaterial({ visible: false }));
-      hp.position.set(0, 3.2, -3.2); hp.userData.assetId = 'heli';
-      g.add(hp);
-      const ring = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(2.4, 1.0, 1.4)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
-      ring.position.copy(hp.position);
-      g.add(ring);
-    }
-    building(g, T, 250, 214, 22, 30, '#e58a3d', 'flat');   // senin kafen
-
-    // arabalar
-    const carDefs = [
-      { id: 'scooter', col: '#e5634d', len: 14, hh: 7, sp: 52, dir: 1, y: 134, off: 20 },
-      { id: 'hatch', col: '#4cc9f0', len: 24, hh: 9, sp: 38, dir: -1, y: 121, off: 90 },
-      { id: 'sedan', col: '#6fd6a2', len: 28, hh: 9, sp: 46, dir: 1, y: 135, off: 160 },
-      { id: 'sport', col: '#ffd23f', len: 28, hh: 8, sp: 90, dir: -1, y: 122, off: 40 },
-    ];
-    carDefs.forEach((c) => {
-      if (!has[c.id]) return;
-      const car = new THREE.Group();
-      const L = c.len / U * 1.1, Hh = Math.max(0.3, c.hh / U * 1.1);
-      box(car, L, Hh, 0.55, c.col, 0, Hh / 2 + 0.06, 0);
-      box(car, L * 0.5, Hh * 0.7, 0.5, '#bfe6ff', 0, Hh + 0.3, 0);
-      box(car, L * 0.8, 0.12, 0.62, '#1a1a22', 0, 0.06, 0);
-      car.position.y = 0.02;
-      car.children.forEach((ch) => { ch.userData.assetId = c.id; });
-      g.add(car);
-      dyn.cars.push({ car, def: c });
-    });
-    // helikopter
-    if (has.heli) {
-      const hel = new THREE.Group();
-      const body = add(hel, new THREE.SphereGeometry(0.5, 12, 8), mat('#d4443a'), 0, 0, 0);
-      body.scale.set(1.5, 0.8, 0.9);
-      box(hel, 1.2, 0.12, 0.12, '#d4443a', -1.2, 0.1, 0);
-      const rotor = box(hel, 2.6, 0.04, 0.14, '#222', 0, 0.55, 0);
-      hel.position.set(0, 3.2, -3.2);
-      hel.children.forEach((ch) => { ch.userData.assetId = 'heli'; });
-      g.add(hel);
-      dyn.heli = { hel, rotor };
-    }
-    // yat
-    if (has.yacht) {
-      const y = new THREE.Group();
-      box(y, 3.2, 0.5, 1.1, '#f4f1ea', 0, 0.25, 0);
-      box(y, 3.2, 0.1, 1.12, '#e58a3d', 0, 0.38, 0);
-      box(y, 1.4, 0.55, 0.8, '#dff1f6', -0.1, 0.8, 0);
-      box(y, 0.9, 0.22, 0.82, '#5a8bb0', -0.1, 0.85, 0);
-      y.position.set(CITY_X(310) + 0.3, 0.1, CITY_Z(207));
-      y.children.forEach((ch) => { ch.userData.assetId = 'yacht'; });
-      g.add(y);
-      dyn.yacht = y;
-    }
-    return g;
-  }
-
   /* ---------- Müşteriler ---------- */
   function makeCustomer(c) {
     const g = new THREE.Group();
@@ -534,33 +381,16 @@ export function createView3D(canvas, bridge, options = {}) {
     const S = bridge.S;
     return [S.tab, S.bar, S.mach, S.cas, S.dec, S.room, S.name, JSON.stringify(S.avatar || {}), kit.ready ? 'k' : ''].join('|');
   }
-  function signatureCity() {
-    const S = bridge.S;
-    return Object.keys(S.assets || {}).filter((k) => S.assets[k]).sort().map((k) => k + ':' + S.assets[k]).join(',');
-  }
-
-  function update(dt, wantMode) {
+  function update(dt) {
     const clock = bridge.clock();
-    if (wantMode && wantMode !== mode) { mode = wantMode; cafeSig = citySig = ''; }
-    if (mode === 'cafe') {
-      const sig = signatureCafe() + '|' + bridge.getH();
-      if (sig !== cafeSig) {
-        if (cafeGroup) { scene.remove(cafeGroup); disposeGroup(cafeGroup); }
-        cafeGroup = buildCafe();
-        scene.add(cafeGroup);
-        cafeSig = sig;
-        if (autoCamera) fit(18.6, bridge.getH() / U, 2.4, 56, 0.5, 0.4);
-      }
-    } else if (!cityGroup || signatureCity() !== citySig) {
-      if (cityGroup) { scene.remove(cityGroup); disposeGroup(cityGroup); }
-      cityGroup = buildCity();
-      scene.add(cityGroup);
-      citySig = signatureCity();
-      if (autoCamera) fit(22, 10.5, 3.2, 42, 0.6, 0.9);
+    const sig = signatureCafe() + '|' + bridge.getH();
+    if (sig !== cafeSig) {
+      if (cafeGroup) { scene.remove(cafeGroup); disposeGroup(cafeGroup); }
+      cafeGroup = buildCafe();
+      scene.add(cafeGroup);
+      cafeSig = sig;
+      if (autoCamera) fit(18.6, bridge.getH() / U, 2.4, 56, 0.5, 0.4);
     }
-    if (cafeGroup) cafeGroup.visible = mode === 'cafe';
-    if (cityGroup) cityGroup.visible = mode === 'city';
-    customerLayer.visible = mode === 'cafe';
     // gün içi ışık (sabah sıcak, akşam karanlık) ve olay etkisi
     {
       const Sd = bridge.S, dl = bridge.dayLen || 90, t = Math.min(Sd.dayT || 0, dl) / dl;
@@ -568,65 +398,22 @@ export function createView3D(canvas, bridge, options = {}) {
       if (t < 0.12) k = 0.8 + 0.2 * (t / 0.12); else if (t > 0.68) k = 1 - Math.min(0.5, (t - 0.68) / 0.32 * 0.5);
       if (Sd.ev === 1) k *= 0.85;
       hemi.intensity = 1.0 * k; sun.intensity = 1.3 * k;
-      bgColor.set(mode === 'cafe' ? '#14201f' : '#a9d7ea').multiplyScalar(0.4 + 0.6 * k);
-      const raining = mode === 'city' && Sd.ev === 1;
-      rain.ls.visible = raining;
-      if (raining) {
-        for (let i = 0; i < rain.n; i++) {
-          const s = rain.seed[i], y = (((s[1] - clock * 9) % 8) + 8) % 8, o = i * 6;
-          rain.pos[o] = s[0]; rain.pos[o + 1] = y; rain.pos[o + 2] = s[2];
-          rain.pos[o + 3] = s[0] - 0.1; rain.pos[o + 4] = y - 0.45; rain.pos[o + 5] = s[2];
-        }
-        rain.ls.geometry.attributes.position.needsUpdate = true;
-      }
+      bgColor.set('#14201f').multiplyScalar(0.4 + 0.6 * k);
     }
 
-    if (mode === 'cafe') {
-      updateCustomers(dt, clock);
-      dyn.baristas.forEach((b, i) => {
-        if (!b) return;
-        const busy = !!bridge.lanes[i].cur;
-        b.position.y = busy ? Math.sin(clock * 9) * 0.04 : 0;
-        const puffs = dyn.steam[i] || [];
-        puffs.forEach((p, k) => {
-          p.visible = busy;
-          if (busy) { const ph = (clock * 1.5 + k * 0.5) % 1; p.position.y = 2.1 + ph * 0.7; p.material.opacity = 0.5 * (1 - ph); }
-        });
+    updateCustomers(dt, clock);
+    dyn.baristas.forEach((b, i) => {
+      if (!b) return;
+      const busy = !!bridge.lanes[i].cur;
+      b.position.y = busy ? Math.sin(clock * 9) * 0.04 : 0;
+      const puffs = dyn.steam[i] || [];
+      puffs.forEach((p, k) => {
+        p.visible = busy;
+        if (busy) { const ph = (clock * 1.5 + k * 0.5) % 1; p.position.y = 2.1 + ph * 0.7; p.material.opacity = 0.5 * (1 - ph); }
       });
-      if (autoCamera) placeCamera(Math.sin(clock * 0.25) * 0.6);
-    } else {
-      const span = 360 + 80;
-      dyn.cars.forEach(({ car, def }) => {
-        const v = (clock * def.sp + def.off) % span;
-        const px = def.dir > 0 ? v - 40 : 360 + 40 - v;
-        car.position.x = (px - 180) / U;
-        car.position.z = CITY_Z(def.y);
-        car.rotation.y = def.dir > 0 ? 0 : Math.PI;
-      });
-      if (dyn.heli) {
-        dyn.heli.hel.position.x = Math.sin(clock * 0.6) * 4;
-        dyn.heli.hel.position.y = 3.2 + Math.sin(clock * 1.7) * 0.15;
-        dyn.heli.rotor.rotation.y = clock * 30;
-      }
-      if (dyn.yacht) dyn.yacht.position.y = 0.1 + Math.sin(clock * 1.5) * 0.05;
-      if (autoCamera) placeCamera(Math.sin(clock * 0.2) * 1.2);
-    }
+    });
+    if (autoCamera) placeCamera(Math.sin(clock * 0.25) * 0.6);
     renderer.render(scene, camera);
-  }
-
-  // Ekrandaki bir noktadaki varlığı bulur (şehir görünümünde dokunma için)
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  function pick(clientX, clientY) {
-    if (mode !== 'city' || !cityGroup) return null;
-    const r = canvas.getBoundingClientRect();
-    ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(ndc, camera);
-    const hits = ray.intersectObject(cityGroup, true);
-    for (const h of hits) {
-      let o = h.object;
-      while (o) { if (o.userData && o.userData.assetId) return o.userData.assetId; o = o.parent; }
-    }
-    return null;
   }
 
   function resize(w, h) {
@@ -634,19 +421,18 @@ export function createView3D(canvas, bridge, options = {}) {
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
     camera.aspect = Math.max(1, w) / Math.max(1, h);
     camera.updateProjectionMatrix();
-    cafeSig = citySig = '';   // kamerayı yeni orana göre yeniden sığdır
+    cafeSig = '';   // kamerayı yeni orana göre yeniden sığdır
   }
 
   function dispose() {
-    [cafeGroup, cityGroup].forEach((gr) => { if (gr) { scene.remove(gr); disposeGroup(gr); } });
+    if (cafeGroup) { scene.remove(cafeGroup); disposeGroup(cafeGroup); }
     matCache.forEach((m) => { if (m.map) m.map.dispose(); });
     renderer.dispose();
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
   return {
-    update, resize, dispose, pick, camera, renderer, scene,
-    setMode(m) { mode = m; cafeSig = citySig = ''; },
+    update, resize, dispose, camera, renderer, scene,
     setAutoCamera(v) { autoCamera = !!v; },
   };
 }

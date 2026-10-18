@@ -46,7 +46,7 @@ Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile 
 |---|---|
 | **Kafe** | Bugün (gelir, müşteri, hedef, unvan, zaman hızı) |
 | **Kafe** | Yükselt, Menü, Fiyat, Personel |
-| **Dünya** | Varlıklar, Kariyer, Hayır, Şehirler |
+| **Servet** | Mülkler, İşletmeler, Hayır, Marka, Şubeler |
 | **Ödüller** | Çark, Sandık, Etkinlik, Başarım |
 | **Ben** | Karakter, Yetenek, Sıralama, Ayarlar, Kafe |
 
@@ -57,7 +57,7 @@ Müşteri gelir → kuyruğa girer → barista sipariş hazırlar → masaya otu
         ↓
    Para kazanılır → menüye, mekana, personele harcanır → seviye atlanır → sandık ve kart düşer
         ↓
-   Fazla para Dünya'da varlığa, işe ve hayra yatırılır → pasif gelir + prestij → kafeye daha çok müşteri
+   Fazla para Servet'te mülke, işletmeye ve hayra yatırılır → pasif gelir + prestij → kafeye daha çok müşteri
         ↓
    Her şey maksimuma gelince franchise: yeni şehirde başla, eski şuben otomatik çalışmaya devam eder
 ```
@@ -91,9 +91,9 @@ Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenileme
 - **Fiyat:** Her ürünün fiyatı ayarlanır (adil fiyatın %50'si ile %300'ü). Ucuz satmak müşteriyi artırır, pahalı satmak azaltır ve çok pahalıda itibar düşer. Servis kapasitesi doluysa fiyat artırmak kazancı yükseltir.
 - **Personel:** 6 personel (Baristabaşı, Salon müdürü, Muhasebeci, Pazarlamacı, Şef, Denetim uzmanı). Kart toplanır, her biri 10 seviyeye kadar yükselir. Kartlar sandıktan, çarktan ve kart paketinden (para karşılığı) gelir.
 
-### Dünya
-- **Varlıklar:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. **Haritadaki her yere dokunarak** yönetim penceresini açabilirsin (2B ve 3B). Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
-- **Kariyer:** 4 yan iş (Toptan kahve, Online sipariş, Catering, Kahve markası), 10 seviyeye kadar, günlük pasif gelir.
+### Servet
+- **Mülkler:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. Servet sekmesinin üstünde izometrik şehir görünür: sahip olduğun konutlar, ofis ve AVM adadaki parsellerde durur, arsa inşaat kolileriyle, araçlar yollarda dolaşır, helikopter adanın üstünde uçar, yat denizde yüzer. Sahip olmadığın mülklerin parselinde "satılık" levhası çıkar. **Şehirdeki bir mülke dokunarak** yönetim penceresini açabilirsin, listeden bir mülke dokununca kamera ona gider. Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
+- **İşletmeler:** 7 işletme (Toptan kahve, Burger, Online sipariş, Tatlıcı, Catering, Restoran, Kahve markası), 10 seviyeye kadar, günlük pasif gelir. Şehir ana ekranında da görünürler.
 - **Hayır:** Bağış yaptıkça hayırsever kademe yükselir, her kademe müşteriyi %2 artırır.
 - **Şehirler:** Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır, günlük pasif gelir getirir ve yükseltilebilir.
 - Prestij, kafene gelen müşteriyi artırır (en fazla +%50).
@@ -122,7 +122,7 @@ Oyunu kapatınca kafe ve yatırımlar (en çok 3 saat, %30 hızla) çalışmaya 
 
 ## 3B görünüm (Three.js)
 
-Sahne sağ üstteki **3B** düğmesiyle 3B'ye geçer. Kafe sekmelerinde 3B kafe, Dünya sekmesinde 3B şehir görünür.
+Kafe sekmelerinde sahne sağ üstteki **3B** düğmesiyle 3B kafeye geçer. Şehir, işletme içleri ve Servet'teki şehir görünümü her zaman 3B'dir (ayrı modüller: `three-hub.js`, `three-biz.js`).
 
 - 3B görünüm yalnızca düğmeye basınca yüklenir, kapatınca kaynaklar temizlenir. 3B kod oyunu değiştirmez, yalnızca okur.
 - **Ayrı demo:** `3d-demo.html` sayfasında sahneyi serbestçe döndürüp yakınlaştırabilirsin.

@@ -30,8 +30,6 @@
 <canvas id="c"></canvas>
 <div class="bar">
   <h1>Köşe Kafe 3B</h1>
-  <button id="mCafe" class="on">Kafe</button>
-  <button id="mCity">Şehir</button>
   <button id="room">Mekan: Geniş salon</button>
 </div>
 <div class="hint">Döndürmek için sürükle, yakınlaştırmak için kaydır veya çimdikle.</div>
@@ -138,17 +136,7 @@ function start(OrbitControls, createView3D) {
   }
   window.addEventListener('resize', () => { resize(); refit(); });
 
-  const bCafe = document.getElementById('mCafe'), bCity = document.getElementById('mCity'), bRoom = document.getElementById('room');
-  function setMode(m) {
-    mode = m;
-    bCafe.classList.toggle('on', m === 'cafe');
-    bCity.classList.toggle('on', m === 'city');
-    bRoom.style.display = m === 'cafe' ? '' : 'none';
-    view.setMode(m);
-    refit();
-  }
-  bCafe.addEventListener('click', () => setMode('cafe'));
-  bCity.addEventListener('click', () => setMode('city'));
+  const bRoom = document.getElementById('room');
   bRoom.addEventListener('click', () => {
     S.room = (S.room + 1) % ROOMS.length;
     S.tab = ROOMS[S.room].tabs;

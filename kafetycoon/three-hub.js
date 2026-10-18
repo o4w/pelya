@@ -23,6 +23,19 @@ export const LOTS = [
   { id: 'resto', tile: [2, 0], model: 'building_G' },
 ];
 
+// Mülk parselleri (Servet'te alınan varlıklar). Sahip olunmayanlar yalnızca Servet görünümünde "satılık" levhası gösterir.
+export const ASSET_PLOTS = [
+  { id: 'studio', tile: [5, 5], model: 'building_A', s: 0.5 },
+  { id: 'flat', tile: [6, 4], model: 'building_B', s: 0.55 },
+  { id: 'house', tile: [4, 6], model: 'building_C', s: 0.42 },
+  { id: 'villa', tile: [5, 1], model: 'building_E', s: 0.55 },
+  { id: 'mansion', tile: [1, 5], model: 'building_F', s: 0.62 },
+  { id: 'land', tile: [0, 4], model: null, s: 1 },
+  { id: 'office', tile: [4, 0], model: 'building_G', s: 0.55 },
+  { id: 'mall', tile: [6, 6], model: 'building_H', s: 0.62 },
+];
+const VEHICLES = { scooter: 'car_hatchback', hatch: 'car_hatchback', sedan: 'car_sedan', sport: 'car_taxi' };
+
 const kit = { state: 0, tpl: {}, mat: null, grey: null, waiters: [] };
 function loadKit(cb) {
   if (kit.state === 2) { cb(); return; }
@@ -115,6 +128,8 @@ export function createHub(canvas, bridge) {
   let world = null, sig = '', ready = false, failed = false, aspect = 0.8;
   const lotNodes = new Map();      // id -> { group, label, balloon, key }
   const cars = [];
+  let assetGroup = null, assetSig = '';
+  const mobiles = [];   // araçlar, helikopter, yat
   let clock = 0, renderAcc = 1;
 
   const view = { x: 0, z: 0, zoom: 1, hw: 6 };
@@ -172,7 +187,7 @@ export function createHub(canvas, bridge) {
       else if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose();
       if (o.material && !o.material.userData.shared && !o.isSprite) o.material.dispose();
     });
-    world = null; lotNodes.clear(); cars.length = 0;
+    world = null; lotNodes.clear(); cars.length = 0; assetGroup = null; assetSig = ''; mobiles.length = 0;
   }
 
   function buildWorld() {
@@ -190,6 +205,7 @@ export function createHub(canvas, bridge) {
     const mid = (GRID - 1) / 2;
     const lawnA = new THREE.MeshLambertMaterial({ color: 0x86e060 }), lawnB = new THREE.MeshLambertMaterial({ color: 0x78d853 });
     const lotTiles = new Set(LOTS.map((l) => l.tile.join(',')));
+    const plotTiles = new Set(ASSET_PLOTS.map((l) => l.tile.join(',')));
     for (let i = 0; i < GRID; i++) {
       for (let j = 0; j < GRID; j++) {
         const x = tx(i), z = tx(j), key = i + ',' + j;
@@ -202,7 +218,7 @@ export function createHub(canvas, bridge) {
     // süsler: çimen karelerine deterministik dağılım
     for (let i = 0; i < GRID; i++) {
       for (let j = 0; j < GRID; j++) {
-        if (i === mid || j === mid || lotTiles.has(i + ',' + j)) continue;
+        if (i === mid || j === mid || lotTiles.has(i + ',' + j) || plotTiles.has(i + ',' + j)) continue;
         const x = tx(i), z = tx(j), k = (i * 5 + j * 3) % 7;
         if (k === 0 || k === 4) place(g, 'bush', x - 0.55, 0.08, z - 0.5, 0, 2.2);
         if (k === 1 || k === 4) place(g, 'bush', x + 0.5, 0.08, z + 0.45, 0, 2.6);
@@ -249,8 +265,72 @@ export function createHub(canvas, bridge) {
     });
   }
 
+  // Mülkler: sahip olunanlar şehirde görünür; Servet görünümünde satılık levhalar ve etiketler de çıkar
+  function buildAssets() {
+    if (assetGroup) {
+      world.remove(assetGroup);
+      assetGroup.traverse((o) => { if (o.isSprite) disposeSprite(o); else if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material && !o.material.userData.shared && !o.isSprite) o.material.dispose(); });
+    }
+    mobiles.length = 0;
+    const g = new THREE.Group();
+    assetGroup = g;
+    const data = bridge.getAssets ? bridge.getAssets() : [], plots = !!(bridge.showPlots && bridge.showPlots());
+    const by = {}; data.forEach((d) => { by[d.id] = d; });
+    ASSET_PLOTS.forEach((pl) => {
+      const d = by[pl.id]; if (!d) return;
+      const x = tx(pl.tile[0]), z = tx(pl.tile[1]);
+      const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.userData.assetId = pl.id; g.add(grp);
+      let labelText = '', top = 1.4;
+      if (d.lv > 0) {
+        if (pl.model) { const o = place(grp, pl.model, 0, 0.08, 0, 0, pl.s * (1 + 0.07 * (d.lv - 1))); top = (o ? 1.6 : 1) * pl.s * 2.2 + 0.4; }
+        else { for (let k = 0; k < 3; k++) { place(grp, k % 2 ? 'box_B' : 'box_A', -0.5 + k * 0.5, 0.08, k % 2 ? 0.3 : -0.3, k, 4); } top = 1; }
+        labelText = d.name + (d.lv > 1 ? ' ' + d.lv : '');
+      } else if (plots) {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(0.8, 0.95, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false }));
+        ring.rotation.x = -Math.PI / 2; ring.position.y = 0.12; grp.add(ring);
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, 0.08), new THREE.MeshLambertMaterial({ color: 0x8a6a45 })); post.position.y = 0.4; grp.add(post);
+        labelText = d.locked ? '🔒 Sv. ' + d.req : d.name; top = 0.8;
+      }
+      if (labelText && plots) {
+        const lb = bubble(labelText, { bg: d.lv > 0 ? '#ffffff' : d.locked ? '#d5dae3' : '#fff3c4', sw: 1.7, h: 64 });
+        lb.position.set(0, top + 0.5, 0); grp.add(lb);
+      }
+    });
+    // araçlar: sahip olunan her araç yolda dolaşır
+    let k = 0;
+    Object.keys(VEHICLES).forEach((id) => {
+      const d = by[id]; if (!d || d.lv < 1) return;
+      const car = place(g, VEHICLES[id], 0, 0.12, 0, 0, id === 'scooter' ? 1.1 : 1.6);
+      if (car) { car.userData.assetId = id; mobiles.push({ kind: 'car', o: car, horiz: k % 2 === 1, dir: k < 2 ? -1 : 1, lane: (k % 2 ? 0.7 : -0.7), off: k * 2.3, sp: 1.9 + k * 0.5 }); k++; }
+    });
+    if (by.heli && by.heli.lv > 0) {
+      const h = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), new THREE.MeshLambertMaterial({ color: 0xd4443a })); body.scale.set(1.5, 0.8, 0.8); h.add(body);
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.12, 0.12), new THREE.MeshLambertMaterial({ color: 0xd4443a })); tail.position.x = -1.2; h.add(tail);
+      const rotor = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.04, 0.16), new THREE.MeshLambertMaterial({ color: 0x2b2b3a })); rotor.position.y = 0.55; h.add(rotor);
+      h.userData.assetId = 'heli'; g.add(h); mobiles.push({ kind: 'heli', o: h, rotor });
+    }
+    if (by.yacht && by.yacht.lv > 0) {
+      const y = new THREE.Group();
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 1), new THREE.MeshLambertMaterial({ color: 0xf4f1ea })); y.add(hull);
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.1, 1.02), new THREE.MeshLambertMaterial({ color: 0xe58a3d })); stripe.position.y = 0.1; y.add(stripe);
+      const cab = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 0.7), new THREE.MeshLambertMaterial({ color: 0xdff1f6 })); cab.position.set(-0.2, 0.5, 0); y.add(cab);
+      y.userData.assetId = 'yacht'; y.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); g.add(y); mobiles.push({ kind: 'yacht', o: y });
+    } else if (plots) {
+      const lb = bubble(by.yacht && by.yacht.locked ? '🔒 Sv. ' + by.yacht.req : 'Marina ve yat', { bg: by.yacht && by.yacht.locked ? '#d5dae3' : '#fff3c4', sw: 1.8, h: 64 });
+      const gp = new THREE.Group(); gp.userData.assetId = 'yacht'; gp.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); lb.position.y = 1.2; gp.add(lb);
+      const buoy = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshLambertMaterial({ color: 0xff7a66 })); buoy.position.y = 0.2; gp.add(buoy);
+      g.add(gp);
+    }
+    world.add(g);
+  }
+
   function signature() {
     return bridge.getLots().map((d) => [d.id, d.name, d.lv, d.locked ? 1 : 0, d.req, d.mgr ? 1 : 0].join(':')).join('|');
+  }
+  function signatureAssets() {
+    const a = bridge.getAssets ? bridge.getAssets() : [];
+    return (bridge.showPlots && bridge.showPlots() ? 'P' : 'h') + a.map((d) => [d.id, d.lv, d.locked ? 1 : 0].join(':')).join('|');
   }
 
   function updateBalloons() {
@@ -276,7 +356,18 @@ export function createHub(canvas, bridge) {
     if (!ready) return;
     const s = signature();
     if (s !== sig) { sig = s; buildLots(); }
+    const as = signatureAssets();
+    if (as !== assetSig) { assetSig = as; buildAssets(); }
     updateBalloons();
+    mobiles.forEach((m) => {
+      if (m.kind === 'car') {
+        const span = GRID * TILE + 2, v = ((clock * m.sp + m.off) % span) - span / 2;
+        if (m.horiz) { m.o.position.set(v * m.dir, 0.12, m.lane); m.o.rotation.y = m.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
+        else { m.o.position.set(m.lane, 0.12, v * m.dir); m.o.rotation.y = m.dir > 0 ? 0 : Math.PI; }
+      } else if (m.kind === 'heli') {
+        const a = clock * 0.5; m.o.position.set(Math.cos(a) * 4.5, 5 + Math.sin(clock * 1.7) * 0.15, Math.sin(a) * 4.5); m.o.rotation.y = -a; m.rotor.rotation.y = clock * 30;
+      } else if (m.kind === 'yacht') { m.o.position.y = -0.95 + Math.sin(clock * 1.5) * 0.06; m.o.rotation.z = Math.sin(clock * 1.2) * 0.03; }
+    });
     cars.forEach((c) => {
       if (!c.o) return;
       const v = ((clock * c.sp + c.off) % c.span) - c.span / 2;
@@ -300,6 +391,7 @@ export function createHub(canvas, bridge) {
       while (o) {
         if (o.userData && o.userData.balloonId) return { kind: 'balloon', id: o.userData.balloonId };
         if (o.userData && o.userData.lotId) return { kind: 'lot', id: o.userData.lotId };
+        if (o.userData && o.userData.assetId) return { kind: 'asset', id: o.userData.assetId };
         o = o.parent;
       }
     }
@@ -318,6 +410,13 @@ export function createHub(canvas, bridge) {
     return { x: r.left + (tmp.x + 1) / 2 * r.width, y: r.top + (1 - tmp.y) / 2 * r.height };
   }
 
+  // Kamerayı bir mülke (ya da işletmeye) götürür
+  function focus(id) {
+    const pl = ASSET_PLOTS.find((p) => p.id === id) || LOTS.find((l) => l.id === id);
+    if (pl) { view.x = tx(pl.tile[0]); view.z = tx(pl.tile[1]); fitCamera(); }
+    else if (id === 'yacht') { view.x = 4; view.z = 0; fitCamera(); }
+  }
+
   function resize(w, h) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
@@ -331,7 +430,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { update, resize, dispose, pick, screenPos, focus, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }
