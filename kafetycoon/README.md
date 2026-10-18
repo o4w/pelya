@@ -232,6 +232,7 @@ Web Interface Guidelines ile denetlendi:
 - Pencereler `role="dialog"`: odak ilk düğmeye gider, Escape kapatır. Aktif sekme `aria-current`.
 - Şehir haritası klavyeyle gezilir (oklar, +/-) ve gizli işletme listesi vardır.
 - "Hareketi azalt" ayarı (sistem tercihine uyar): animasyonlar ve şehirdeki araçlar durur.
+- Dokunma hedefleri en az 44px (sekmeler, 3B düğmesi, tutamaç). Yatay telefonda sahne gizlenir, alt çubuk ince olur (ui-ux-pro-max denetimi).
 - Form alanlarına `name`/`aria-label`/`spellcheck`, `…` karakteri, `tabular-nums`, `overscroll-behavior`, `preconnect`, açıklama meta'sı.
 
 ## Prototip notları
