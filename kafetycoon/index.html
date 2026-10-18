@@ -228,10 +228,9 @@
   body.noscene .scene, body.noscene .grip { display: none; }
   /* kafe ekranı: sahne altında hızlı düğmeler tek satır, sahnenin üstüne binmez */
   body:not(.hubmode) .stagebox { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; width: 100%; }
-  body:not(.hubmode) .rail { position: static; flex-direction: row; gap: 8px; order: 3; }
+  body:not(.hubmode) .rail, body:not(.hubmode) .v3d { display: none; }
   body:not(.hubmode) .boost { position: static; transform: none; min-width: 0; flex: 1 1 140px; order: 2; }
   body:not(.hubmode) .boost:active:not(:disabled) { transform: translateY(3px); }
-  body:not(.hubmode) .v3d { position: static; order: 3; min-width: 44px; min-height: 44px; }
   body.bizmode .boost, body.bizmode .rail { display: none; }
   .rail .hubonly { display: none; }
   body.cityview .rail .hubonly { display: flex; }
@@ -786,7 +785,7 @@
     var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
   }
   applyTheme();
-  var APP_VER = 'v34';
+  var APP_VER = 'v35';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -3310,7 +3309,7 @@
     if (bizOn) ensureBiz();
     cv.hidden = full || noScene || v3on;
     cv3.hidden = full || noScene || !v3on;
-    if (!full && !noScene && !v3on && !v3busy && !v3failed && S.settings.v3 !== false) start3d();
+    if (!full && !noScene && !v3on && !v3busy && !v3failed) start3d();
     $('v3d').classList.toggle('on', v3on);
     $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
   }
@@ -3337,10 +3336,6 @@
       applyViews(); layoutCanvases();
     }).catch(function () { v3busy = false; v3 = null; v3on = false; v3failed = true; applyViews(); v3msg('3B açılamadı'); });
   }
-  $('v3d').addEventListener('click', function () {
-    if (v3on) { S.settings.v3 = false; persist(); stop3d(); return; }
-    S.settings.v3 = true; v3failed = false; persist(); start3d();
-  });
   cv3.addEventListener('webglcontextlost', function (e) { e.preventDefault(); v3failed = true; stop3d(); v3msg('3B durdu'); });
 
   /* ---------- Bulut: Supabase (giriş, kayıt, liderlik tablosu) ---------- */
