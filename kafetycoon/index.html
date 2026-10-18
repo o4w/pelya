@@ -338,6 +338,14 @@
   details.cat > summary::after { content: '▾'; transition: transform 0.2s; }
   details.cat:not([open]) > summary::after { transform: rotate(-90deg); }
   .buy:active:not(:disabled), .big:active:not(:disabled) { filter: brightness(0.94); }
+  .lotsheet { position: absolute; left: 8px; right: 8px; bottom: 84px; background: #fff; color: var(--ink); border: 4px solid #1d3f9a; border-radius: 22px; padding: 10px 12px 12px; box-shadow: 0 6px 0 #12286b; animation: sheetup 0.18s ease-out; }
+  .lotsheet h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: calc(20px * var(--fs)); padding-right: 40px; }
+  .lotsheet p { margin: 2px 0 8px; color: var(--muted); font-size: calc(14px * var(--fs)); }
+  .lotsheet .row { display: flex; gap: 8px; }
+  .lotsheet .row button { flex: 1; min-height: 44px; padding: 6px 4px; font-size: calc(16px * var(--fs)); line-height: 1.15; }
+  .lotsheet .row button small { display: block; font-family: var(--body); font-weight: 600; font-size: calc(14px * var(--fs)); text-shadow: none; }
+  .lotsheet .xbtn { top: 6px; right: 6px; }
+  @keyframes sheetup { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -2707,6 +2715,39 @@
     if (id) openBizCard(id);
   }
   bizCv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); bizFailed(); });
+  var lotSheet = document.createElement('div'); lotSheet.className = 'lotsheet'; lotSheet.hidden = true; lotSheet.setAttribute('role', 'region');
+  $('hubui').appendChild(lotSheet);
+  var lotSheetId = null, lotSheetSig = '';
+  function hideLotSheet() { lotSheetId = null; lotSheet.hidden = true; }
+  function showLotSheet(id) { lotSheetId = id; lotSheetSig = ''; renderLotSheet(); }
+  function renderLotSheet() {
+    if (!lotSheetId) return;
+    var biz = bizDef(lotSheetId);
+    if (!biz || !hubActive()) { hideLotSheet(); return; }
+    var lv = bizLv(biz), cost = bizCost(biz), max = lv >= BIZ_MAX, mgr = !!S.bizMgr[biz.id], mc = bizMgrCost(biz);
+    var sig = [lotSheetId, lv, mgr, S.money >= cost, S.money >= mc, S.settings.fs].join('|');
+    if (sig === lotSheetSig) return;
+    lotSheetSig = sig;
+    lotSheet.setAttribute('aria-label', biz.n);
+    lotSheet.innerHTML = '<h3>' + esc2(biz.n) + '</h3><button class="xbtn" data-ls="x" aria-label="Kapat">✕</button>' +
+      '<p>Seviye ' + lv + '/' + BIZ_MAX + ' · günlük ₺' + fmt(bizInc(biz)) + (mgr ? ' · müdür var' : '') + '</p>' +
+      '<div class="row">' + (max ? '' : '<button class="buy" data-ls="up"' + (S.money < cost ? ' disabled' : '') + '>Yükselt<small>₺' + fmt(cost) + '</small></button>') +
+      (!mgr ? '<button data-ls="mgr" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300"' + (S.money < mc ? ' disabled' : '') + '>Müdür<small>₺' + fmt(mc) + '</small></button>' : '') +
+      '<button class="on" data-ls="in">İçeri gir</button></div>';
+    lotSheet.style.display = '';
+    lotSheet.hidden = false;
+  }
+  lotSheet.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-ls]') : null;
+    if (!b || b.disabled) return;
+    var k = b.getAttribute('data-ls'), biz = bizDef(lotSheetId);
+    sfx('tick');
+    if (k === 'x') hideLotSheet();
+    else if (k === 'in') { var id = lotSheetId; hideLotSheet(); enterBiz(id); }
+    else if (k === 'up' && biz) { upgradeBiz(biz); lotSheetSig = ''; renderLotSheet(); }
+    else if (k === 'mgr' && biz) { hireMgr(biz); lotSheetSig = ''; renderLotSheet(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && lotSheetId && modal.hidden) hideLotSheet(); });
   function enterBiz(id) { bizSel = id; view = 'biz'; setTab('home'); }
   function upgradeBiz(biz) {
     var lv = bizLv(biz), cost = bizCost(biz);
@@ -2756,7 +2797,7 @@
       }, 200);
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
-        { var hm2 = $('hubmsg'); if (hm2.textContent === 'Şehir yükleniyor…') hm2.hidden = true; }
+        { var hm2 = $('hubmsg'); if (hm2.textContent.indexOf('Şehir yükleniyor') === 0) hm2.hidden = true; }
         if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
       };
       hubBusy = false; layoutCanvases();
@@ -2786,17 +2827,20 @@
       }
     });
   }
+  var balCombo = 0, balComboT = 0;
   function collectBalloon(id) {
     var o = bal[id];
     if (!o || !o.v) return 0;
     var v = o.v; o.v = 0; o.t = 0;
+    var nowT = Date.now(); balCombo = nowT - balComboT < 3500 ? balCombo + 1 : 1; balComboT = nowT;
+    var cb = Math.min(0.5, 0.1 * (balCombo - 1)); if (cb > 0) { v = Math.round(v * (1 + cb)); hubMsgSafe('Zincir ×' + balCombo + ' · +%' + Math.round(cb * 100)); }
     S.money += v; S.dayPassive += v; lotsAt = 0; dqAdd('balloon'); flyCoins(null, 4);
     sfx('win'); buzz(20); track('balloon', { id: id });
     return v;
   }
   function collectAll() {
     var sum = 0;
-    BIZ.forEach(function (b) { sum += collectBalloon(b.id); });
+    BIZ.forEach(function (b) { balCombo = 0; sum += collectBalloon(b.id); });
     if (sum > 0) { hubMsg('+₺' + fmt(sum) + ' toplandı'); persist(); } else { sfx('error'); hubMsg('Toplanacak para yok'); }
   }
   var hubListSig = '';
@@ -2827,7 +2871,8 @@
     if (id === 'cafe') { enterCafe(); return; }
     var biz = bizDef(id);
     if (!biz) return;
-    if (bizLv(biz) > 0 && !bizFail) { enterBiz(id); return; }
+    if (bizLv(biz) > 0 && !bizFail) { showLotSheet(id); return; }
+    hideLotSheet();
     openBizCard(id);
   }
   function openBizCard(id) {
@@ -2854,7 +2899,7 @@
   hubCv.addEventListener('click', function (e) {
     if (!hub || hub.dragged) return;
     var r = hub.pick(e.clientX, e.clientY);
-    if (!r) return;
+    if (!r) { hideLotSheet(); return; }
     sfx('tick');
     if (r.kind === 'balloon') { var v = collectBalloon(r.id); if (v) hubMsg('+₺' + fmt(v)); } else if (r.kind === 'asset') openAsset(r.id); else if (r.kind === 'rival') { view = 'cafe'; setTab('market'); } else openLot(r.id);
   });
@@ -3405,7 +3450,7 @@
     var dm = S.money - shownMoney;
     shownMoney += Math.abs(dm) < 0.5 ? dm : dm * Math.min(1, dt * 7);
     $('money').textContent = fmt(shownMoney);
-    if (uiAcc > 0.15) { uiAcc = 0; refresh(); }
+    if (uiAcc > 0.15) { uiAcc = 0; refresh(); renderLotSheet(); if (hub && hub.ready) { var tt = Math.min(S.dayT, DAY_LEN) / DAY_LEN, nn = tt > 0.68 ? (tt - 0.68) / 0.32 : tt < 0.12 ? (0.12 - tt) / 0.12 * 0.35 : 0; hub.setNight(nn); } }
     if (saveAcc > 4) { saveAcc = 0; persist(); }
     requestAnimationFrame(frame);
   }

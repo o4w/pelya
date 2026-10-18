@@ -133,7 +133,8 @@ export function createHub(canvas, bridge) {
 
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-8, 8, 8, -8, 0.1, 100);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x8fa066, 1.4));
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x8fa066, 1.4);
+  scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffffff, 1.25);
   sun.position.set(-6, 12, 5);
   scene.add(sun);
@@ -440,7 +441,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { reduced: false, setQuality(m) { qMode = m; prCap = m === 1 ? 1 : 2; fAcc = 0; fN = 0; if (lastW) resize(lastW, lastH); }, get pixelRatio() { return pr(); }, nudge(dx, dy) { panBy(dx, dy); }, zoomBy(f) { view.zoom = Math.max(0.75, Math.min(1.6, view.zoom * f)); fitCamera(); }, update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { reduced: false, setNight(n) { n = Math.max(0, Math.min(1, n)); hemi.intensity = 1.4 - 0.7 * n; sun.intensity = 1.25 - 0.85 * n; hemi.color.setRGB(1 - 0.45 * n, 1 - 0.38 * n, 1 - 0.1 * n); sun.color.setRGB(1 - 0.5 * n, 1 - 0.42 * n, 1 - 0.05 * n); }, setQuality(m) { qMode = m; prCap = m === 1 ? 1 : 2; fAcc = 0; fN = 0; if (lastW) resize(lastW, lastH); }, get pixelRatio() { return pr(); }, nudge(dx, dy) { panBy(dx, dy); }, zoomBy(f) { view.zoom = Math.max(0.75, Math.min(1.6, view.zoom * f)); fitCamera(); }, update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }

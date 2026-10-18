@@ -235,6 +235,11 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Ayarlar > Grafik kalitesi: Otomatik (şehirde ~2 sn ölçüm, yavaşsa çözünürlüğü düşürür), Düşük, Yüksek.
 - Şehir açılırken yükleme yüzdesi gösterilir.
 
+## Şehir ekranı etkileşimi
+- Sahip olunan işletmeye dokununca altta bir sayfa açılır: seviye, günlük gelir, hızlı "Yükselt", "Müdür" ve "İçeri gir". Yükseltmek için içeri girmek gerekmez.
+- Balon zinciri: balonları 3,5 sn içinde art arda toplarsan her biri +%10 ek kazandırır (en çok +%50). "Hepsini topla" düğmesi zincir saymaz.
+- Gece/gündüz: şehrin ışığı kafedeki gün saatine göre akşam ve geceye doğru kararır, şafakta açılır.
+
 ## Alım hissi
 - Yükselt sekmesinde ×1 / ×5 / Maks alım seçici (parası yettiği kadar seviye alır, seçim kaydedilir).
 - Alım düğmesine ya da işletme "Yükselt" düğmesine basılı tutunca alım hızla tekrarlanır.
