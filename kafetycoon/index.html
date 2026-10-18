@@ -562,6 +562,11 @@
       <div class="segs" id="fsegs"><button data-fs="0">Normal</button><button data-fs="1">Büyük</button><button data-fs="2">Çok büyük</button></div>
     </div>
     <div class="box">
+      <h3>Grafik kalitesi</h3>
+      <div class="segs" id="qsegs" role="group" aria-label="Grafik kalitesi"><button data-q="0">Otomatik</button><button data-q="1">Düşük</button><button data-q="2">Yüksek</button></div>
+      <p>Otomatik: yavaş telefonlarda 3B çözünürlüğü kendiliğinden düşürür.</p>
+    </div>
+    <div class="box">
       <h3>Bildirimler</h3>
       <label class="chk"><input type="checkbox" data-set="notif"> Tarayıcı bildirimleri</label>
       <p style="margin-top:6px">Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterir. Uygulama tamamen kapalıyken bildirim gelmez.</p>
@@ -694,6 +699,7 @@
   if (!S.mg) S.mg = { day: '', n: 0, best: 0 };
   if (!S.dq || !Array.isArray(S.dq.q)) S.dq = { day: '', q: [], bonus: false };
   if ([0, 1, 5].indexOf(S.settings.bn) < 0) S.settings.bn = 1;
+  if ([0, 1, 2].indexOf(S.settings.q) < 0) S.settings.q = 0;
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -1030,6 +1036,7 @@
       var cbs = $('p-settings').querySelectorAll('input[data-set]');
       for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
       $('prembtn').textContent = S.premium ? 'Premium aktif (kapat)' : 'Premium\'u dene';
+      [].forEach.call($('qsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-q'), 10) === S.settings.q); });
       [].forEach.call($('fsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-fs'), 10) === S.settings.fs); });
     } else if (tab === 'inv') {
       [].forEach.call($('bnseg').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-bn'), 10) === S.settings.bn); });
@@ -1137,10 +1144,10 @@
     });
     var ah = H, cw3 = Math.max(120, Math.min(availW, maxH * W / ah)), d3 = Math.min(dpr, 2);
     cv3.style.width = cw3 + 'px'; cv3.style.height = (cw3 * ah / W) + 'px';
-    if (v3) v3.resize(Math.round(cw3 * d3), Math.round(cw3 * ah / W * d3));
-    if (biz3 && !bizCv.hidden) { var br = bizCv.getBoundingClientRect(); if (br.width > 0 && br.height > 0) biz3.resize(Math.round(br.width * d3), Math.round(br.height * d3)); }
+    if (v3) v3.resize(Math.round(cw3), Math.round(cw3 * ah / W));
+    if (biz3 && !bizCv.hidden) { var br = bizCv.getBoundingClientRect(); if (br.width > 0 && br.height > 0) biz3.resize(Math.round(br.width), Math.round(br.height)); }
     if (hub && !hubCv.hidden) {
-      var hr = hubCv.getBoundingClientRect(); if (hr.width > 0 && hr.height > 0) hub.resize(Math.round(hr.width * d3), Math.round(hr.height * d3)); }
+      var hr = hubCv.getBoundingClientRect(); if (hr.width > 0 && hr.height > 0) hub.resize(Math.round(hr.width), Math.round(hr.height)); }
   }
 
   function mainOf(sub) {
@@ -1892,6 +1899,12 @@
     var b = e.target.closest ? e.target.closest('button[data-fs]') : null;
     if (!b) return;
     S.settings.fs = parseInt(b.getAttribute('data-fs'), 10); applyFs(); persist(); refresh(); layoutCanvases(); sfx('tick');
+  });
+  $('qsegs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-q]') : null;
+    if (!b) return;
+    S.settings.q = parseInt(b.getAttribute('data-q'), 10); persist(); sfx('tick'); refresh();
+    if (hub) hub.setQuality(S.settings.q);
   });
   $('prembtn').addEventListener('click', function () {
     S.premium = !S.premium;
@@ -2735,7 +2748,12 @@
     hubBusy = true; { var hm = $('hubmsg'); hm.textContent = 'Şehir yükleniyor…'; hm.hidden = false; }
     import('./three-hub.js').then(function (m) {
       hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo, getRivals: getRivalsInfo });
-      hub.reduced = !!S.settings.rm;
+      hub.reduced = !!S.settings.rm; hub.setQuality(S.settings.q);
+      var lp = m.loadProgress, lt = setInterval(function () {
+        var hm = $('hubmsg');
+        if (hub && hub.ready || hubFail) { clearInterval(lt); return; }
+        if (hm.textContent.indexOf('Şehir yükleniyor') === 0) hm.textContent = 'Şehir yükleniyor… %' + Math.round(lp.done / Math.max(1, lp.total) * 100);
+      }, 200);
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
         { var hm2 = $('hubmsg'); if (hm2.textContent === 'Şehir yükleniyor…') hm2.hidden = true; }

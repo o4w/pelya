@@ -42,6 +42,7 @@ export const RIVAL_LOTS = [
 ];
 const VEHICLES = { scooter: 'car_hatchback', hatch: 'car_hatchback', sedan: 'car_sedan', sport: 'car_taxi' };
 
+export const loadProgress = { done: 0, total: 1 };
 const kit = { state: 0, tpl: {}, mat: null, grey: null, waiters: [] };
 function loadKit(cb) {
   if (kit.state === 2) { cb(); return; }
@@ -49,7 +50,8 @@ function loadKit(cb) {
   if (kit.state === 1) return;
   kit.state = 1;
   const loader = new GLTFLoader();
-  Promise.all(NAMES.map((n) => loader.loadAsync(BASE + n + '.gltf').then((g) => [n, g.scene])))
+  loadProgress.done = 0; loadProgress.total = NAMES.length;
+  Promise.all(NAMES.map((n) => loader.loadAsync(BASE + n + '.gltf').then((g) => { loadProgress.done++; return [n, g.scene]; })))
     .then((list) => {
       let atlas = null;
       list.forEach(([n, root]) => {
@@ -124,7 +126,9 @@ export function createHub(canvas, bridge) {
   try {
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
   } catch (e) { throw new Error('WebGL kullanılamıyor'); }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  let prCap = 2, qMode = 0, lastW = 0, lastH = 0, fAcc = 0, fN = 0;
+  const pr = () => Math.min(window.devicePixelRatio || 1, prCap);
+  renderer.setPixelRatio(pr());
   renderer.setClearColor(0x000000, 0);
 
   const scene = new THREE.Scene();
@@ -378,6 +382,13 @@ export function createHub(canvas, bridge) {
       if (c.horiz) { c.o.position.set(v * c.dir, 0.12, c.lane); c.o.rotation.y = c.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
       else { c.o.position.set(c.lane, 0.12, v * c.dir); c.o.rotation.y = c.dir > 0 ? 0 : Math.PI; }
     });
+    if (qMode === 0 && prCap > 1 && lastW) {   // otomatik kalite: yavaş cihazda çözünürlüğü düşür
+      fAcc += dt; fN++;
+      if (fN >= 120) {
+        if (fAcc / fN > 0.034) { prCap = prCap > 1.25 ? 1.25 : 1; resize(lastW, lastH); }
+        fAcc = 0; fN = 0;
+      }
+    }
     renderAcc += dt;
     if (renderAcc >= 1 / 32) { renderAcc = 0; renderer.render(scene, camera); }   // pil ömrü için en çok ~30 kare/sn
   }
@@ -416,7 +427,8 @@ export function createHub(canvas, bridge) {
   }
 
   function resize(w, h) {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    lastW = w; lastH = h;
+    renderer.setPixelRatio(pr());
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
     aspect = Math.max(1, w) / Math.max(1, h);
     fitCamera();
@@ -428,7 +440,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { reduced: false, nudge(dx, dy) { panBy(dx, dy); }, zoomBy(f) { view.zoom = Math.max(0.75, Math.min(1.6, view.zoom * f)); fitCamera(); }, update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { reduced: false, setQuality(m) { qMode = m; prCap = m === 1 ? 1 : 2; fAcc = 0; fN = 0; if (lastW) resize(lastW, lastH); }, get pixelRatio() { return pr(); }, nudge(dx, dy) { panBy(dx, dy); }, zoomBy(f) { view.zoom = Math.max(0.75, Math.min(1.6, view.zoom * f)); fitCamera(); }, update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }

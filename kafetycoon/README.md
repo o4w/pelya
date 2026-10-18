@@ -230,6 +230,11 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Giriş serisi: art arda her gün +%10 ödül (en çok +%50). Üç görev de bitince bronz sandık verilir.
 - Ödül miktarı `rewardBase()` ile ekonomiye ölçeklenir. Para, ödül alınırken ve balon/çevrimdışı kazançta üst çubuktaki paraya uçar (Hareketi azalt açıksa uçmaz).
 
+## Performans ve kalite
+- 3B tuvaller artık çözünürlüğü bir kez uygular (önceden cihaz piksel oranı iki kez çarpılıyor, retina telefonda 4x piksel çiziliyordu). Şehir, işletme içi ve 3B kafe için geçerli.
+- Ayarlar > Grafik kalitesi: Otomatik (şehirde ~2 sn ölçüm, yavaşsa çözünürlüğü düşürür), Düşük, Yüksek.
+- Şehir açılırken yükleme yüzdesi gösterilir.
+
 ## Alım hissi
 - Yükselt sekmesinde ×1 / ×5 / Maks alım seçici (parası yettiği kadar seviye alır, seçim kaydedilir).
 - Alım düğmesine ya da işletme "Yükselt" düğmesine basılı tutunca alım hızla tekrarlanır.
