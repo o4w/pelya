@@ -6,7 +6,7 @@ description: Köşe Kafe Tycoon projesinde Three.js (3B) kodu yazarken veya değ
 # Three.js kuralları (Köşe Kafe Tycoon)
 
 3B kod `kafetycoon/three-view.js` içindedir. Oyun (`index.html`) ve demo (`3d-demo.html`) aynı modülü kullanır.
-Şehir ana ekranı ayrı modüldür: `kafetycoon/three-hub.js` (izometrik, ortografik kamera, `assets/kaykit-city`). Aynı kuralları izler: yalnızca depodaki modeller, ortak malzeme, `dispose`, yedek yol (yüklenemezse oyun kafe görünümüne düşer).
+Şehir ana ekranı ayrı modüldür: `kafetycoon/three-hub.js` (izometrik, ortografik kamera, `assets/kaykit-city`). İşletme iç mekânı `kafetycoon/three-biz.js` (izometrik, `assets/kaykit-restaurant`). Aynı kuralları izler: yalnızca depodaki modeller, ortak malzeme, `dispose`, yedek yol (yüklenemezse oyun kafe görünümüne düşer).
 
 ## Kaynak ve güvenlik
 - Three.js **yalnızca** `kafetycoon/vendor/three/` içinden yüklenir (importmap ile `three` adı buraya bağlanır). CDN kullanma.
