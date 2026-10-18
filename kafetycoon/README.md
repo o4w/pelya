@@ -235,6 +235,7 @@ Tüm ayarlar kaynakta tek satırdadır: `var ECO = { rev, cost, rentPass, stock,
 - `rev: 0.7` müşteri geliri %30 düştü, `cost: 1.3` tüm alımlar (eşya, menü, mülk, işletme, şube) %30 pahalı, işletme seviye maliyeti çarpanı 1.7'den 1.8'e çıktı.
 - Gün sonu giderleri yaklaşık iki katı: kira tabanı ve ekipman payı arttı, kira pasif gelirin %8'i, malzeme kafe gelirinin %17'si.
 - Çevrimdışı kazanç `0.3x 3 saat` yerine `0.12x 2 saat` (yaklaşık 4 kat az). Balon `0.18`. Ödüller (görev, çark, mini oyun) kazanç oranına bağlı olduğu için `rw: 0.6` ile küçüldü. Hedef ve başarım ödülleri `0.7x`.
+- Sandıklar: para çarpanı bronz 2→0,7, gümüş 6→2, altın 15→5; deneyim 10/30/80 → 6/18/50, altın sandıkta 3 kart. Çark para dilimleri 1/3/10 → 0,6/1,8/5, haftalık ödül 10→5, günlük görev ve mini oyun ödülleri %25 azaldı.
 - Ölçüm: yeni oyuncu ilk dakikada eskiye göre yaklaşık %35 daha az kazanır (82 yerine 53). Genel tempo yaklaşık 1,8-2 kat yavaş. Çok kolay ya da zor gelirse yalnızca bu satırdaki sayılar ayarlanır.
 
 ## Görsel kimlik (palet)

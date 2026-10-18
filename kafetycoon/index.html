@@ -787,7 +787,7 @@
     var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
   }
   applyTheme();
-  var APP_VER = 'v32';
+  var APP_VER = 'v33';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -2041,8 +2041,8 @@
   $('wclaim').addEventListener('click', function () {
     if (!weekClaimable()) return;
     S.week.claimed = true;
-    var m = rewardBase() * 10;
-    S.money += m; gainXp(60); giveChest('g');
+    var m = rewardBase() * 5;
+    S.money += m; gainXp(40); giveChest('g');
     sfx('win'); buzz([30, 30, 60]);
     burst(W / 2, 140, 40, ['#ffd23f', '#6fd6a2', '#ff9ecd', '#4cc9f0'], 140);
     persist(); refresh();
@@ -2129,7 +2129,7 @@
   }
   function dqDef(id) { return DQ_POOL.filter(function (q) { return q.id === id; })[0]; }
   function dqStreakMult() { return 1 + Math.min(0.5, 0.1 * (S.streak.n - 1)); }
-  function dqReward(q) { return Math.round(rewardBase() * dqDef(q.id).m * dqStreakMult()); }
+  function dqReward(q) { return Math.round(rewardBase() * dqDef(q.id).m * 0.75 * dqStreakMult()); }
   function dqClaimable() { dqEnsure(); return S.dq.q.some(function (q) { return q.p >= q.n && !q.c; }); }
   function dqClaim(i, el) {
     var q = S.dq.q[i];
@@ -2199,7 +2199,7 @@
   function rewardBase() { return Math.max(60, Math.round((estPerMin().rate * 0.75 + passiveDaily() / DAY_LEN * 40) * ECO.rw)); }
 
   // Sandıklar
-  var CHEST = { b: { n: 'Bronz sandık', m: 2, cards: 1, xp: 10 }, s: { n: 'Gümüş sandık', m: 6, cards: 2, xp: 30 }, g: { n: 'Altın sandık', m: 15, cards: 4, xp: 80 } };
+  var CHEST = { b: { n: 'Bronz sandık', m: 0.7, cards: 1, xp: 6 }, s: { n: 'Gümüş sandık', m: 2, cards: 2, xp: 18 }, g: { n: 'Altın sandık', m: 5, cards: 3, xp: 50 } };
   function chestCount() { return S.chests.b + S.chests.s + S.chests.g; }
   function giveChest(k) {
     S.chests[k]++;
@@ -2230,10 +2230,10 @@
 
   // Günlük çark
   var WHEEL = [
-    { t: 'm', k: 1, l: '₺', c: '#e07a4f', w: 25 }, { t: 'c', l: 'Kart', c: '#7cc9bd', w: 20 },
+    { t: 'm', k: 0.6, l: '₺', c: '#e07a4f', w: 25 }, { t: 'c', l: 'Kart', c: '#7cc9bd', w: 20 },
     { t: 'h', l: 'Hız', c: '#b8d9a0', w: 15 }, { t: 'x', l: 'XP', c: '#c9a27a', w: 15 },
-    { t: 'm', k: 10, l: '₺₺₺', c: '#f1b02f', w: 5 }, { t: 'b', k: 'b', l: 'Sandık', c: '#d98a52', w: 10 },
-    { t: 'm', k: 3, l: '₺₺', c: '#f0b6a0', w: 6 }, { t: 'b', k: 's', l: 'Gümüş', c: '#d8c9b0', w: 4 }
+    { t: 'm', k: 5, l: '₺₺₺', c: '#f1b02f', w: 5 }, { t: 'b', k: 'b', l: 'Sandık', c: '#d98a52', w: 10 },
+    { t: 'm', k: 1.8, l: '₺₺', c: '#f0b6a0', w: 6 }, { t: 'b', k: 's', l: 'Gümüş', c: '#d8c9b0', w: 4 }
   ];
   var wheelAng = 0, wheelSpin = null;
   function wheelReady() { return S.wheel.day !== todayKey(); }
@@ -2432,7 +2432,7 @@
     for (i = 0; i < els.length; i++) mgrRows.push({ lv: els[i].querySelector('em'), bar: els[i].querySelector('.meter i'), b: els[i].querySelector('button') });
 
     h = '';
-    ['b', 's', 'g'].forEach(function (k) { h += '<div class="item"><div class="info"><b>' + CHEST[k].n + '<em></em></b><span>Para x' + CHEST[k].m + ', ' + CHEST[k].cards + ' kart, deneyim</span></div><button class="buy" data-k="' + k + '">Aç</button></div>'; });
+    ['b', 's', 'g'].forEach(function (k) { h += '<div class="item"><div class="info"><b>' + CHEST[k].n + '<em></em></b><span>Para ödülü, ' + CHEST[k].cards + ' kart, deneyim</span></div><button class="buy" data-k="' + k + '">Aç</button></div>'; });
     $('chestlist').innerHTML = h;
     els = $('chestlist').querySelectorAll('.item');
     for (i = 0; i < els.length; i++) chestRows.push({ n: els[i].querySelector('em'), b: els[i].querySelector('button') });
@@ -3035,7 +3035,7 @@
   var MG = { state: 'idle', end: 0, tl: 30, score: 0, combo: 0, best: 0, done: 0, order: [], pos: 0, tmr: 0, lock: false };
   var MG_FREE = 3;
   function mgLeft() { var d = todayKey(); return S.mg.day === d ? Math.max(0, MG_FREE - S.mg.n) : MG_FREE; }
-  function mgPrize(score) { return Math.round(rewardBase() * (0.3 + Math.min(2.7, score / 60))); }
+  function mgPrize(score) { return Math.round(rewardBase() * 0.75 * (0.3 + Math.min(2.7, score / 60))); }
   function mgOpenUi() {
     mgOpen = true; $('mg').hidden = false; MG.state = 'ready';
     $('mgbody').hidden = false; $('mgres').hidden = true; $('mgstack').innerHTML = ''; $('mgorder').innerHTML = '';
