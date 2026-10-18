@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Köşe Kafe Tycoon</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
@@ -27,6 +27,9 @@
     color-scheme: light;
   }
   html, body { height: 100%; }
+  /* çift dokunmayla yakınlaşmayı kapatır; kaydırma ve dokunma aynen çalışır */
+  html, body, button, canvas, .shop, .tabs, .nav, .modal { touch-action: manipulation; }
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; color: var(--fg); font-family: var(--body); font-weight: 500;
     background: linear-gradient(180deg, #74d3f7 0%, #4aa6ee 55%, #3a78dc 100%) fixed;
