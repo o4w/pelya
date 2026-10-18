@@ -2,7 +2,7 @@
 // Sayfa (navigasyon) isteklerinde önce ağ denenir, çevrimdışıysa önbellek kullanılır.
 // Aynı kaynaktan gelen diğer dosyalar önbellekten verilir ve arka planda yenilenir.
 // Yazı tipleri, Supabase gibi başka kaynaklara dokunulmaz. Yeni sürümde CACHE adını artır.
-const CACHE = 'kafetycoon-v33';
+const CACHE = 'kafetycoon-v34';
 const CORE = ['./', 'index.html', 'three-view.js', 'vendor/three/three.module.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 // Şehir ve işletme içi modülleri: yüklenemezse kurulumu bozmaz, ilk açılıştan sonra çevrimdışı da çalışır
 const EXTRA = ['three-hub.js', 'three-biz.js', 'vendor/three/loaders/GLTFLoader.js', 'vendor/three/utils/BufferGeometryUtils.js'];

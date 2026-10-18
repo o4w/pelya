@@ -226,13 +226,12 @@
   body.hubmode .v3d { display: none; }
   /* Servet, Ödüller ve Ben sekmelerinde sahne yok: liste ekranı tamamen kaplar */
   body.noscene .scene, body.noscene .grip { display: none; }
-  /* kafe ekranı: üstteki sahne kapalı, hızlı düğmeler ince bir şerit olur */
-  body.slim .grip, body.slim .v3d, body.slim #cv, body.slim #cv3 { display: none; }
-  body.slim .scene { padding-block: 6px 0; }
-  body.slim .stagebox { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; width: 100%; }
-  body.slim .rail { position: static; flex-direction: row; gap: 8px; }
-  body.slim .boost { position: static; transform: none; min-width: 0; order: -1; }
-  body.slim .boost:active:not(:disabled) { transform: translateY(3px); }
+  /* kafe ekranı: sahne altında hızlı düğmeler tek satır, sahnenin üstüne binmez */
+  body:not(.hubmode) .stagebox { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; width: 100%; }
+  body:not(.hubmode) .rail { position: static; flex-direction: row; gap: 8px; order: 3; }
+  body:not(.hubmode) .boost { position: static; transform: none; min-width: 0; flex: 1 1 140px; order: 2; }
+  body:not(.hubmode) .boost:active:not(:disabled) { transform: translateY(3px); }
+  body:not(.hubmode) .v3d { position: static; order: 3; min-width: 44px; min-height: 44px; }
   body.bizmode .boost, body.bizmode .rail { display: none; }
   .rail .hubonly { display: none; }
   body.cityview .rail .hubonly { display: flex; }
@@ -787,7 +786,7 @@
     var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
   }
   applyTheme();
-  var APP_VER = 'v33';
+  var APP_VER = 'v34';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -1227,7 +1226,7 @@
   function layoutCanvases() {
     var box = document.querySelector('.scene');
     var availW = Math.min(box.clientWidth - 32, 448);
-    var maxH = window.innerHeight * (expanded ? 0.2 : 0.36);
+    var maxH = window.innerHeight * (expanded ? 0.2 : 0.27);
     var dpr = window.devicePixelRatio || 1;
     [[cv, ctx, W, H]].forEach(function (a) {
       var cw = Math.max(120, Math.min(availW, maxH * a[2] / a[3]));
@@ -2303,7 +2302,7 @@
     function done() { auditOpen = false; paused = false; persist(); }
     enqueue(function () {
       showModal('<h2>Belediye denetimi!</h2><p>Müfettişler kapıda. Hazırlığın ne durumda?</p>' +
-        '<div class="stats"><span>Başarı şansı</span><span>%' + Math.round(ch * 100) + '</span><span>Başarırsan</span><span>+₺' + fmt(win) + '</span><span>Başaramazsan</span><span>-₺' + fmt(fine) + '</span><span>Erteleme ücreti</span><span>₺' + fmt(delay) + '</span></div>' +
+        '<div class="stats"><span>Başarı şansı</span><span>%' + Math.round(ch * 100) + '</span><span>Başarırsan</span><span>ceza yok, itibar +0.1</span><span>Başaramazsan</span><span>-₺' + fmt(fine) + '</span><span>Erteleme ücreti</span><span>₺' + fmt(delay) + '</span></div>' +
         '<p>İtibar, dekor, barista ve Denetim uzmanı şansını artırır.</p>' +
         '<div class="row"><button data-act="delay"' + (S.money < delay ? ' disabled' : '') + '>Ertele</button><button class="on" data-act="go">Denetime gir</button></div>',
         {
@@ -2311,10 +2310,10 @@
           go: function () {
             if (Math.random() < ch) {
               track('audit', { r: 'pass' });
-              S.money += win; gainXp(20); if (Math.random() < 0.5) giveChest('b');
+              gainXp(20); S.rep = Math.min(5, S.rep + 0.1);
               sfx('win'); burst(W / 2, 140, 30, ['#ffd23f', '#6fd6a2'], 120);
               done();
-              enqueue(function () { showModal('<h2>Denetimi geçtin!</h2><div class="big">+₺' + fmt(win) + '</div><div class="row"><button class="on" data-act="ok">Süper</button></div>', {}); });
+              enqueue(function () { showModal('<h2>Denetimi geçtin!</h2><p>Ceza yemedin, itibarın biraz arttı.</p><div class="row"><button class="on" data-act="ok">Süper</button></div>', {}); });
             } else {
               track('audit', { r: 'fail' });
               S.money = Math.max(0, S.money - fine); S.rep = Math.max(repMin(), S.rep - 0.15);
@@ -3258,7 +3257,7 @@
   var TUT_BOUGHT = 0;
   var TUT = [
     { title: 'Hoş geldin!', text: 'Kafen şehirde. Ona dokun ve içeri gir.', target: function () { var q = hub && hub.screenPos('cafe'); return q ? { x: q.x - 46, y: q.y - 46, w: 92, h: 92 } : null; }, when: function () { return hubActive(); }, done: function () { return view === 'cafe' && mainTab === 'home'; }, ok: false },
-    { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', when: function () { return mainTab === 'home' && view === 'cafe'; }, target: function () { return rectOf(document.querySelector('#p-home .box')); }, done: null, ok: true },
+    { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', when: function () { return mainTab === 'home' && view === 'cafe'; }, target: function () { return rectOf(document.querySelector('.stagebox')); }, done: null, ok: true },
     { title: 'Kafeni yükselt', text: 'Parayı kafene yatır. Kafe sekmesine dokun.', target: function () { return rectOf(document.querySelector('#nav [data-main="grow"]')); }, done: function () { return mainTab === 'grow'; }, ok: false },
     { title: 'İlk yükseltme', text: 'Yeşil düğmeye basıp ilk yükseltmeni al. Parası yetmiyorsa biraz bekle, müşteriler sattıkça para birikir.', target: function () { var b = document.querySelector('#list .item button.buy:not([disabled])') || document.querySelector('#list .item button.buy'); return rectOf(b); }, when: function () { return mainTab === 'grow' && tab === 'inv'; }, done: function () { return TUT_BOUGHT > 0; }, ok: false },
     { title: 'Şehre dön', text: 'Şehir sekmesiyle haritaya dönersin. Yeni işletmeler seviyeyle açılır.', target: function () { return rectOf(document.querySelector('#nav [data-main="home"]')); }, done: function () { return hubActive(); }, ok: false },
@@ -3296,7 +3295,7 @@
   setInterval(tutTick, 250);
 
   /* ---------- 3B görünüm (Three.js, depodaki sabit sürüm; yalnızca isteyince yüklenir) ---------- */
-  var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false;
+  var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false, v3failed = false;
   function applyViews() {
     var hubOn = hubActive(), bizOn = bizActive(), full = hubOn || bizOn;
     document.body.classList.toggle('hubmode', full);
@@ -3304,14 +3303,14 @@
     document.body.classList.toggle('cityview', hubOn);
     var noScene = !full && (mainTab === 'world' || mainTab === 'rew' || mainTab === 'me');
     document.body.classList.toggle('noscene', noScene);
-    var slim = !full && !noScene;
-    document.body.classList.toggle('slim', slim);
+    document.body.classList.remove('slim');
     hubCv.hidden = !hubOn; $('hubui').hidden = !hubOn;
     bizCv.hidden = !bizOn; $('bizui').hidden = !bizOn;
     if (hubOn) ensureHub();
     if (bizOn) ensureBiz();
-    cv.hidden = full || noScene || slim || v3on;
-    cv3.hidden = full || noScene || slim || !v3on;
+    cv.hidden = full || noScene || v3on;
+    cv3.hidden = full || noScene || !v3on;
+    if (!full && !noScene && !v3on && !v3busy && !v3failed && S.settings.v3 !== false) start3d();
     $('v3d').classList.toggle('on', v3on);
     $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
   }
@@ -3324,10 +3323,9 @@
     if (v3) { try { v3.dispose(); } catch (e) {} v3 = null; }
     applyViews(); layoutCanvases();
   }
-  $('v3d').addEventListener('click', function () {
-    if (v3on) { stop3d(); return; }
-    if (v3busy) return;
-    if (location.protocol === 'file:') { v3msg('http(s) gerekli'); return; }
+  function start3d() {
+    if (v3on || v3busy) return;
+    if (location.protocol === 'file:') { v3failed = true; v3msg('http(s) gerekli'); return; }
     v3busy = true;
     import('./three-view.js').then(function (m) {
       var bridge = {
@@ -3337,9 +3335,13 @@
       v3 = m.createView3D(cv3, bridge);
       v3on = true; v3busy = false;
       applyViews(); layoutCanvases();
-    }).catch(function () { v3busy = false; v3 = null; v3on = false; applyViews(); v3msg('3B açılamadı'); });
+    }).catch(function () { v3busy = false; v3 = null; v3on = false; v3failed = true; applyViews(); v3msg('3B açılamadı'); });
+  }
+  $('v3d').addEventListener('click', function () {
+    if (v3on) { S.settings.v3 = false; persist(); stop3d(); return; }
+    S.settings.v3 = true; v3failed = false; persist(); start3d();
   });
-  cv3.addEventListener('webglcontextlost', function (e) { e.preventDefault(); stop3d(); v3msg('3B durdu'); });
+  cv3.addEventListener('webglcontextlost', function (e) { e.preventDefault(); v3failed = true; stop3d(); v3msg('3B durdu'); });
 
   /* ---------- Bulut: Supabase (giriş, kayıt, liderlik tablosu) ---------- */
   var SUPABASE_URL = 'https://jsweeupxworydfpihlgd.supabase.co';

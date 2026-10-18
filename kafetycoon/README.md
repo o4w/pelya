@@ -258,6 +258,10 @@ Oyun hazır "şeker/hiper-casual" görünümünden kafe kimliğine geçirildi: h
 - Ayarlar > Grafik kalitesi: Otomatik (şehirde ~2 sn ölçüm, yavaşsa çözünürlüğü düşürür), Düşük, Yüksek.
 - Şehir açılırken yükleme yüzdesi gösterilir.
 
+## Kafe sahnesi (2.5B izometrik) ve denetim
+- Kafe sekmesinde 2.5B izometrik 3B sahne geri geldi: müşteriler kapıdan girer, sıraya girer, masaya oturur, çıkar. 3B açılamazsa 2B sahneye düşer. Sahne alçaktır (ekranın ~%27'si); "Hızlan" düğmesi ve hızlı düğmeler sahnenin altında tek satırdır, üstüne binmez. "3B" düğmesiyle 2B görünüme geçilebilir (seçim hatırlanır).
+- Belediye denetimi artık para vermez: geçersen ceza yemezsin ve itibarın +0,1 artar, kalırsan ceza ve itibar kaybı vardır.
+
 ## Kafe ekranı (sahnesiz)
 Kafeye girince üstteki 2B/3B sahne kapalıdır; alt düğmeler ve listeler tüm alanı kullanır. Hızlan düğmesi ve hızlı düğmeler (mini oyun, çark, sandık, etkinlik) ince bir şerit olarak üstte durur. 3B kafe görünümü kodda duruyor ama arayüzden açılmıyor.
 
