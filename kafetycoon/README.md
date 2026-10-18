@@ -230,6 +230,14 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Giriş serisi: art arda her gün +%10 ödül (en çok +%50). Üç görev de bitince bronz sandık verilir.
 - Ödül miktarı `rewardBase()` ile ekonomiye ölçeklenir. Para, ödül alınırken ve balon/çevrimdışı kazançta üst çubuktaki paraya uçar (Hareketi azalt açıksa uçmaz).
 
+## Renk paleti, yedek ve uygulama simgesi
+- Renk teması (Ben > Ayarlar): Gökyüzü, Gün batımı, Orman, Şeker. Tema arka plan gradyanını, üst göstergeleri, alt çubuğu ve tarayıcı `theme-color` rengini değiştirir. Bölüm panellerinin renk kodları (mavi, turuncu, pembe, sarı, mor, yeşil) bilinçli olarak sabit kalır. Renkler `:root` ve `html[data-theme]` altındaki değişkenlerdedir.
+- Üst gösterge yazıları temaya göre koyu renktir (`--hudtx`, `--hudem`); simge yazıları koyulaştırıldı.
+- Kayıt yedeği: "Yedeği kopyala", "Yedekten yükle", "Oyunu sıfırla" (onaylı) ve sürüm etiketi. Yedek kodu base64 JSON'dur.
+- Simgeler gökyüzü temasına göre yenilendi; ayrı maskable (tam taşan) simge ve `apple-touch-icon.png` eklendi.
+- Çevrimdışı: şehir ve işletme içi modülleri de önbelleğe alınır.
+- Küçük ekran (320px) ve en büyük yazı boyutunda taşan menü/personel kartları ve segment düğmeleri düzeltildi.
+
 ## Performans ve kalite
 - 3B tuvaller artık çözünürlüğü bir kez uygular (önceden cihaz piksel oranı iki kez çarpılıyor, retina telefonda 4x piksel çiziliyordu). Şehir, işletme içi ve 3B kafe için geçerli.
 - Ayarlar > Grafik kalitesi: Otomatik (şehirde ~2 sn ölçüm, yavaşsa çözünürlüğü düşürür), Düşük, Yüksek.

@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#4aa6ee">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
   /* Kafe tycoon: gökyüzü mavisi zemin, renkli çerçeveli paneller, kalın renk kodlu düğmeler. */
   :root {
@@ -30,15 +30,22 @@
     --body: "Fredoka", "Nunito", system-ui, sans-serif;
     /* panel renkleri: çerçeve, koyu kenar, iç zemin */
     --pf: #48b4ff; --pd: #1c62c0; --pi: #d6eeff;
+    /* tema renkleri: zemin gradyanı, üst göstergeler, alt çubuk */
+    --bg1: #74d3f7; --bg2: #4aa6ee; --bg3: #3a78dc;
+    --nav1: #2f66cf; --nav2: #1d3f9a; --navb: #12286b;
+    --hudtx: #0b1b4d; --hudem: #8f3600;
     color-scheme: light;
   }
+  html[data-theme="sunset"] { --pf: #ff9a5c; --pd: #b84a12; --pi: #ffe8d6; --bg1: #ffd08a; --bg2: #ff8f6b; --bg3: #d9507a; --nav1: #c24a6a; --nav2: #8f2a52; --navb: #5e1838; --hudtx: #3a0f20; --hudem: #7a1a00; }
+  html[data-theme="forest"] { --pf: #4cc77a; --pd: #1b7a3f; --pi: #dcf8e6; --bg1: #9be8b5; --bg2: #4cbf87; --bg3: #2a8f78; --nav1: #1f8a5c; --nav2: #14664a; --navb: #0b4030; --hudtx: #06301f; --hudem: #7a2e00; }
+  html[data-theme="candy"] { --pf: #c58bff; --pd: #6a2fb8; --pi: #f0e2ff; --bg1: #ffc2ec; --bg2: #b88bff; --bg3: #7a5ae0; --nav1: #6a49c8; --nav2: #4a2f9a; --navb: #2e1c6e; --hudtx: #2a1060; --hudem: #7a1a5a; }
   html, body { height: 100%; }
   /* çift dokunmayla yakınlaşmayı kapatır; kaydırma ve dokunma aynen çalışır */
   html, body, button, canvas, .shop, .tabs, .nav, .modal { touch-action: manipulation; }
   html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; color: var(--fg); font-family: var(--body); font-weight: 500;
-    background: linear-gradient(180deg, #74d3f7 0%, #4aa6ee 55%, #3a78dc 100%) fixed;
+    background: linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%) fixed;
     display: flex; flex-direction: column; overflow: hidden;
     user-select: none; -webkit-user-select: none;
   }
@@ -50,19 +57,19 @@
   /* üst göstergeler */
   .hud { padding-block: 8px 2px; position: relative; z-index: 2; }
   .row1 { display: flex; align-items: center; gap: 8px; }
-  .pill { display: flex; align-items: center; gap: 6px; background: #1d3f9a; color: #fff; border-radius: 999px; padding: 3px 12px 3px 3px; font-weight: 600; font-size: calc(15px * var(--fs)); border: 2px solid #12286b; box-shadow: inset 0 2px 0 rgba(0,0,0,0.3), 0 2px 0 rgba(255,255,255,0.35); min-width: 0; white-space: nowrap; }
+  .pill { display: flex; align-items: center; gap: 6px; background: var(--nav2); color: #fff; border-radius: 999px; padding: 3px 12px 3px 3px; font-weight: 600; font-size: calc(15px * var(--fs)); border: 2px solid var(--navb); box-shadow: inset 0 2px 0 rgba(0,0,0,0.3), 0 2px 0 rgba(255,255,255,0.35); min-width: 0; white-space: nowrap; }
   .pill .ico { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: calc(14px * var(--fs)); font-family: var(--display); flex-shrink: 0; }
   .pill.coin { flex: 1; }
-  .pill.coin .ico { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffc233 55%, #e08a00); color: #9a5a00; box-shadow: 0 2px 0 #a86300; }
-  .pill.star .ico { background: radial-gradient(circle at 35% 30%, #ffe0f7, #e66bd8 60%, #a53aa0); color: #fff; box-shadow: 0 2px 0 #7b2a77; }
-  .pill.lvl .ico { background: radial-gradient(circle at 35% 30%, #d9ffe0, #4cdc72 60%, #18a040); color: #fff; box-shadow: 0 2px 0 #0f6a28; }
+  .pill.coin .ico { background: radial-gradient(circle at 35% 30%, #fff3a8, #ffc233 55%, #e08a00); color: #4a2a00; box-shadow: 0 2px 0 #a86300; }
+  .pill.star .ico { background: radial-gradient(circle at 35% 30%, #ffe0f7, #e66bd8 60%, #a53aa0); color: #3d0b3a; box-shadow: 0 2px 0 #7b2a77; }
+  .pill.lvl .ico { background: radial-gradient(circle at 35% 30%, #d9ffe0, #4cdc72 60%, #18a040); color: #06301a; box-shadow: 0 2px 0 #0f6a28; }
   .money { font-family: var(--display); font-size: calc(21px * var(--fs)); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
   .xpbar { width: 36px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.4); overflow: hidden; }
   .xpbar i { display: block; height: 100%; width: 0; background: #6dff74; }
-  .row2 { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; font-size: calc(14px * var(--fs)); font-weight: 600; color: #0b1b4d; text-shadow: 0 1px 0 rgba(255,255,255,0.35); }
+  .row2 { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; font-size: calc(14px * var(--fs)); font-weight: 600; color: var(--hudtx); text-shadow: 0 1px 0 rgba(255,255,255,0.35); }
   .cafename { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52%; }
   .day { text-align: right; }
-  .day em { font-style: normal; color: #8f3600; }
+  .day em { font-style: normal; color: var(--hudem); }
   .daybar { height: 8px; border-radius: 4px; background: rgba(18,40,107,0.55); margin: 3px 0 0 auto; overflow: hidden; width: 110px; }
   .daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffe36a, #ff9a1f); border-radius: 4px; }
   .goal { color: var(--good); font-size: calc(14px * var(--fs)); font-weight: 700; margin-top: 6px; }
@@ -137,7 +144,7 @@
   }
   .note { background: rgba(18,40,107,0.88); color: #fff; padding: 8px 12px; border-radius: 12px; font-size: calc(14px * var(--fs)); margin: 6px 4px 10px; text-shadow: none; }
   .segs { display: flex; gap: 6px; margin: 8px 0; }
-  .segs button { flex: 1; font-size: calc(15px * var(--fs)); --c1: #c9cfe0; --c2: #9aa3be; --bd: #5d6688; }
+  .segs button { flex: 1; min-width: 0; padding-inline: 6px; overflow-wrap: anywhere; font-size: calc(15px * var(--fs)); --c1: #c9cfe0; --c2: #9aa3be; --bd: #5d6688; }
   .segs button.on, .acctrow button.on, .modal button.on { --c1: #7cf08a; --c2: #32c24e; --bd: #0c6a22; }
   .acctrow { display: flex; gap: 8px; margin-top: 8px; }
   .acctrow button { flex: 1; min-width: 0; font-size: calc(15px * var(--fs)); --c1: #7fdcff; --c2: #3aaaf0; --bd: #0b5bb0; }
@@ -160,7 +167,7 @@
   .grip:active:not(:disabled) { transform: none; box-shadow: none; }
   .grip span { display: block; width: 48px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.7); margin: 0 auto; }
   /* alt gezinme: renkli, kalın ikon düğmeleri */
-  .nav { display: flex; gap: 8px; padding: 8px max(12px, env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, #2f66cf, #1d3f9a); border-top: 4px solid #12286b; flex-shrink: 0; position: relative; z-index: 2; }
+  .nav { display: flex; gap: 8px; padding: 8px max(12px, env(safe-area-inset-left, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, var(--nav1), var(--nav2)); border-top: 4px solid var(--navb); flex-shrink: 0; position: relative; z-index: 2; }
   .nav button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px 5px; font-size: calc(14px * min(var(--fs), 1.0)); letter-spacing: 0; position: relative; border-radius: 16px; }
   .nav button[data-main="home"] { --c1: #ffc457; --c2: #f58a0e; --bd: #9a4300; }
   .nav button[data-main="grow"] { --c1: #7cf08a; --c2: #32c24e; --bd: #0c6a22; }
@@ -196,7 +203,7 @@
   .modal .row.col > button small { display: block; font-family: var(--body); font-weight: 500; font-size: calc(14px * var(--fs)); opacity: 0.95; margin-top: 2px; text-shadow: none; }
   .modal .cd { font-size: calc(14px * var(--fs)); color: var(--muted); margin-top: 10px; }
   /* ızgara kartlar: menü ve yöneticiler. Renk, sıraya göre nadirlik gibi değişir. */
-  #menulist, #mgrlist, #bizlist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
+  #menulist, #mgrlist, #bizlist { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-bottom: 8px; }
   #menulist .item, #mgrlist .item, #bizlist .item { flex-direction: column; align-items: stretch; text-align: center; margin-bottom: 0; padding: 12px 8px 10px; gap: 8px; --pi: #cfe9ff; }
   #menulist .item .info, #mgrlist .item .info, #bizlist .item .info { flex: 1; }
   #menulist .item button.buy, #mgrlist .item button.buy, #bizlist .item button.buy { min-width: 0; width: 100%; }
@@ -353,6 +360,10 @@
   .lotsheet .row button small { display: block; font-family: var(--body); font-weight: 600; font-size: calc(14px * var(--fs)); text-shadow: none; }
   .lotsheet .xbtn { top: 6px; right: 6px; }
   @keyframes sheetup { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  input, textarea { user-select: text; -webkit-user-select: text; }
+  textarea { font-family: var(--body); border: 2px solid var(--pd); border-radius: 12px; padding: 8px; color: var(--ink); background: #fff; }
+  .item { min-width: 0; }
+  .acctrow { flex-wrap: wrap; }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -577,6 +588,10 @@
       <div class="segs" id="fsegs"><button data-fs="0">Normal</button><button data-fs="1">Büyük</button><button data-fs="2">Çok büyük</button></div>
     </div>
     <div class="box">
+      <h3>Renk teması</h3>
+      <div class="segs" id="thsegs" style="display:grid;grid-template-columns:1fr 1fr" role="group" aria-label="Renk teması"><button data-th="sky">Gökyüzü</button><button data-th="sunset">Gün batımı</button><button data-th="forest">Orman</button><button data-th="candy">Şeker</button></div>
+    </div>
+    <div class="box">
       <h3>Grafik kalitesi</h3>
       <div class="segs" id="qsegs" role="group" aria-label="Grafik kalitesi"><button data-q="0">Otomatik</button><button data-q="1">Düşük</button><button data-q="2">Yüksek</button></div>
       <p>Otomatik: yavaş telefonlarda 3B çözünürlüğü kendiliğinden düşürür.</p>
@@ -590,6 +605,13 @@
       <h3>Gizlilik</h3>
       <label class="chk"><input type="checkbox" data-set="telemetry"> Anonim kullanım verisi gönder</label>
       <p style="margin-top:6px">Kimlik içermez: ad, e-posta ve kayıt içeriği toplanmaz. Yalnızca hangi adımların yapıldığı sayılır.</p>
+    </div>
+    <div class="box">
+      <h3>Kayıt yedeği</h3>
+      <p>İlerlemen bu cihazda saklanır. Telefon değiştirirsen ya da tarayıcı verisini silersen kaybolur; yedek kodunu kopyalayıp saklayabilirsin.</p>
+      <div class="acctrow"><button id="bkexp">Yedeği kopyala</button><button id="bkimp">Yedekten yükle</button></div>
+      <div class="acctrow"><button id="bkreset" style="--c1:#ff9a8a;--c2:#e5493a;--bd:#8f1f14">Oyunu sıfırla</button></div>
+      <p id="verinfo" style="margin-top:8px"></p>
     </div>
     <div class="box">
       <h3>Premium (simülasyon)</h3>
@@ -715,6 +737,14 @@
   if (!S.dq || !Array.isArray(S.dq.q)) S.dq = { day: '', q: [], bonus: false };
   if ([0, 1, 5].indexOf(S.settings.bn) < 0) S.settings.bn = 1;
   if ([0, 1, 2].indexOf(S.settings.q) < 0) S.settings.q = 0;
+  var THEMES = { sky: '#4aa6ee', sunset: '#ff8f6b', forest: '#4cbf87', candy: '#b88bff' };
+  if (!THEMES[S.settings.th]) S.settings.th = 'sky';
+  function applyTheme() {
+    var t = S.settings.th; if (t === 'sky') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+    var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
+  }
+  applyTheme();
+  var APP_VER = 'v30';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -1051,6 +1081,8 @@
       var cbs = $('p-settings').querySelectorAll('input[data-set]');
       for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
       $('prembtn').textContent = S.premium ? 'Premium aktif (kapat)' : 'Premium\'u dene';
+      [].forEach.call($('thsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-th') === S.settings.th); });
+      $('verinfo').textContent = 'Sürüm ' + APP_VER;
       [].forEach.call($('qsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-q'), 10) === S.settings.q); });
       [].forEach.call($('fsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-fs'), 10) === S.settings.fs); });
     } else if (tab === 'inv') {
@@ -1914,6 +1946,40 @@
     var b = e.target.closest ? e.target.closest('button[data-fs]') : null;
     if (!b) return;
     S.settings.fs = parseInt(b.getAttribute('data-fs'), 10); applyFs(); persist(); refresh(); layoutCanvases(); sfx('tick');
+  });
+  $('thsegs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-th]') : null;
+    if (!b) return;
+    S.settings.th = b.getAttribute('data-th'); applyTheme(); persist(); sfx('tick'); refresh();
+  });
+  function backupCode() { try { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); } catch (e) { return ''; } }
+  $('bkexp').addEventListener('click', function () {
+    var code = backupCode(); persist();
+    var done = function () { enqueue(function () { showModal('<h2>Yedek hazır</h2><p>Kod panoya kopyalandı. Güvenli bir yere yapıştırıp sakla.</p><div class="row"><button class="on" data-act="ok">Tamam</button></div>', {}); }); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, function () { showBackupBox(code); });
+    else showBackupBox(code);
+  });
+  function showBackupBox(code) {
+    enqueue(function () { showModal('<h2>Yedek kodu</h2><p>Tümünü seçip kopyala:</p><textarea id="bkarea" readonly rows="5" style="width:100%;box-sizing:border-box;font-size:14px">' + esc2(code) + '</textarea><div class="row"><button class="on" data-act="ok">Kapat</button></div>', {}); var a = $('bkarea'); if (a) { a.focus(); a.select(); } });
+  }
+  $('bkimp').addEventListener('click', function () {
+    enqueue(function () {
+      showModal('<h2>Yedekten yükle</h2><p>Yedek kodunu yapıştır. Şu anki ilerlemenin üzerine yazılır.</p><textarea id="bkarea" rows="5" style="width:100%;box-sizing:border-box;font-size:14px" aria-label="Yedek kodu" spellcheck="false" placeholder="Yedek kodunu buraya yapıştır…"></textarea><div class="row"><button data-act="no">Vazgeç</button><button class="on" data-act="go">Yükle</button></div>', {
+        go: function () {
+          var o = null;
+          try { o = JSON.parse(decodeURIComponent(escape(atob(($('bkarea').value || '').trim())))); } catch (e) {}
+          if (!o || typeof o.money !== 'number' || typeof o.level !== 'number') { enqueue(function () { showModal('<h2>Kod geçersiz</h2><p>Bu bir Köşe Kafe yedeği gibi görünmüyor.</p><div class="row"><button class="on" data-act="ok">Tamam</button></div>', {}); }); return; }
+          blockPersist = true; try { localStorage.setItem('tycoon-v3', JSON.stringify(o)); } catch (e) {} location.reload();
+        }
+      });
+    });
+  });
+  $('bkreset').addEventListener('click', function () {
+    enqueue(function () {
+      showModal('<h2>Oyunu sıfırla?</h2><p>Tüm ilerlemen bu cihazdan silinir. Bunu geri alamazsın.</p><div class="row"><button data-act="no">Vazgeç</button><button class="on" data-act="go" style="--c1:#ff9a8a;--c2:#e5493a;--bd:#8f1f14">Sil ve sıfırla</button></div>', {
+        go: function () { blockPersist = true; try { localStorage.removeItem('tycoon-v3'); } catch (e) {} location.reload(); }
+      });
+    });
   });
   $('qsegs').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-q]') : null;
