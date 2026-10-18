@@ -96,7 +96,7 @@
   .shop { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; padding-bottom: 24px; }
   /* her sekme: renkli çerçeveli panel */
   .shop .wrap > div[id^="p-"] { background: var(--pf); border: 3px solid var(--pd); border-radius: 26px; padding: 10px 10px 2px; box-shadow: 0 6px 0 var(--pd); margin-bottom: 14px; }
-  #p-home, #p-cafe, #p-cities, #p-rank { --pf: #48b4ff; --pd: #1c62c0; --pi: #d6eeff; }
+  #p-home, #p-cafe, #p-cities, #p-rank, #p-market { --pf: #48b4ff; --pd: #1c62c0; --pi: #d6eeff; }
   #p-inv, #p-career, #p-chest { --pf: #ffa02e; --pd: #b05a00; --pi: #ffe4bd; }
   #p-menu, #p-charity, #p-event, #p-avatar { --pf: #ff62b0; --pd: #aa1f6a; --pi: #ffd3ea; }
   #p-price, #p-ach { --pf: #ffcf3a; --pd: #a87a00; --pi: #fff2b8; }
@@ -263,6 +263,12 @@
   .meter.mini { height: 8px; margin-top: 6px; }
   .item.rec { border-color: #ffe36a; box-shadow: 0 0 0 3px rgba(255,227,106,0.9), 0 3px 0 rgba(30,26,77,0.2); }
   .item.rec b::after { content: 'Önerilen'; display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #ffe36a; color: #5a3400; font-family: var(--body); font-size: calc(12px * var(--fs)); font-weight: 700; vertical-align: middle; }
+  .mkrow { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-weight: 600; font-size: calc(14px * var(--fs)); }
+  .mkrow .nm { width: 38%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mkrow .bar { flex: 1; height: 14px; border-radius: 7px; background: var(--soft); overflow: hidden; box-shadow: inset 0 2px 0 rgba(0,0,0,0.12); }
+  .mkrow .bar i { display: block; height: 100%; border-radius: 7px; transition: width 0.3s; }
+  .mkrow .pc { width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+  .mkrow.me .nm { font-weight: 700; color: var(--ink); }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -308,6 +314,16 @@
   <div id="p-menu" hidden>
     <div class="box"><h4>Menü<small id="menucount"></small></h4><p>Yeni ürünler müşteri çeşitliliğini ve sepet tutarını artırır. Yiyecekler için pasta vitrini gerekir.</p></div>
     <div id="menulist"></div>
+  </div>
+  <div id="p-market" hidden>
+    <div class="box">
+      <h4>Pazar payı<small id="mkmult"></small></h4>
+      <p>Müşteriler fiyat, kalite ve itibara bakıp seçer. Payın %25'ten yüksekse sana daha çok müşteri gelir.</p>
+      <div id="mkbars"></div>
+      <div class="hint" id="mkadvice"></div>
+    </div>
+    <div id="mkrivals"></div>
+    <div class="box"><h4>Haberler</h4><p id="mknews"></p></div>
   </div>
   <div id="p-price" hidden>
     <div class="box">
@@ -576,6 +592,7 @@
   if (!Array.isArray(S.branches)) S.branches = [];
   if (!S.week) S.week = { id: '', served: 0, earn: 0, claimed: false };
   S.premium = !!S.premium;
+  if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
   if (!S.boost || typeof S.boost.pop !== 'number') S.boost = { pop: 1, svc: 1 };
   ['mgr', 'biz', 'avOwn', 'bizMgr'].forEach(function (k) { if (!S[k]) S[k] = {}; });
@@ -639,9 +656,51 @@
   function patience() { return 22 + 2 * S.dec + 2 * S.perks.patience + 1.5 * mgrLv('host'); }
   function vipChance() { return (0.04 + 0.02 * S.perks.vip) * (wev() === 'vip' ? 2 : 1); }
   function menuCount() { return unlocked().length; }
+  /* ---------- Rakip firmalar ve pazar payı ---------- */
+  var RIVALS = [
+    { id: 'cheap', n: 'Ucuz Kafe', d: 'Düşük fiyatla müşteri çeker.', q0: 0.8, pr: 0.85, rep: 3.0, col: '#ff9a3c', tile: [0, 0] },
+    { id: 'premium', n: 'Premium Kahve', d: 'Pahalı ama kaliteli, itibarlı.', q0: 1.3, pr: 1.25, rep: 4.2, col: '#b07ae0', tile: [6, 0] },
+    { id: 'chain', n: 'Zincir Kahve', d: 'Her gün biraz daha büyür, ara sıra kampanya yapar.', q0: 1.0, pr: 1.0, rep: 3.4, col: '#e5534b', tile: [0, 6] }
+  ];
+  function rv(r) { var o = S.mkt.r[r.id]; if (!o) o = S.mkt.r[r.id] = { pr: r.pr, promo: 0 }; return o; }
+  function rivalQ(r) { return r.q0 * (1 + 0.05 * Math.pow(Math.max(1, S.day), 0.85)) * (r.id === 'chain' ? 1 + 0.003 * S.day : 1); }
+  function rivalRep(r) { return Math.min(4.9, r.rep + 0.01 * S.day); }
+  function rivalPrice(r) { var o = rv(r); return o.pr * (o.promo > 0 ? 0.85 : 1); }
+  function attract(q, rep, price) { return Math.pow(Math.max(0.3, q), 0.8) * Math.pow(Math.max(1, rep), 0.9) * Math.pow(1 / Math.min(2.2, Math.max(0.5, price)), 1.5); }
+  var mktAt = 0, mktCache = null;
+  // Pazar payları: oyuncu ve üç rakip. Fiyat, kalite ve itibar çekiciliği belirler.
+  function marketShares() {
+    var now = performance.now();
+    if (mktCache && now - mktAt < 400) return mktCache;
+    var arr = [{ id: 'me', a: attract(qDrink(), S.rep, avgMult()) }], tot, i;
+    RIVALS.forEach(function (r) { arr.push({ id: r.id, a: attract(rivalQ(r), rivalRep(r), rivalPrice(r)) }); });
+    tot = arr.reduce(function (t, x) { return t + x.a; }, 0);
+    var out = {};
+    for (i = 0; i < arr.length; i++) out[arr[i].id] = arr[i].a / tot;
+    mktCache = out; mktAt = now;
+    return out;
+  }
+  // Pay %25'ten yüksekse müşteri artar, düşükse azalır (en çok -%30 / +%35)
+  function marketMult() { return Math.max(0.7, Math.min(1.35, 1 + 1.2 * (marketShares().me - 0.25))); }
+  function mktNews(t) { S.mkt.news.unshift('Gün ' + S.day + ': ' + t); if (S.mkt.news.length > 4) S.mkt.news.length = 4; }
+  // Gün sonunda rakipler karşılık verir
+  function rivalsDayTick() {
+    var sh = marketShares().me;
+    RIVALS.forEach(function (r) {
+      var o = rv(r);
+      if (o.promo > 0) { o.promo--; if (!o.promo) mktNews(r.n + ' kampanyasını bitirdi.'); }
+      if (r.id === 'chain' && !o.promo && Math.random() < 0.12) { o.promo = 3; mktNews(r.n + ' 3 gün boyunca %15 indirim yapıyor!'); }
+      var before = o.pr;
+      if (sh > 0.38) o.pr = Math.max(0.7, o.pr * 0.97);
+      else if (sh < 0.15) o.pr = Math.min(1.4, o.pr * 1.01);
+      o.pr += (r.pr - o.pr) * 0.05;
+      if (o.pr < before * 0.985 && sh > 0.38) mktNews(r.n + ' pazar payın yüzünden fiyatlarını düşürdü.');
+    });
+    mktCache = null;
+  }
   function popularity() {
     return (0.45 + 0.25 * S.rep) * (1 + 0.05 * S.brandLv) * (1 + 0.18 * S.dec) * (1 + 0.05 * S.perks.magnet) * demandAvg() * EVENTS[S.ev].m *
-      (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv()) * (wev() === 'rush' ? 1.2 : 1) * S.boost.pop;
+      (1 + 0.04 * (menuCount() - 1)) * prestMult() * (1 + 0.03 * mgrLv('mkt')) * (1 + 0.02 * charityLv()) * (wev() === 'rush' ? 1.2 : 1) * S.boost.pop * marketMult();
   }
   function rush() { return 0.7 + 0.9 * Math.pow(Math.sin(Math.PI * Math.min(S.dayT, DAY_LEN) / DAY_LEN), 2); }
   function spawnRate() { return popularity() * rush() / 4.2; }
@@ -740,7 +799,7 @@
   /* ---------- Arayüz ---------- */
   var NAV = [
     { id: 'home', subs: [['home', 'Bugün']] },
-    { id: 'grow', subs: [['inv', 'Yükselt'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Personel']] },
+    { id: 'grow', subs: [['inv', 'Yükselt'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Personel'], ['market', 'Pazar']] },
     { id: 'world', subs: [['world', 'Mülkler'], ['career', 'İşletmeler'], ['charity', 'Hayır'], ['brand', 'Marka'], ['cities', 'Şubeler']] },
     { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
     { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafem']] }
@@ -851,6 +910,8 @@
       $('hmus').textContent = S.dayServed + ' / ' + S.dayLost;
       $('hevent').textContent = EVENTS[S.ev].n + ' · müşteri x' + EVENTS[S.ev].m;
       $('htitle').textContent = title();
+    } else if (tab === 'market') {
+      renderMarket();
     } else if (tab === 'settings') {
       var cbs = $('p-settings').querySelectorAll('input[data-set]');
       for (i = 0; i < cbs.length; i++) cbs[i].checked = !!S.settings[cbs[i].getAttribute('data-set')];
@@ -1168,8 +1229,11 @@
       var cs = dayCosts(), short = cs.total > S.money;
       S.money = Math.max(0, S.money - cs.total);
       if (short) S.rep = Math.max(repMin(), S.rep - 0.1);
+      var shNow = marketShares().me, shPrev = S.mkt.prev || shNow;
+      rivalsDayTick();
       var bg = brandGain(); S.brand += bg;
-      S.endRep = { cost: cs.total, rent: cs.rent, stock: cs.stock, short: short, net: S.dayEarn + S.dayPassive - cs.total, brand: bg };
+      S.endRep = { cost: cs.total, rent: cs.rent, stock: cs.stock, short: short, net: S.dayEarn + S.dayPassive - cs.total, brand: bg, share: shNow, dshare: shNow - shPrev };
+      S.mkt.prev = shNow;
       S.dayDone = true;
       gainXp(10);
       S.daysTotal++;
@@ -1186,7 +1250,7 @@
       '<span>Kira ve bakım</span><span>-₺' + fmt(r.rent) + '</span><span>Malzeme</span><span>-₺' + fmt(r.stock) + '</span>' +
       '<span>Net</span><span style="color:' + (r.net >= 0 ? 'var(--good,#6fd6a2)' : 'var(--bad)') + '">' + (r.net >= 0 ? '+' : '-') + '₺' + fmt(Math.abs(r.net)) + '</span>' +
       '<span>Müşteri / kaçan</span><span>' + S.dayServed + ' / ' + S.dayLost + '</span>' +
-      '<span>İtibar</span><span>★ ' + S.rep.toFixed(1) + '</span>' + (r.brand ? '<span>Marka Değeri</span><span>+' + r.brand + '</span>' : '') + extra;
+      '<span>İtibar</span><span>★ ' + S.rep.toFixed(1) + '</span>' + (r.brand ? '<span>Marka Değeri</span><span>+' + r.brand + '</span>' : '') + (r.share ? '<span>Pazar payı</span><span>%' + Math.round(r.share * 100) + (Math.abs(r.dshare) >= 0.005 ? (r.dshare > 0 ? ' ▲' : ' ▼') : '') + '</span>' : '') + extra;
     var btns = '';
     ['camp', 'prim', 'kis', 'norm'].forEach(function (k) {
       btns += '<button' + (k === 'norm' ? ' class="on"' : '') + ' data-act="' + k + '">' + DECISIONS[k].n + '<small>' + DECISIONS[k].d + '</small></button>';
@@ -2435,6 +2499,10 @@
     lotsCache = arr;
     return arr;
   }
+  function getRivalsInfo() {
+    var sh = marketShares();
+    return RIVALS.map(function (r) { return { id: r.id, name: r.n, col: r.col, pct: Math.round(sh[r.id] * 100) }; });
+  }
   function getAssetsInfo() {
     return ASSETS.map(function (a) { var lv = aLv(a); return { id: a.id, name: a.n, lv: lv, locked: !lv && S.level < a.req, req: a.req }; });
   }
@@ -2443,7 +2511,7 @@
     if (location.protocol === 'file:') { hubFailed('Şehir için http(s) gerekli'); return; }
     hubBusy = true;
     import('./three-hub.js').then(function (m) {
-      hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo });
+      hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo, getRivals: getRivalsInfo });
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
         if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
@@ -2522,7 +2590,7 @@
     var r = hub.pick(e.clientX, e.clientY);
     if (!r) return;
     sfx('tick');
-    if (r.kind === 'balloon') { var v = collectBalloon(r.id); if (v) hubMsg('+₺' + fmt(v)); } else if (r.kind === 'asset') openAsset(r.id); else openLot(r.id);
+    if (r.kind === 'balloon') { var v = collectBalloon(r.id); if (v) hubMsg('+₺' + fmt(v)); } else if (r.kind === 'asset') openAsset(r.id); else if (r.kind === 'rival') { view = 'cafe'; setTab('market'); } else openLot(r.id);
   });
   $('back').addEventListener('click', function () { view = 'city'; setTab('home'); });
 
@@ -2592,6 +2660,33 @@
     return {};
   }
   // Oyuncunun şimdi yapması en mantıklı şey
+  function renderMarket() {
+    var sh = marketShares(), h = '', best = null, i;
+    var all = [{ id: 'me', n: S.name || 'Kafem', col: '#2fcb4e' }].concat(RIVALS);
+    all.sort(function (a, b) { return sh[b.id] - sh[a.id]; });
+    all.forEach(function (x) {
+      h += '<div class="mkrow' + (x.id === 'me' ? ' me' : '') + '"><span class="nm">' + esc2(x.n) + (x.id === 'me' ? ' (sen)' : '') + '</span><span class="bar"><i style="width:' + Math.round(sh[x.id] * 100) + '%;background:' + x.col + '"></i></span><span class="pc">%' + Math.round(sh[x.id] * 100) + '</span></div>';
+    });
+    $('mkbars').innerHTML = h;
+    var mm = marketMult();
+    $('mkmult').textContent = 'müşteri x' + mm.toFixed(2);
+    var pl = avgMult(), ql = qDrink(), rp = 0, rq = 0, n = RIVALS.length;
+    RIVALS.forEach(function (r) { rp += rivalPrice(r); rq += rivalQ(r); });
+    rp /= n; rq /= n;
+    var adv = pl > rp * 1.12 ? 'Fiyatın rakiplerin ortalamasından yüksek: müşteri kaçıyor. Fiyatı biraz düşür.' :
+      ql < rq * 0.9 ? 'Kalite rakiplerin gerisinde: makine, dekor ve menü yatırımı yap.' :
+      sh.me >= 0.3 ? 'Pazarda öndesin. Fiyatı yavaşça artırmayı deneyebilirsin.' : 'Dengeli gidiyorsun. Fiyat veya kaliteyi artırınca payın yükselir.';
+    $('mkadvice').textContent = adv;
+    var rh = '';
+    RIVALS.forEach(function (r) {
+      var o = rv(r);
+      rh += '<div class="item"><div class="info"><b>' + esc2(r.n) + '<em>%' + Math.round(sh[r.id] * 100) + '</em></b><span>' + esc2(r.d) + '</span>' +
+        '<span>Fiyat: x' + rivalPrice(r).toFixed(2) + (o.promo ? ' (kampanya)' : '') + ' · Kalite: ' + rivalQ(r).toFixed(1) + ' · İtibar: ★' + rivalRep(r).toFixed(1) + '</span></div></div>';
+    });
+    $('mkrivals').innerHTML = rh + '<div class="item"><div class="info"><b>Sen</b><span>Fiyat: x' + pl.toFixed(2) + ' · Kalite: ' + ql.toFixed(1) + ' · İtibar: ★' + S.rep.toFixed(1) + '</span></div></div>';
+    $('mknews').textContent = S.mkt.news.length ? S.mkt.news.join('\n') : 'Henüz haber yok. Her gün sonunda rakipler karşılık verir.';
+    $('mknews').style.whiteSpace = 'pre-line';
+  }
   function nextStep() {
     if (weekClaimable()) return { t: 'Haftalık etkinlik ödülünü al', hot: true, go: function () { setTab('event'); } };
     if (chestCount() > 0) return { t: 'Sandığını aç', hot: true, go: function () { setTab('chest'); } };

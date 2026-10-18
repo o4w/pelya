@@ -34,6 +34,12 @@ export const ASSET_PLOTS = [
   { id: 'office', tile: [4, 0], model: 'building_G', s: 0.55 },
   { id: 'mall', tile: [6, 6], model: 'building_H', s: 0.62 },
 ];
+// Rakip firmaların şehirdeki binaları (köşelerde). Kimlikler oyundaki rakiplerle eşleşir.
+export const RIVAL_LOTS = [
+  { id: 'cheap', tile: [0, 0], model: 'building_A' },
+  { id: 'premium', tile: [6, 0], model: 'building_F' },
+  { id: 'chain', tile: [0, 6], model: 'building_C' },
+];
 const VEHICLES = { scooter: 'car_hatchback', hatch: 'car_hatchback', sedan: 'car_sedan', sport: 'car_taxi' };
 
 const kit = { state: 0, tpl: {}, mat: null, grey: null, waiters: [] };
@@ -208,7 +214,7 @@ export function createHub(canvas, bridge) {
     const mid = (GRID - 1) / 2;
     const lawnA = new THREE.MeshLambertMaterial({ color: 0x86e060 }), lawnB = new THREE.MeshLambertMaterial({ color: 0x78d853 });
     const lotTiles = new Set(LOTS.map((l) => l.tile.join(',')));
-    const plotTiles = new Set(ASSET_PLOTS.map((l) => l.tile.join(',')));
+    const plotTiles = new Set(ASSET_PLOTS.concat(RIVAL_LOTS).map((l) => l.tile.join(',')));
     for (let i = 0; i < GRID; i++) {
       for (let j = 0; j < GRID; j++) {
         const x = tx(i), z = tx(j), key = i + ',' + j;
@@ -272,7 +278,7 @@ export function createHub(canvas, bridge) {
   function buildAssets() {
     if (assetGroup) {
       world.remove(assetGroup);
-      assetGroup.traverse((o) => { if (o.isSprite) disposeSprite(o); else if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material && !o.material.userData.shared && !o.isSprite) o.material.dispose(); });
+      assetGroup.traverse((o) => { if (o.userData && o.userData.tint) o.userData.tint.dispose(); if (o.isSprite) disposeSprite(o); else if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material && !o.material.userData.shared && !o.isSprite) o.material.dispose(); });
     }
     mobiles.length = 0;
     const g = new THREE.Group();
@@ -286,6 +292,16 @@ export function createHub(canvas, bridge) {
       if (d.lv < 1) return;
       if (pl.model) place(grp, pl.model, 0, 0.08, 0, 0, pl.s * (1 + 0.07 * (d.lv - 1)));
       else { for (let k = 0; k < 3; k++) place(grp, k % 2 ? 'box_B' : 'box_A', -0.5 + k * 0.5, 0.08, k % 2 ? 0.3 : -0.3, k, 4); }
+    });
+    // rakip firmalar: renkli bina ve pazar payı etiketi
+    (bridge.getRivals ? bridge.getRivals() : []).forEach((rv) => {
+      const def = RIVAL_LOTS.find((l) => l.id === rv.id); if (!def) return;
+      const grp = new THREE.Group(); grp.position.set(tx(def.tile[0]), 0, tx(def.tile[1])); grp.userData.rivalId = rv.id; g.add(grp);
+      const tint = new THREE.MeshLambertMaterial({ map: kit.mat.map, color: new THREE.Color(rv.col).lerp(new THREE.Color(0xffffff), 0.45) });
+      const b = place(grp, def.model, 0, 0, 0); if (b) b.traverse((m) => { if (m.isMesh) m.material = tint; });
+      const lb = bubble(rv.name + ' %' + rv.pct, { bg: '#ffe9e6', edge: rv.col });
+      lb.position.set(0, ({ building_A: 1.9, building_F: 2.6, building_C: 3.2 }[def.model] || 2.4) + 0.55, 0); grp.add(lb);
+      grp.userData.tint = tint;
     });
     // araçlar: sahip olunan her araç yolda dolaşır
     let k = 0;
@@ -316,7 +332,8 @@ export function createHub(canvas, bridge) {
   }
   function signatureAssets() {
     const a = bridge.getAssets ? bridge.getAssets() : [];
-    return a.map((d) => [d.id, d.lv, d.locked ? 1 : 0].join(':')).join('|');
+    const r = bridge.getRivals ? bridge.getRivals() : [];
+    return a.map((d) => [d.id, d.lv, d.locked ? 1 : 0].join(':')).join('|') + '#' + r.map((x) => x.id + x.pct).join(',');
   }
 
   function updateBalloons() {
@@ -377,6 +394,7 @@ export function createHub(canvas, bridge) {
       while (o) {
         if (o.userData && o.userData.balloonId) return { kind: 'balloon', id: o.userData.balloonId };
         if (o.userData && o.userData.lotId) return { kind: 'lot', id: o.userData.lotId };
+        if (o.userData && o.userData.rivalId) return { kind: 'rival', id: o.userData.rivalId };
         if (o.userData && o.userData.assetId) return { kind: 'asset', id: o.userData.assetId };
         o = o.parent;
       }

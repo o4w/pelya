@@ -24,6 +24,14 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Şehirdeki etiketler** dünya boyutunda sabit piksel ölçeğiyle (`PX`) çizilir; metne göre genişler, telefonda yaklaşık 15 px okunur.
 - Hareket azaltma tercihi (`prefers-reduced-motion`) açıksa nabız ve parmak animasyonları durur.
 
+## Rakip firmalar ve pazar payı
+Üç yapay zekâ rakip vardır: **Ucuz Kafe** (düşük fiyat), **Premium Kahve** (pahalı, kaliteli, itibarlı) ve **Zincir Kahve** (her gün büyür, ara sıra %15 kampanya yapar). Hepsi yerel bir kural motoruyla çalışır, gerçek oyuncu değildir.
+- **Pazar payı:** her firmanın çekiciliği `kalite^0.8 x itibar^0.9 x (1/fiyat)^1.5` ile hesaplanır, pay toplam içindeki orandır. Senin fiyatın `avgMult()`, kaliten `qDrink()`, itibarın `S.rep` değeridir. Rakiplerin kalitesi gün sayısına göre büyür (`rivalQ`), yani yatırım yapmazsan geride kalırsın.
+- **Etki:** `marketMult() = 1 + 1.2 x (pay - 0.25)`, en az 0.7, en çok 1.35. Pay %25 ise etki yoktur. Müşteri akışına (`popularity()`) çarpan olarak girer. Fiyatı veya kaliteyi değiştirince hemen etkisini görürsün.
+- **Gün sonu:** rakipler karşılık verir. Payın %38'i geçerse fiyat düşürürler, %15'in altındaysa fiyat artırırlar. Haberler Pazar sekmesinde ve gün sonu raporunda "Pazar payı" satırı (▲/▼) görünür.
+- **Ekranlar:** Kafe > Pazar (paylar, rakip kartları, tavsiye, haberler). Şehir haritasının köşelerinde rakip binaları pazar payı etiketiyle durur, dokununca Pazar sekmesi açılır. Franchise açınca gün sayacı sıfırlandığı için pazar da yeniden başlar.
+- Rakamlar tahmindir; `RIVALS` ve `attract()` ile ayarlanır.
+
 ## Sahne yalnızca nerede gerekiyorsa var
 Şehir, işletme içi ve Kafe sekmelerinde üstte sahne görünür. **Servet, Ödüller ve Ben** sekmelerinde sahne yoktur, liste ekranın tamamını kaplar (`body.noscene`). Bu sekmelerde çizim de yapılmaz, pil tasarrufu sağlar. Servet'teki mülkler Şehir ana ekranında görünür.
 
