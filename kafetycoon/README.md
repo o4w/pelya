@@ -230,6 +230,13 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Giriş serisi: art arda her gün +%10 ödül (en çok +%50). Üç görev de bitince bronz sandık verilir.
 - Ödül miktarı `rewardBase()` ile ekonomiye ölçeklenir. Para, ödül alınırken ve balon/çevrimdışı kazançta üst çubuktaki paraya uçar (Hareketi azalt açıksa uçmaz).
 
+## Görsel kimlik (palet)
+Oyun hazır "şeker/hiper-casual" görünümünden kafe kimliğine geçirildi: her düğme farklı renk, altı farklı panel rengi ve parlak jel yerine sınırlı bir palet ve düz "etiket" düğmeler.
+- **Espresso** `#2a1a10` (yazı, çerçeve, alt çubuk), **krem** `#fff4df` (kartlar), **latte** `#e8cfa3` (panel çerçevesi), **terrakota** `#c4491b` (ana eylem), **hardal** `#f1b02f` (ödül/hızlandırma), **çam yeşili-teal** `#1f7a72` (seçili durum), zemin: nane-deniz gradyanı.
+- Düğmeler üç rolden oluşur: ana (terrakota), ikincil (krem), ödül (hardal). Seçili sekme espresso, seçili seçenek teal, devre dışı soluk bej. Satır içi `--c1/--c2/--bd` renkleri stil sonundaki "Kafe kimliği" bloğuyla düzleştirilir.
+- Temalar: Kafe, Gün batımı, Orman, Gece (yalnızca zemin, üst gösterge ve alt çubuk).
+- Şehir etiketleri, çark dilimleri, uygulama simgesi ve `theme-color` aynı palete çekildi.
+
 ## Renk paleti, yedek ve uygulama simgesi
 - Renk teması (Ben > Ayarlar): Gökyüzü, Gün batımı, Orman, Şeker. Tema arka plan gradyanını, üst göstergeleri, alt çubuğu ve tarayıcı `theme-color` rengini değiştirir. Bölüm panellerinin renk kodları (mavi, turuncu, pembe, sarı, mor, yeşil) bilinçli olarak sabit kalır. Renkler `:root` ve `html[data-theme]` altındaki değişkenlerdedir.
 - Üst gösterge yazıları temaya göre koyu renktir (`--hudtx`, `--hudem`); simge yazıları koyulaştırıldı.

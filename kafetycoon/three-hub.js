@@ -101,12 +101,12 @@ function bubble(text, opt = {}) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const g = c.getContext('2d');
-  g.fillStyle = opt.bg || '#fff';
-  g.strokeStyle = opt.edge || '#1d3f9a';
+  g.fillStyle = opt.bg || '#fff4df';
+  g.strokeStyle = opt.edge || '#2a1a10';
   g.lineWidth = 6;
   g.beginPath(); g.roundRect(5, 5, w - 10, h - 24, 22); g.fill(); g.stroke();
   g.beginPath(); g.moveTo(w / 2 - 12, h - 20); g.lineTo(w / 2, h - 4); g.lineTo(w / 2 + 12, h - 20); g.closePath(); g.fill();
-  g.fillStyle = opt.fg || '#1e1a4d';
+  g.fillStyle = opt.fg || '#2a1a10';
   g.textAlign = 'center'; g.textBaseline = 'middle';
   g.font = font;
   g.fillText(text, w / 2, (h - 24) / 2 + 5);
@@ -213,7 +213,7 @@ export function createHub(canvas, bridge) {
     grass.position.y = -0.3; g.add(grass);
     const rim = new THREE.Mesh(new THREE.BoxGeometry(GRID * TILE + 1.4, 0.5, GRID * TILE + 1.4), new THREE.MeshLambertMaterial({ color: 0xd9b27a }));
     rim.position.y = -0.85; g.add(rim);
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshBasicMaterial({ color: 0x3fb2f0 }));
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshBasicMaterial({ color: 0x4fb9b0 }));
     water.rotation.x = -Math.PI / 2; water.position.y = -1.15; g.add(water);
 
     const mid = (GRID - 1) / 2;
@@ -271,7 +271,7 @@ export function createHub(canvas, bridge) {
       if (b) setGrey(b, d.locked);
       group.userData.lotId = d.id;
       world.add(group);
-      const label = bubble(d.locked ? '🔒 Sv. ' + d.req : d.name + (d.lv ? ' ' + d.lv : '') + (d.mgr ? ' ★' : ''), { bg: d.locked ? '#d5dae3' : '#ffffff' });
+      const label = bubble(d.locked ? 'Sv. ' + d.req : d.name + (d.lv ? ' ' + d.lv : '') + (d.mgr ? ' ★' : ''), { bg: d.locked ? '#d5dae3' : '#ffffff' });
       const hgt = { building_A: 1.9, building_B: 1.9, building_C: 3.2, building_D: 3.2, building_E: 2.6, building_F: 2.6, building_G: 3.2, building_H: 3.3 }[def.model] || 2.4;
       label.position.set(0, hgt + 0.55, 0);
       group.add(label);
@@ -350,7 +350,7 @@ export function createHub(canvas, bridge) {
         if (n.balloon) { n.group.remove(n.balloon); disposeSprite(n.balloon); n.balloon = null; }
         n.bText = txt;
         if (txt) {
-          n.balloon = bubble(txt, { bg: '#6dff74', edge: '#0c6a22', fg: '#0b3d14' });
+          n.balloon = bubble(txt, { bg: '#f1b02f', edge: '#5a3a00', fg: '#2a1a10' });
           n.balloon.userData.balloonId = d.id;
           n.group.add(n.balloon);
         }

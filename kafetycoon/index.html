@@ -11,15 +11,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap">
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#4aa6ee">
+<meta name="theme-color" content="#84cfc2">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
   /* Kafe tycoon: gökyüzü mavisi zemin, renkli çerçeveli paneller, kalın renk kodlu düğmeler. */
   :root {
-    --fg: #2b2250;
-    --muted: #5d5683;
-    --ink: #1e1a4d;
+    --fg: #2a1a10;
+    --muted: #6b5445;
+    --ink: #2a1a10;
     --fs: 1;
     --txt: #2b1608;
     --good: #12873a;
@@ -31,14 +31,15 @@
     /* panel renkleri: çerçeve, koyu kenar, iç zemin */
     --pf: #48b4ff; --pd: #1c62c0; --pi: #d6eeff;
     /* tema renkleri: zemin gradyanı, üst göstergeler, alt çubuk */
-    --bg1: #74d3f7; --bg2: #4aa6ee; --bg3: #3a78dc;
-    --nav1: #2f66cf; --nav2: #1d3f9a; --navb: #12286b;
-    --hudtx: #0b1b4d; --hudem: #8f3600;
+    --bg1: #c4eadf; --bg2: #84cfc2; --bg3: #429d97;
+    --nav1: #4a2e1f; --nav2: #3a2418; --navb: #1a0e08;
+    --hudtx: #2a1a10; --hudem: #8a2f0f;
+    --espresso: #2a1a10; --cream: #fff4df; --latte: #e8cfa3; --terra: #c4491b; --mustard: #f1b02f; --teal: #1f7a72;
     color-scheme: light;
   }
-  html[data-theme="sunset"] { --pf: #ff9a5c; --pd: #b84a12; --pi: #ffe8d6; --bg1: #ffd08a; --bg2: #ff8f6b; --bg3: #d9507a; --nav1: #c24a6a; --nav2: #8f2a52; --navb: #5e1838; --hudtx: #3a0f20; --hudem: #7a1a00; }
-  html[data-theme="forest"] { --pf: #4cc77a; --pd: #1b7a3f; --pi: #dcf8e6; --bg1: #9be8b5; --bg2: #4cbf87; --bg3: #2a8f78; --nav1: #1f8a5c; --nav2: #14664a; --navb: #0b4030; --hudtx: #06301f; --hudem: #7a2e00; }
-  html[data-theme="candy"] { --pf: #c58bff; --pd: #6a2fb8; --pi: #f0e2ff; --bg1: #ffc2ec; --bg2: #b88bff; --bg3: #7a5ae0; --nav1: #6a49c8; --nav2: #4a2f9a; --navb: #2e1c6e; --hudtx: #2a1060; --hudem: #7a1a5a; }
+  html[data-theme="sunset"] { --bg1: #ffd9a0; --bg2: #ff9a76; --bg3: #d9647a; --nav1: #6b2a1e; --nav2: #55201a; --navb: #2e0f0b; }
+  html[data-theme="forest"] { --bg1: #b4e6b9; --bg2: #62c17f; --bg3: #2f8d6a; --nav1: #2a4a37; --nav2: #1f3a2b; --navb: #0f2218; }
+  html[data-theme="night"] { --bg1: #4b5a82; --bg2: #2f3b5e; --bg3: #1b2440; --nav1: #20263f; --nav2: #171c31; --navb: #0a0d1a; --hudtx: #fff4df; --hudem: #ffd27a; }
   html, body { height: 100%; }
   /* çift dokunmayla yakınlaşmayı kapatır; kaydırma ve dokunma aynen çalışır */
   html, body, button, canvas, .shop, .tabs, .nav, .modal { touch-action: manipulation; }
@@ -70,11 +71,11 @@
   .cafename { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52%; }
   .day { text-align: right; }
   .day em { font-style: normal; color: var(--hudem); }
-  .daybar { height: 8px; border-radius: 4px; background: rgba(18,40,107,0.55); margin: 3px 0 0 auto; overflow: hidden; width: 110px; }
+  .daybar { height: 8px; border-radius: 4px; background: rgba(26,14,8,0.55); margin: 3px 0 0 auto; overflow: hidden; width: 110px; }
   .daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffe36a, #ff9a1f); border-radius: 4px; }
   .goal { color: var(--good); font-size: calc(14px * var(--fs)); font-weight: 700; margin-top: 6px; }
   .scene { padding-block: 8px 0; display: flex; justify-content: center; }
-  canvas { display: block; border-radius: 20px; background: #1d3834; box-shadow: 0 0 0 4px #fff, 0 0 0 7px #1d3f9a, 0 11px 0 rgba(18,40,107,0.45); }
+  canvas { display: block; border-radius: 20px; background: #1d3834; box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--nav2), 0 11px 0 rgba(26,14,8,0.45); }
   .stagebox { position: relative; line-height: 0; }
   .v3d { position: absolute; top: 10px; right: 10px; line-height: 1; padding: 6px 12px; font-size: calc(14px * var(--fs)); }
   .boost { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); line-height: 1.05; min-width: 128px; padding: 5px 16px 6px; font-size: calc(17px * var(--fs)); --c1: #7fdcff; --c2: #3aaaf0; --bd: #0b5bb0; }
@@ -100,7 +101,7 @@
     box-shadow: 0 4px 0 var(--bd), inset 0 2px 0 rgba(255,255,255,0.45); transition: transform 0.05s, box-shadow 0.05s;
   }
   button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--bd), inset 0 2px 0 rgba(255,255,255,0.45); }
-  button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 6px #1d3f9a; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 6px var(--nav2); }
   /* kullanılamayan düğme her zaman gri: .on, .buy gibi renk sınıflarının üstüne çıkar */
   button:disabled { --c1: #cfd3dd !important; --c2: #b7bcc9 !important; --bd: #6c7283 !important; color: #3b4050; text-shadow: none; cursor: default; }
   .item button.buy.claim:disabled { color: #3b4050; text-shadow: none; }
@@ -142,7 +143,7 @@
     background: #fff; border: 2px solid var(--pd); border-radius: 12px; padding: 10px 12px; margin-top: 8px; box-shadow: inset 0 2px 0 rgba(0,0,0,0.08);
     user-select: text; -webkit-user-select: text;
   }
-  .note { background: rgba(18,40,107,0.88); color: #fff; padding: 8px 12px; border-radius: 12px; font-size: calc(14px * var(--fs)); margin: 6px 4px 10px; text-shadow: none; }
+  .note { background: rgba(42,26,16,0.9); color: #fff; padding: 8px 12px; border-radius: 12px; font-size: calc(14px * var(--fs)); margin: 6px 4px 10px; text-shadow: none; }
   .segs { display: flex; gap: 6px; margin: 8px 0; }
   .segs button { flex: 1; min-width: 0; padding-inline: 6px; overflow-wrap: anywhere; font-size: calc(15px * var(--fs)); --c1: #c9cfe0; --c2: #9aa3be; --bd: #5d6688; }
   .segs button.on, .acctrow button.on, .modal button.on { --c1: #7cf08a; --c2: #32c24e; --bd: #0c6a22; }
@@ -161,7 +162,7 @@
   .avrow button { font-size: calc(14px * var(--fs)); padding: 6px 10px; line-height: 1.2; --c1: #7fdcff; --c2: #3aaaf0; --bd: #0b5bb0; }
   .avrow button small { display: block; font-family: var(--body); font-weight: 600; opacity: 0.9; }
   .avrow button.sw { width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 3px 0 rgba(30,26,77,0.4); }
-  .avrow button.on { outline: 3px solid #1d3f9a; outline-offset: 2px; }
+  .avrow button.on { outline: 3px solid var(--nav2); outline-offset: 2px; }
   .avrow button.locked { opacity: 0.6; }
   .grip { display: block; width: 100%; background: none; border: 0; border-radius: 0; box-shadow: none; padding: 8px 0 2px; cursor: pointer; }
   .grip:active:not(:disabled) { transform: none; box-shadow: none; }
@@ -238,9 +239,9 @@
   body.hubmode .rail { top: 10px; }
   .hubui { position: absolute; inset: 0; pointer-events: none; line-height: 1.15; }
   .hubui > * { pointer-events: auto; }
-  .hubgoal { position: absolute; left: 10px; right: 10px; top: 8px; background: #fff; color: var(--ink); border: 3px solid #1d3f9a; border-radius: 16px; padding: 7px 12px; font-weight: 600; font-size: calc(14px * var(--fs)); box-shadow: 0 3px 0 rgba(18,40,107,0.5); }
+  .hubgoal { position: absolute; left: 10px; right: 10px; top: 8px; background: #fff; color: var(--ink); border: 3px solid var(--nav2); border-radius: 16px; padding: 7px 12px; font-weight: 600; font-size: calc(14px * var(--fs)); box-shadow: 0 3px 0 rgba(26,14,8,0.5); }
   .hubgoal b { font-family: var(--display); font-weight: 400; color: #b4470a; margin-right: 6px; }
-  .hubmsg { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); background: rgba(18,40,107,0.9); color: #fff; font-weight: 600; font-size: calc(14px * var(--fs)); padding: 7px 14px; border-radius: 14px; pointer-events: none; white-space: nowrap; }
+  .hubmsg { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); background: rgba(26,14,8,0.9); color: #fff; font-weight: 600; font-size: calc(14px * var(--fs)); padding: 7px 14px; border-radius: 14px; pointer-events: none; white-space: nowrap; }
   .hubbar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 8px; align-items: flex-end; }
   .hubbar button { position: relative; flex: 1; min-width: 0; padding: 7px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: calc(14px * var(--fs)); border-radius: 18px; line-height: 1.05; }
   .hubbar button svg { width: 30px; height: 30px; fill: none; stroke: var(--txt); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -250,7 +251,7 @@
   .backbtn { padding: 3px 10px; font-size: calc(14px * var(--fs)); border-radius: 12px; margin-right: 8px; flex: 0 0 auto; }
   /* Sıradaki adım çubuğu */
   .nextwrap { padding-top: 8px; padding-bottom: 6px; }
-  .nextbar { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-align: left; --c1: #ffffff; --c2: #eef5ff; --bd: #1d3f9a;
+  .nextbar { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-align: left; --c1: #ffffff; --c2: #eef5ff; --bd: var(--nav2);
     color: var(--ink); text-shadow: none; font-family: var(--body); font-weight: 600; font-size: calc(15px * var(--fs)); line-height: 1.2; padding: 7px 10px; border-radius: 16px; }
   .nextbar .ni { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #9aa3be; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2); }
   .nextbar .ni svg { width: 18px; height: 18px; fill: none; stroke: var(--txt); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
@@ -258,7 +259,7 @@
   .nextbar .nt { flex: 1; min-width: 0; }
   .nextbar .nt small { display: block; font-size: calc(12px * var(--fs)); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #b4470a; text-shadow: none; }
   .nextbar .nt span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .nextbar .nc { flex: 0 0 auto; font-family: var(--display); color: #1d3f9a; font-size: calc(20px * var(--fs)); }
+  .nextbar .nc { flex: 0 0 auto; font-family: var(--display); color: var(--nav2); font-size: calc(20px * var(--fs)); }
   .nextbar.hot { animation: nbpulse 1.6s ease-in-out infinite; }
   @keyframes nbpulse { 0%, 100% { box-shadow: 0 4px 0 var(--bd), 0 0 0 0 rgba(31,184,63,0.55); } 50% { box-shadow: 0 4px 0 var(--bd), 0 0 0 7px rgba(31,184,63,0); } }
   #hubgoal { display: none; }
@@ -271,7 +272,7 @@
   @keyframes tutglow { 0%, 100% { border-color: #ffe36a; } 50% { border-color: #ffffff; } }
   .tuthand { position: absolute; width: 44px; height: 44px; margin: -6px 0 0 -22px; transition: left 0.25s, top 0.25s; animation: handbob 0.9s ease-in-out infinite; filter: drop-shadow(0 3px 0 rgba(0,0,0,0.35)); }
   @keyframes handbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  .tutcard { position: absolute; left: 14px; right: 14px; max-width: 420px; margin: 0 auto; pointer-events: auto; background: #fff; color: var(--ink); border: 4px solid #1d3f9a; border-radius: 22px; padding: 14px 16px 12px; box-shadow: 0 6px 0 rgba(18,40,107,0.5); font-size: calc(16px * var(--fs)); font-weight: 600; line-height: 1.35; }
+  .tutcard { position: absolute; left: 14px; right: 14px; max-width: 420px; margin: 0 auto; pointer-events: auto; background: #fff; color: var(--ink); border: 4px solid var(--nav2); border-radius: 22px; padding: 14px 16px 12px; box-shadow: 0 6px 0 rgba(26,14,8,0.5); font-size: calc(16px * var(--fs)); font-weight: 600; line-height: 1.35; }
   .tutcard b { font-family: var(--display); font-weight: 400; color: #b4470a; font-size: calc(18px * var(--fs)); display: block; margin-bottom: 2px; }
   .tutcard .row { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
   .tutcard .row button { padding: 7px 16px; font-size: calc(16px * var(--fs)); }
@@ -299,7 +300,7 @@
   .mgtime.low i { background: linear-gradient(180deg, #ff8a7a, #d52c1e); }
   .mgorder { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 40px; }
   .mgorder span { padding: 6px 10px; border-radius: 12px; background: #fff; border: 3px solid rgba(30,26,77,0.2); font-weight: 700; font-size: calc(14px * var(--fs)); color: var(--ink); }
-  .mgorder span.cur { border-color: #1d3f9a; box-shadow: 0 0 0 3px rgba(29,63,154,0.25); transform: scale(1.08); }
+  .mgorder span.cur { border-color: var(--nav2); box-shadow: 0 0 0 3px rgba(29,63,154,0.25); transform: scale(1.08); }
   .mgorder span.ok { opacity: 0.45; text-decoration: line-through; }
   .mgstackwrap { height: 190px; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(180deg, #d6eeff, #bfe0f7); border-radius: 18px; padding-bottom: 8px; box-sizing: border-box; }
   .mgstack { display: flex; flex-direction: column-reverse; align-items: center; width: 190px; }
@@ -352,7 +353,7 @@
   details.cat > summary::after { content: '▾'; transition: transform 0.2s; }
   details.cat:not([open]) > summary::after { transform: rotate(-90deg); }
   .buy:active:not(:disabled), .big:active:not(:disabled) { filter: brightness(0.94); }
-  .lotsheet { position: absolute; left: 8px; right: 8px; bottom: 84px; background: #fff; color: var(--ink); border: 4px solid #1d3f9a; border-radius: 22px; padding: 10px 12px 12px; box-shadow: 0 6px 0 #12286b; animation: sheetup 0.18s ease-out; }
+  .lotsheet { position: absolute; left: 8px; right: 8px; bottom: 84px; background: #fff; color: var(--ink); border: 4px solid var(--nav2); border-radius: 22px; padding: 10px 12px 12px; box-shadow: 0 6px 0 var(--navb); animation: sheetup 0.18s ease-out; }
   .lotsheet h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: calc(20px * var(--fs)); padding-right: 40px; }
   .lotsheet p { margin: 2px 0 8px; color: var(--muted); font-size: calc(14px * var(--fs)); }
   .lotsheet .row { display: flex; gap: 8px; }
@@ -365,6 +366,43 @@
   .item { min-width: 0; }
   .acctrow { flex-wrap: wrap; }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
+
+  /* ===== Kafe kimliği: sınırlı palet, düz "etiket" düğmeler, krem kâğıt kartlar ===== */
+  button { --c1: var(--cream) !important; --c2: var(--cream) !important; --bd: var(--espresso) !important; text-shadow: none; box-shadow: 0 4px 0 var(--bd); }
+  button:active:not(:disabled) { box-shadow: 0 1px 0 var(--bd); }
+  button.on, .item button.buy, .big, .modal .row > button.on, .hubbar .big { --c1: var(--terra) !important; --c2: var(--terra) !important; --bd: #5a1d08 !important; color: #fff; }
+  .item button.buy.claim, .boost, .tabs button:nth-child(5n+1).claim { --c1: var(--mustard) !important; --c2: var(--mustard) !important; --bd: #6b4600 !important; color: var(--espresso); }
+  .boost { --c1: var(--mustard) !important; --c2: var(--mustard) !important; --bd: #6b4600 !important; color: var(--espresso); }
+  .segs button.on, .acctrow button.on, .avrow button.on { --c1: var(--teal) !important; --c2: var(--teal) !important; --bd: #0b3d38 !important; color: #fff; }
+  .tabs button { color: var(--espresso); opacity: 1; }
+  .tabs button.on { --c1: var(--espresso) !important; --c2: var(--espresso) !important; --bd: #000 !important; color: var(--cream); outline: none; }
+  .nav button { --c1: #5b3a24 !important; --c2: #5b3a24 !important; --bd: #1a0e08 !important; color: var(--cream); opacity: 1; }
+  .nav button svg { stroke: currentColor; }
+  .nav button.on { --c1: var(--terra) !important; --c2: var(--terra) !important; --bd: #5a1d08 !important; color: #fff; outline: none; }
+  .rail button svg, .hubbar button svg, .nextbar .ni svg { stroke: currentColor; }
+  .xbtn { --c1: #7d2a0c !important; --c2: #7d2a0c !important; --bd: #3a1204 !important; color: #fff; }
+  button[style*="e5493a"], button[style*="ff9a8a"] { --c1: #7a1e1e !important; --c2: #7a1e1e !important; --bd: #3a0c0c !important; color: #fff; }
+  button:disabled:disabled:disabled { --c1: #e3d7c2 !important; --c2: #e3d7c2 !important; --bd: #8a7a68 !important; color: #6b5a48; box-shadow: 0 3px 0 var(--bd); }
+  .shop .wrap > div[id^="p-"] { --pf: var(--latte) !important; --pd: var(--espresso) !important; --pi: var(--cream) !important; }
+  .item, .box { border: 2px solid var(--espresso); box-shadow: 0 3px 0 rgba(42,26,16,0.3); }
+  .item.done { background: #d6efe8; border-color: var(--teal); }
+  .item.rec { border-color: var(--terra); box-shadow: 0 0 0 3px rgba(196,73,27,0.35), 0 3px 0 rgba(42,26,16,0.3); }
+  .item.rec b::after { background: var(--terra); color: #fff; }
+  .modal { background: rgba(26,14,8,0.68); }
+  .modal .card { --mf: var(--mustard); --md: var(--espresso); --mi: var(--cream); }
+  .modal .card.t-orange { --mf: var(--mustard); --md: var(--espresso); --mi: var(--cream); }
+  .modal .card.t-blue, .modal .card.t-green { --mf: #8fd3c8; --md: var(--espresso); --mi: var(--cream); }
+  .modal .card.t-purple { --mf: #c9a27a; --md: var(--espresso); --mi: var(--cream); }
+  .modal .card.t-red { --mf: #e98a62; --md: var(--espresso); --mi: var(--cream); }
+  .modal h2 { color: var(--espresso); text-shadow: none; }
+  .pill.star .ico { background: radial-gradient(circle at 35% 30%, #ffe9c4, #f4a259 65%, #c4491b); color: #3a1204; box-shadow: 0 2px 0 #7d2a0c; }
+  .pill.lvl .ico { background: radial-gradient(circle at 35% 30%, #d9fff4, #62d1be 65%, #1f7a72); color: #04302b; box-shadow: 0 2px 0 #0b3d38; }
+  .xpbar i { background: var(--mustard); }
+  .nextbar .ni { background: #8a7a68; }
+  .nextbar.hot .ni { background: var(--teal); }
+  .nextbar .nt small { color: #8a2f0f; }
+  canvas { box-shadow: 0 0 0 4px var(--cream), 0 0 0 7px var(--espresso), 0 11px 0 rgba(26,14,8,0.4); }
+  button:focus-visible, input:focus-visible { box-shadow: 0 0 0 6px var(--espresso); }
 </style>
 
 <style>[hidden]{display:none!important}</style>
@@ -589,7 +627,7 @@
     </div>
     <div class="box">
       <h3>Renk teması</h3>
-      <div class="segs" id="thsegs" style="display:grid;grid-template-columns:1fr 1fr" role="group" aria-label="Renk teması"><button data-th="sky">Gökyüzü</button><button data-th="sunset">Gün batımı</button><button data-th="forest">Orman</button><button data-th="candy">Şeker</button></div>
+      <div class="segs" id="thsegs" style="display:grid;grid-template-columns:1fr 1fr" role="group" aria-label="Renk teması"><button data-th="sky">Kafe</button><button data-th="sunset">Gün batımı</button><button data-th="forest">Orman</button><button data-th="night">Gece</button></div>
     </div>
     <div class="box">
       <h3>Grafik kalitesi</h3>
@@ -737,14 +775,14 @@
   if (!S.dq || !Array.isArray(S.dq.q)) S.dq = { day: '', q: [], bonus: false };
   if ([0, 1, 5].indexOf(S.settings.bn) < 0) S.settings.bn = 1;
   if ([0, 1, 2].indexOf(S.settings.q) < 0) S.settings.q = 0;
-  var THEMES = { sky: '#4aa6ee', sunset: '#ff8f6b', forest: '#4cbf87', candy: '#b88bff' };
+  var THEMES = { sky: '#84cfc2', sunset: '#ff9a76', forest: '#62c17f', night: '#2f3b5e' };
   if (!THEMES[S.settings.th]) S.settings.th = 'sky';
   function applyTheme() {
     var t = S.settings.th; if (t === 'sky') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
     var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
   }
   applyTheme();
-  var APP_VER = 'v30';
+  var APP_VER = 'v31';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -2184,10 +2222,10 @@
 
   // Günlük çark
   var WHEEL = [
-    { t: 'm', k: 1, l: '₺', c: '#e5634d', w: 25 }, { t: 'c', l: 'Kart', c: '#4cc9f0', w: 20 },
-    { t: 'h', l: 'Hız', c: '#6fd6a2', w: 15 }, { t: 'x', l: 'XP', c: '#b388eb', w: 15 },
-    { t: 'm', k: 10, l: '₺₺₺', c: '#ffd23f', w: 5 }, { t: 'b', k: 'b', l: 'Sandık', c: '#e58a3d', w: 10 },
-    { t: 'm', k: 3, l: '₺₺', c: '#ff9ecd', w: 6 }, { t: 'b', k: 's', l: 'Gümüş', c: '#aeb4bd', w: 4 }
+    { t: 'm', k: 1, l: '₺', c: '#e07a4f', w: 25 }, { t: 'c', l: 'Kart', c: '#7cc9bd', w: 20 },
+    { t: 'h', l: 'Hız', c: '#b8d9a0', w: 15 }, { t: 'x', l: 'XP', c: '#c9a27a', w: 15 },
+    { t: 'm', k: 10, l: '₺₺₺', c: '#f1b02f', w: 5 }, { t: 'b', k: 'b', l: 'Sandık', c: '#d98a52', w: 10 },
+    { t: 'm', k: 3, l: '₺₺', c: '#f0b6a0', w: 6 }, { t: 'b', k: 's', l: 'Gümüş', c: '#d8c9b0', w: 4 }
   ];
   var wheelAng = 0, wheelSpin = null;
   function wheelReady() { return S.wheel.day !== todayKey(); }
