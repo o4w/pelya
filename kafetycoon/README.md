@@ -225,6 +225,11 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - `manifest.webmanifest`, `sw.js` ve simgeler sayesinde oyun ana ekrana eklenebilir ve çevrimdışı açılabilir. Sayfa istekleri önce ağdan denenir, çevrimdışıysa önbellekten gelir. **Yeni sürümde `sw.js` içindeki `CACHE` adını artır.**
 - **Bildirimler (isteğe bağlı):** Tarayıcı arka plandayken, çark ve sandıklar hazırsa günde en çok bir hatırlatma gösterilir. **Uygulama tamamen kapalıyken bildirim gelmez.** Bunun için sunucudan push bildirimi gerekir (VAPID anahtarı, abonelik tablosu, zamanlanmış bir Edge Function). E-posta hatırlatması da bir e-posta sağlayıcısı gerektirir. İkisi de henüz kurulmadı.
 
+## Günlük görevler ve para uçuşu
+- Her gün 3 görev (servis, alım, balon, mini oyun, çark havuzundan, günün tarihine göre sabit). Kafe ekranında "Bugün" sekmesinde görünür; hazır olunca "Sıradaki adım" çubuğu da çağırır.
+- Giriş serisi: art arda her gün +%10 ödül (en çok +%50). Üç görev de bitince bronz sandık verilir.
+- Ödül miktarı `rewardBase()` ile ekonomiye ölçeklenir. Para, ödül alınırken ve balon/çevrimdışı kazançta üst çubuktaki paraya uçar (Hareketi azalt açıksa uçmaz).
+
 ## Erişilebilirlik ve arayüz denetimi
 Web Interface Guidelines ile denetlendi:
 - Pinch zoom geri açıldı (`maximum-scale` kaldırıldı; çift dokunma zoom'u `touch-action: manipulation` ile engelli).
