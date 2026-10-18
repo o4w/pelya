@@ -332,6 +332,11 @@
   .dqbar { height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); overflow: hidden; margin-top: 4px; }
   .dqbar i { display: block; height: 100%; background: linear-gradient(90deg, #62f070, #1fb83f); border-radius: 4px; transition: width 0.3s; }
   .fly { position: fixed; z-index: 40; width: 26px; height: 26px; border-radius: 50%; background: #ffd23f; color: #6a3d00; border: 2px solid #b87400; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 15px; pointer-events: none; }
+  details.cat { margin-bottom: 6px; }
+  details.cat > summary { cursor: pointer; list-style: none; min-height: 44px; display: flex; align-items: center; justify-content: space-between; font-family: var(--display); font-weight: 400; font-size: calc(15px * var(--fs)); letter-spacing: 0.06em; color: var(--ink); padding: 0 4px; }
+  details.cat > summary::-webkit-details-marker { display: none; }
+  details.cat > summary::after { content: '▾'; transition: transform 0.2s; }
+  details.cat:not([open]) > summary::after { transform: rotate(-90deg); }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -927,10 +932,10 @@
     html = ''; var cat = '';
     for (i = 0; i < ASSETS.length; i++) {
       var a = ASSETS[i];
-      if (a.cat !== cat) { cat = a.cat; html += '<h4>' + cat + '</h4>'; }
+      if (a.cat !== cat) { if (cat) html += '</details>'; cat = a.cat; html += '<details class="cat"' + (!i || (S.assets[a.id]) ? ' open' : '') + '><summary>' + cat + '</summary>'; }
       html += '<div class="item"><div class="info"><b>' + a.n + '<em></em></b><span>+₺' + fmt(a.inc) + '/gün · prestij +' + a.pr + '</span></div><button class="buy" data-id="' + a.id + '"></button></div>';
     }
-    $('assetlist').innerHTML = html;
+    $('assetlist').innerHTML = html + '</details>';
     var ae = $('assetlist').querySelectorAll('.item');
     for (i = 0; i < ae.length; i++) assetRows.push({ el: ae[i], lv: ae[i].querySelector('em'), b: ae[i].querySelector('button') });
 
@@ -972,6 +977,12 @@
     nextCur = nextStep();
     renderNext();
     var ips = incomePerSec(); $('incps').textContent = '+₺' + (ips < 10 ? ips.toFixed(1) : fmt(ips)) + '/sn';
+    var rl = $('rail'), railSig = S.level + '|' + chestCount();
+    if (rl && refreshHud.railSig !== railSig) {
+      refreshHud.railSig = railSig;
+      var vis = { game: S.level >= 2, event: S.level >= 3, chest: chestCount() > 0 || S.level >= 5 };
+      Object.keys(vis).forEach(function (k) { var bt = rl.querySelector('[data-go="' + k + '"]'); if (bt) bt.style.display = vis[k] ? '' : 'none'; });
+    }
     var incEl = $('incps'), incKey = incEl.textContent + '|' + S.settings.fs;
     if (incKey !== refreshHud.incKey) { refreshHud.incKey = incKey; incEl.style.visibility = ''; if (incEl.scrollWidth > incEl.clientWidth + 1) incEl.style.visibility = 'hidden'; }
     if (bizActive()) {
