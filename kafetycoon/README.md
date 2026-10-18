@@ -24,6 +24,9 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Şehirdeki etiketler** dünya boyutunda sabit piksel ölçeğiyle (`PX`) çizilir; metne göre genişler, telefonda yaklaşık 15 px okunur.
 - Hareket azaltma tercihi (`prefers-reduced-motion`) açıksa nabız ve parmak animasyonları durur.
 
+## Sahne yalnızca nerede gerekiyorsa var
+Şehir, işletme içi ve Kafe sekmelerinde üstte sahne görünür. **Servet, Ödüller ve Ben** sekmelerinde sahne yoktur, liste ekranın tamamını kaplar (`body.noscene`). Bu sekmelerde çizim de yapılmaz, pil tasarrufu sağlar. Servet'teki mülkler Şehir ana ekranında görünür.
+
 ## Gezinme adları
 Alt çubuk: **Şehir** (harita), **Kafe** (yükselt, menü, fiyat, personel), **Servet** (mülkler, işletmeler, hayır, marka, şubeler), **Ödüller** (çark, sandık, etkinlik, başarım), **Ben** (karakter, yetenek, sıralama, ayarlar, kafem). Kafedeki yardımcılar **personel** (kartla yükselir), şehirdeki işletmelerin yöneticisi **müdür** diye anılır.
 
@@ -98,7 +101,7 @@ Gider durumu kayda (`dayDone`, `endRep`) yazılır, bu yüzden sayfayı yenileme
 - **Personel:** 6 personel (Baristabaşı, Salon müdürü, Muhasebeci, Pazarlamacı, Şef, Denetim uzmanı). Kart toplanır, her biri 10 seviyeye kadar yükselir. Kartlar sandıktan, çarktan ve kart paketinden (para karşılığı) gelir.
 
 ### Servet
-- **Mülkler:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. Servet sekmesinin üstünde izometrik şehir görünür: sahip olduğun konutlar, ofis ve AVM adadaki parsellerde durur, arsa inşaat kolileriyle, araçlar yollarda dolaşır, helikopter adanın üstünde uçar, yat denizde yüzer. Sahip olmadığın mülklerin parselinde "satılık" levhası çıkar. **Şehirdeki bir mülke dokunarak** yönetim penceresini açabilirsin, listeden bir mülke dokununca kamera ona gider. Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
+- **Mülkler:** 14 varlık (konut, araç, yatırım). Her biri günlük pasif gelir ve prestij verir. Sahip olduğun mülkler Şehir ana ekranında görünür: konutlar, ofis ve AVM adadaki parsellerde durur, arsa inşaat kolileriyle, araçlar yollarda dolaşır, helikopter adanın üstünde uçar, yat denizde yüzer. **Şehirdeki bir mülke dokunarak** ya da listeden **Yönet**'e basarak yönetim penceresini açabilirsin. Varlıklar 5 seviyeye yükselir (Konut: döşeme, Araç: modifiye, Yatırım: yenileme), seviye geliri ve prestiji artırır. İstersen değerinin yarısına satabilirsin. Haritada seviye kadar yıldız görünür.
 - **İşletmeler:** 7 işletme (Toptan kahve, Burger, Online sipariş, Tatlıcı, Catering, Restoran, Kahve markası), 10 seviyeye kadar, günlük pasif gelir. Şehir ana ekranında da görünürler.
 - **Hayır:** Bağış yaptıkça hayırsever kademe yükselir, her kademe müşteriyi %2 artırır.
 - **Şehirler:** Franchise açınca eski şuben otomatik yönetilen bir şube olarak kalır, günlük pasif gelir getirir ve yükseltilebilir.
@@ -128,7 +131,7 @@ Oyunu kapatınca kafe ve yatırımlar (en çok 3 saat, %30 hızla) çalışmaya 
 
 ## 3B görünüm (Three.js)
 
-Kafe sekmelerinde sahne sağ üstteki **3B** düğmesiyle 3B kafeye geçer. Şehir, işletme içleri ve Servet'teki şehir görünümü her zaman 3B'dir (ayrı modüller: `three-hub.js`, `three-biz.js`).
+Kafe sekmelerinde sahne sağ üstteki **3B** düğmesiyle 3B kafeye geçer. Şehir ve işletme içleri her zaman 3B'dir (ayrı modüller: `three-hub.js`, `three-biz.js`).
 
 - 3B görünüm yalnızca düğmeye basınca yüklenir, kapatınca kaynaklar temizlenir. 3B kod oyunu değiştirmez, yalnızca okur.
 - **Ayrı demo:** `3d-demo.html` sayfasında sahneyi serbestçe döndürüp yakınlaştırabilirsin.

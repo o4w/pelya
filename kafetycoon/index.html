@@ -207,12 +207,13 @@
   .rail button svg { width: 26px; height: 26px; fill: none; stroke: var(--txt); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .rail button i { position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
   /* şehir ana ekranı */
-  .hubcv.framed { border-radius: 20px; background: linear-gradient(180deg, #74d3f7, #4aa6ee); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #1d3f9a, 0 11px 0 rgba(18,40,107,0.45); }
   .hubcv { width: 100%; height: 100%; border-radius: 0; background: transparent; box-shadow: none; touch-action: none; }
   body.hubmode .grip, body.hubmode .tabs, body.hubmode .shop { display: none; }
   body.hubmode .scene { flex: 1; min-height: 0; padding: 0; }
   body.hubmode .stagebox { width: 100%; height: 100%; }
   body.hubmode .v3d { display: none; }
+  /* Servet, Ödüller ve Ben sekmelerinde sahne yok: liste ekranı tamamen kaplar */
+  body.noscene .scene, body.noscene .grip { display: none; }
   body.bizmode .boost, body.bizmode .rail { display: none; }
   .rail .hubonly { display: none; }
   body.cityview .rail .hubonly { display: flex; }
@@ -817,6 +818,7 @@
     nextCur = nextStep();
     renderNext();
     var ips = incomePerSec(); $('incps').textContent = '+₺' + (ips < 10 ? ips.toFixed(1) : fmt(ips)) + '/sn';
+    var incEl = $('incps'); incEl.style.visibility = ''; if (incEl.scrollWidth > incEl.clientWidth + 1) incEl.style.visibility = 'hidden';
     if (bizActive()) {
       var bb = bizDef(bizSel), bl = bizLv(bb), bc = bizCost(bb), bm = bizMgrCost(bb), bmax = bl >= BIZ_MAX;
       $('bizinfo').innerHTML = '<b>' + esc2(bb.n) + '</b>Sv. ' + bl + ' · ₺' + fmt(bizInc(bb)) + '/gün' + (S.bizMgr[bb.id] ? ' · ★ müdür' : '');
@@ -962,7 +964,6 @@
     if (v3) v3.resize(Math.round(cw3 * d3), Math.round(cw3 * ah / W * d3));
     if (biz3 && !bizCv.hidden) { var br = bizCv.getBoundingClientRect(); if (br.width > 0 && br.height > 0) biz3.resize(Math.round(br.width * d3), Math.round(br.height * d3)); }
     if (hub && !hubCv.hidden) {
-      if (mainTab === 'world' && !hubCv.classList.contains('hubfull')) { hubCv.style.width = availW + 'px'; hubCv.style.height = Math.max(190, maxH) + 'px'; } else { hubCv.style.width = ''; hubCv.style.height = ''; }
       var hr = hubCv.getBoundingClientRect(); if (hr.width > 0 && hr.height > 0) hub.resize(Math.round(hr.width * d3), Math.round(hr.height * d3)); }
   }
 
@@ -987,7 +988,7 @@
     TABS.forEach(function (x) { var el = $('p-' + x); if (el) el.hidden = x !== t; });
     if (!telSeen[t]) { telSeen[t] = 1; track('tab_view', { t: t }); }
     applyViews();
-    boostBtn.hidden = mainTab === 'world'; $('rail').hidden = mainTab === 'world'; $('v3d').hidden = mainTab === 'world';
+    
     layoutCanvases();
     refresh();
     var sh = document.querySelector('.shop'); if (sh) sh.scrollTop = 0;
@@ -1048,7 +1049,6 @@
     var b = e.target.closest ? e.target.closest('button.buy') : null;
     if (!b || b.disabled) return;
     var a = ABY[b.getAttribute('data-id')];
-    if (hub) hub.focus(a.id);
     if (S.assets[a.id]) { openAsset(a.id); return; }
     if (S.level < a.req || S.money < a.cost) return;
     S.money -= a.cost; S.assets[a.id] = 1;
@@ -2443,7 +2443,7 @@
     if (location.protocol === 'file:') { hubFailed('Şehir için http(s) gerekli'); return; }
     hubBusy = true;
     import('./three-hub.js').then(function (m) {
-      hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo, showPlots: function () { return mainTab === 'world'; } });
+      hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo });
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
         if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
@@ -2679,14 +2679,14 @@
     document.body.classList.toggle('hubmode', full);
     document.body.classList.toggle('bizmode', bizOn);
     document.body.classList.toggle('cityview', hubOn);
-    var worldOn = mainTab === 'world' && !full && !hubFail;
-    hubCv.hidden = !(hubOn || worldOn); $('hubui').hidden = !hubOn;
-    hubCv.classList.toggle('framed', worldOn); hubCv.classList.toggle('hubfull', hubOn);
+    var noScene = !full && (mainTab === 'world' || mainTab === 'rew' || mainTab === 'me');
+    document.body.classList.toggle('noscene', noScene);
+    hubCv.hidden = !hubOn; $('hubui').hidden = !hubOn;
     bizCv.hidden = !bizOn; $('bizui').hidden = !bizOn;
-    if (hubOn || worldOn) ensureHub();
+    if (hubOn) ensureHub();
     if (bizOn) ensureBiz();
-    cv.hidden = full || worldOn || v3on;
-    cv3.hidden = full || worldOn || !v3on;
+    cv.hidden = full || noScene || v3on;
+    cv3.hidden = full || noScene || !v3on;
     $('v3d').classList.toggle('on', v3on);
     $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
   }
@@ -2939,7 +2939,8 @@
     update(dt);
     wheelTick(now);
     if (bizActive()) { if (biz3) { try { biz3.update(dt); } catch (e) { bizFailed(); } } else ensureBiz(); }
-    else if (hubActive() || (mainTab === 'world' && !hubFail)) { if (hub) { try { hub.update(dt); } catch (e) { hubFailed('Şehir hatası'); } } else ensureHub(); }
+    else if (document.body.classList.contains('noscene')) { /* sahne yok: çizim yapma */ }
+    else if (hubActive()) { if (hub) { try { hub.update(dt); } catch (e) { hubFailed('Şehir hatası'); } } else ensureHub(); }
     else if (v3on && v3) { try { v3.update(dt, 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
     else draw();
     uiAcc += dt; saveAcc += dt;

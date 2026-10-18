@@ -23,7 +23,7 @@ export const LOTS = [
   { id: 'resto', tile: [2, 0], model: 'building_G' },
 ];
 
-// Mülk parselleri (Servet'te alınan varlıklar). Sahip olunmayanlar yalnızca Servet görünümünde "satılık" levhası gösterir.
+// Mülk parselleri (Servet'te alınan varlıklar). Yalnızca sahip olunanlar şehirde görünür.
 export const ASSET_PLOTS = [
   { id: 'studio', tile: [5, 5], model: 'building_A', s: 0.5 },
   { id: 'flat', tile: [6, 4], model: 'building_B', s: 0.55 },
@@ -268,7 +268,7 @@ export function createHub(canvas, bridge) {
     });
   }
 
-  // Mülkler: sahip olunanlar şehirde görünür; Servet görünümünde satılık levhalar ve etiketler de çıkar
+  // Mülkler: sahip olunanlar şehirde görünür (konutlar parsellerde, araçlar yollarda, helikopter havada, yat denizde)
   function buildAssets() {
     if (assetGroup) {
       world.remove(assetGroup);
@@ -277,27 +277,15 @@ export function createHub(canvas, bridge) {
     mobiles.length = 0;
     const g = new THREE.Group();
     assetGroup = g;
-    const data = bridge.getAssets ? bridge.getAssets() : [], plots = !!(bridge.showPlots && bridge.showPlots());
+    const data = bridge.getAssets ? bridge.getAssets() : [];
     const by = {}; data.forEach((d) => { by[d.id] = d; });
     ASSET_PLOTS.forEach((pl) => {
       const d = by[pl.id]; if (!d) return;
       const x = tx(pl.tile[0]), z = tx(pl.tile[1]);
       const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.userData.assetId = pl.id; g.add(grp);
-      let labelText = '', top = 1.4;
-      if (d.lv > 0) {
-        if (pl.model) { const o = place(grp, pl.model, 0, 0.08, 0, 0, pl.s * (1 + 0.07 * (d.lv - 1))); top = (o ? 1.6 : 1) * pl.s * 2.2 + 0.4; }
-        else { for (let k = 0; k < 3; k++) { place(grp, k % 2 ? 'box_B' : 'box_A', -0.5 + k * 0.5, 0.08, k % 2 ? 0.3 : -0.3, k, 4); } top = 1; }
-        labelText = d.name + (d.lv > 1 ? ' ' + d.lv : '');
-      } else if (plots) {
-        const ring = new THREE.Mesh(new THREE.RingGeometry(0.8, 0.95, 24), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthWrite: false }));
-        ring.rotation.x = -Math.PI / 2; ring.position.y = 0.12; grp.add(ring);
-        const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, 0.08), new THREE.MeshLambertMaterial({ color: 0x8a6a45 })); post.position.y = 0.4; grp.add(post);
-        labelText = d.locked ? '🔒 Sv. ' + d.req : d.name; top = 0.8;
-      }
-      if (labelText && plots) {
-        const lb = bubble(labelText, { bg: d.lv > 0 ? '#ffffff' : d.locked ? '#d5dae3' : '#fff3c4' });
-        lb.position.set(0, top + 0.5, 0); grp.add(lb);
-      }
+      if (d.lv < 1) return;
+      if (pl.model) place(grp, pl.model, 0, 0.08, 0, 0, pl.s * (1 + 0.07 * (d.lv - 1)));
+      else { for (let k = 0; k < 3; k++) place(grp, k % 2 ? 'box_B' : 'box_A', -0.5 + k * 0.5, 0.08, k % 2 ? 0.3 : -0.3, k, 4); }
     });
     // araçlar: sahip olunan her araç yolda dolaşır
     let k = 0;
@@ -319,11 +307,6 @@ export function createHub(canvas, bridge) {
       const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.62, 0.1, 1.02), new THREE.MeshLambertMaterial({ color: 0xe58a3d })); stripe.position.y = 0.1; y.add(stripe);
       const cab = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 0.7), new THREE.MeshLambertMaterial({ color: 0xdff1f6 })); cab.position.set(-0.2, 0.5, 0); y.add(cab);
       y.userData.assetId = 'yacht'; y.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); g.add(y); mobiles.push({ kind: 'yacht', o: y });
-    } else if (plots) {
-      const lb = bubble(by.yacht && by.yacht.locked ? '🔒 Sv. ' + by.yacht.req : 'Marina ve yat', { bg: by.yacht && by.yacht.locked ? '#d5dae3' : '#fff3c4' });
-      const gp = new THREE.Group(); gp.userData.assetId = 'yacht'; gp.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); lb.position.y = 1.2; gp.add(lb);
-      const buoy = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshLambertMaterial({ color: 0xff7a66 })); buoy.position.y = 0.2; gp.add(buoy);
-      g.add(gp);
     }
     world.add(g);
   }
@@ -333,7 +316,7 @@ export function createHub(canvas, bridge) {
   }
   function signatureAssets() {
     const a = bridge.getAssets ? bridge.getAssets() : [];
-    return (bridge.showPlots && bridge.showPlots() ? 'P' : 'h') + a.map((d) => [d.id, d.lv, d.locked ? 1 : 0].join(':')).join('|');
+    return a.map((d) => [d.id, d.lv, d.locked ? 1 : 0].join(':')).join('|');
   }
 
   function updateBalloons() {
@@ -413,13 +396,6 @@ export function createHub(canvas, bridge) {
     return { x: r.left + (tmp.x + 1) / 2 * r.width, y: r.top + (1 - tmp.y) / 2 * r.height };
   }
 
-  // Kamerayı bir mülke (ya da işletmeye) götürür
-  function focus(id) {
-    const pl = ASSET_PLOTS.find((p) => p.id === id) || LOTS.find((l) => l.id === id);
-    if (pl) { view.x = tx(pl.tile[0]); view.z = tx(pl.tile[1]); fitCamera(); }
-    else if (id === 'yacht') { view.x = 4; view.z = 0; fitCamera(); }
-  }
-
   function resize(w, h) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(Math.max(1, w), Math.max(1, h), false);
@@ -433,7 +409,7 @@ export function createHub(canvas, bridge) {
     try { renderer.forceContextLoss(); } catch (e) { /* yok say */ }
   }
 
-  const api = { update, resize, dispose, pick, screenPos, focus, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
+  const api = { update, resize, dispose, pick, screenPos, camera, renderer, scene, onReady: null, get ready() { return ready; }, get failed() { return failed; }, get dragged() { return moved; } };
   loadKit((ok) => { if (ok) { buildWorld(); fitCamera(); } else failed = true; if (api.onReady) api.onReady(ok); });
   return api;
 }
