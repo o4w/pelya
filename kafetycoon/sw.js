@@ -2,7 +2,7 @@
 // Sayfa (navigasyon) isteklerinde önce ağ denenir, çevrimdışıysa önbellek kullanılır.
 // Aynı kaynaktan gelen diğer dosyalar önbellekten verilir ve arka planda yenilenir.
 // Yazı tipleri, Supabase gibi başka kaynaklara dokunulmaz. Yeni sürümde CACHE adını artır.
-const CACHE = 'kafetycoon-v20';
+const CACHE = 'kafetycoon-v21';
 const CORE = ['./', 'index.html', 'three-view.js', 'vendor/three/three.module.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {

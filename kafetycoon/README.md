@@ -24,6 +24,11 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 - **Şehirdeki etiketler** dünya boyutunda sabit piksel ölçeğiyle (`PX`) çizilir; metne göre genişler, telefonda yaklaşık 15 px okunur.
 - Hareket azaltma tercihi (`prefers-reduced-motion`) açıksa nabız ve parmak animasyonları durur.
 
+## Mini oyun: Burger Dizme
+Ödüller > **Oyun** sekmesinden ya da sağdaki kısayol sütunundaki oyun düğmesinden açılır. Siparişte 2-6 malzeme sırası yazar (köfte, peynir, marul, domates, soğan, turşu). Malzemelere sırayla dokunarak burgeri dizersin, 30 saniye sürer. Doğru sıra puan verir (`10 + 4 x malzeme sayısı`, seri çarpanı en çok x3), yanlış malzeme seriyi sıfırlar ve 1.5 sn kaybettirir. Sipariş uzunluğu her 2 burgerde bir artar.
+- **Ödül:** `rewardBase() x (0.3 + min(2.7, puan/60))` kadar para ve 8 deneyim. Günde ilk **3 oyun ödüllü**; sonrası antrenmandır. Sonuç ekranında **Reklamla x2** (simülasyon) ödülü ikiye katlar.
+- Oyun açıkken kafenin günü ve denetimler durur (`mgOpen`). En iyi skor kayıtta (`S.mg.best`). Ödüllü hak varken Ödüller sekmesinde ve rail'de kırmızı nokta yanar, "Sıradaki adım" boş zamanda oyunu önerir.
+
 ## Rakip firmalar ve pazar payı
 Üç yapay zekâ rakip vardır: **Ucuz Kafe** (düşük fiyat), **Premium Kahve** (pahalı, kaliteli, itibarlı) ve **Zincir Kahve** (her gün büyür, ara sıra %15 kampanya yapar). Hepsi yerel bir kural motoruyla çalışır, gerçek oyuncu değildir.
 - **Pazar payı:** her firmanın çekiciliği `kalite^0.8 x itibar^0.9 x (1/fiyat)^1.5` ile hesaplanır, pay toplam içindeki orandır. Senin fiyatın `avgMult()`, kaliten `qDrink()`, itibarın `S.rep` değeridir. Rakiplerin kalitesi gün sayısına göre büyür (`rivalQ`), yani yatırım yapmazsan geride kalırsın.

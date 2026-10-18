@@ -98,7 +98,7 @@
   .shop .wrap > div[id^="p-"] { background: var(--pf); border: 3px solid var(--pd); border-radius: 26px; padding: 10px 10px 2px; box-shadow: 0 6px 0 var(--pd); margin-bottom: 14px; }
   #p-home, #p-cafe, #p-cities, #p-rank, #p-market { --pf: #48b4ff; --pd: #1c62c0; --pi: #d6eeff; }
   #p-inv, #p-career, #p-chest { --pf: #ffa02e; --pd: #b05a00; --pi: #ffe4bd; }
-  #p-menu, #p-charity, #p-event, #p-avatar { --pf: #ff62b0; --pd: #aa1f6a; --pi: #ffd3ea; }
+  #p-menu, #p-charity, #p-event, #p-avatar, #p-game { --pf: #ff62b0; --pd: #aa1f6a; --pi: #ffd3ea; }
   #p-price, #p-ach { --pf: #ffcf3a; --pd: #a87a00; --pi: #fff2b8; }
   #p-mgr, #p-brand, #p-skill, #p-settings, #p-wheel { --pf: #b06cff; --pd: #6029b8; --pi: #e8d6ff; }
   #p-world { --pf: #4fdc6a; --pd: #16803a; --pi: #d4f8d9; }
@@ -269,6 +269,37 @@
   .mkrow .bar i { display: block; height: 100%; border-radius: 7px; transition: width 0.3s; }
   .mkrow .pc { width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
   .mkrow.me .nm { font-weight: 700; color: var(--ink); }
+  /* mini oyun: burger dizme */
+  .mg { position: fixed; inset: 0; z-index: 9; background: rgba(18,24,70,0.72); display: flex; align-items: center; justify-content: center; padding: 12px; }
+  .mgcard { width: min(380px, 100%); max-height: 96vh; background: #fff1cf; border: 4px solid #b05a00; border-radius: 26px; box-shadow: 0 8px 0 #b05a00; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .mgtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--display); font-size: calc(22px * var(--fs)); color: var(--ink); }
+  .mgtop b { font-weight: 400; }
+  .mgcombo { color: #a03c00; font-size: calc(18px * var(--fs)); }
+  .mgx { width: 36px; height: 36px; padding: 0; font-size: 18px; border-radius: 12px; color: #fff; text-shadow: 0 2px 0 var(--bd); --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
+  .mgtime { height: 14px; border-radius: 7px; background: rgba(30,26,77,0.15); overflow: hidden; }
+  .mgtime i { display: block; height: 100%; width: 100%; background: linear-gradient(180deg, #7cf08a, #32c24e); border-radius: 7px; }
+  .mgtime.low i { background: linear-gradient(180deg, #ff8a7a, #d52c1e); }
+  .mgorder { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 40px; }
+  .mgorder span { padding: 6px 10px; border-radius: 12px; background: #fff; border: 3px solid rgba(30,26,77,0.2); font-weight: 700; font-size: calc(14px * var(--fs)); color: var(--ink); }
+  .mgorder span.cur { border-color: #1d3f9a; box-shadow: 0 0 0 3px rgba(29,63,154,0.25); transform: scale(1.08); }
+  .mgorder span.ok { opacity: 0.45; text-decoration: line-through; }
+  .mgstackwrap { height: 190px; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(180deg, #d6eeff, #bfe0f7); border-radius: 18px; padding-bottom: 8px; box-sizing: border-box; }
+  .mgstack { display: flex; flex-direction: column-reverse; align-items: center; width: 190px; }
+  .mgstack .ly { width: 150px; border-radius: 10px; margin-top: -2px; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.18), 0 2px 0 rgba(0,0,0,0.12); animation: lypop 0.18s ease-out; }
+  .mgstack .ly.bunb { width: 160px; border-radius: 6px 6px 18px 18px; }
+  .mgstack .ly.bunt { width: 160px; border-radius: 40px 40px 8px 8px; }
+  @keyframes lypop { from { transform: translateY(-24px) scale(1.08); opacity: 0.4; } to { transform: none; opacity: 1; } }
+  .mgstackwrap.shake { animation: mgshake 0.25s; }
+  @keyframes mgshake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  .mgpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .mgpad button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; font-size: calc(14px * var(--fs)); border-radius: 16px; }
+  .mgpad button i { display: block; width: 34px; height: 16px; border-radius: 8px; border: 2px solid rgba(0,0,0,0.25); }
+  .mgres { text-align: center; }
+  .mgres .big { font-family: var(--display); font-size: calc(40px * var(--fs)); color: var(--ink); margin: 4px 0; }
+  .mgres p { margin: 4px 0; color: var(--muted); font-size: calc(15px * var(--fs)); }
+  .mgres .row { display: flex; gap: 8px; margin-top: 12px; }
+  .mgres .row button { flex: 1; }
+  @media (prefers-reduced-motion: reduce) { .mgstack .ly, .mgstackwrap.shake { animation: none; } }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -289,6 +320,7 @@
 <div class="nextwrap wrap"><button id="nextbar" class="nextbar" hidden></button></div>
 <div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><canvas id="bizcv" class="hubcv" aria-label="İşletme içi" hidden></canvas><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div></div><div class="hubui" id="bizui" hidden><div class="hubgoal" id="bizinfo"></div><div class="hubbar"><button id="bzup" class="big" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Yükselt</button><button id="bzmgr" class="big" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300">Yönetici</button></div></div><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
     <button data-go="collect" class="hubonly" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22" aria-label="Para balonlarını topla"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.500 9.500C9.500 8.400 10.600 8 12 8s2.500.5 2.500 1.600c0 2.200-5 1.200-5 3.600 0 1.100 1.100 1.600 2.500 1.600s2.500-.5 2.500-1.600"/></svg><i hidden></i></button>
+    <button data-go="game" style="--c1:#7fdcff;--c2:#3aaaf0;--bd:#0b5bb0" aria-label="Mini oyun"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="11" rx="5"/><path d="M8 10v5M5.5 12.500h5M16 11h.01M18.500 13.500h.01"/></svg><i hidden></i></button>
     <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
     <button data-go="chest" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300" aria-label="Sandık"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 13v3M5 9a7 7 0 0 1 14 0"/></svg><i hidden></i></button>
     <button data-go="event" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f" aria-label="Etkinlik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><i hidden></i></button>
@@ -324,6 +356,15 @@
     </div>
     <div id="mkrivals"></div>
     <div class="box"><h4>Haberler</h4><p id="mknews"></p></div>
+  </div>
+  <div id="p-game" hidden>
+    <div class="box">
+      <h4>Burger Dizme<small id="mgplays"></small></h4>
+      <p>Siparişteki malzemeleri sırayla dokunarak diz. 30 saniyede ne kadar çok burger yaparsan o kadar çok ödül kazanırsın. Yanlış malzeme süre ve seri kaybettirir.</p>
+      <div class="kv"><span>En iyi skor</span><span id="mgbest"></span></div>
+      <div class="kv"><span>Ödül (bugünkü ilk 3 oyun)</span><span id="mgprize"></span></div>
+      <div class="acctrow"><button class="on" id="mgplay">Oyna</button></div>
+    </div>
   </div>
   <div id="p-price" hidden>
     <div class="box">
@@ -499,6 +540,16 @@
   <button data-main="rew"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 13h18"/><path d="M12 8C9 8 7 7 7 5.5S9.5 3 12 8c2.5-5 5-3.5 5-2.5S15 8 12 8z"/></svg>Ödüller<i hidden></i></button>
   <button data-main="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ben<i hidden></i></button>
 </nav>
+<div class="mg" id="mg" hidden><div class="mgcard" id="mgcard">
+  <div class="mgtop"><span class="mgscore"><b id="mgscore">0</b> puan</span><span class="mgcombo" id="mgcombo"></span><button class="mgx" id="mgquit" aria-label="Kapat">✕</button></div>
+  <div class="mgtime"><i id="mgbar"></i></div>
+  <div class="mgbody" id="mgbody">
+    <div class="mgorder" id="mgorder"></div>
+    <div class="mgstackwrap"><div class="mgstack" id="mgstack"></div></div>
+    <div class="mgpad" id="mgpad"></div>
+  </div>
+  <div class="mgres" id="mgres" hidden></div>
+</div></div>
 <div class="tut" id="tut" hidden><div class="tuthole" id="tuthole"></div><svg class="tuthand" id="tuthand" viewBox="0 0 48 48" aria-hidden="true"><path d="M20 4c2 0 3 1.5 3 3.5V22l2-.5c1.5-.4 3 .3 3.500 1.800l1.800-.3c1.500-.2 2.800.8 3 2.200l1.600-.2c1.600-.1 2.800 1.100 2.800 2.600v6.500c0 5.500-4.500 10-10 10h-3.500c-3.200 0-5.800-1.400-7.500-3.800L9 34c-1-1.400-.7-3.300.7-4.200 1.200-.8 2.700-.5 3.700.5L17 33V7.500C17 5.500 18 4 20 4z" fill="#fff" stroke="#1d3f9a" stroke-width="2.500" stroke-linejoin="round"/></svg><div class="tutcard" id="tutcard"><b id="tuttitle"></b><span id="tuttext"></span><div class="row"><button id="tutskip" style="--c1:#c9cfe0;--c2:#9aa3be;--bd:#5d6688">Atla</button><button id="tutok" class="on" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22">Tamam</button></div></div></div>
 <div class="modal" id="modal" hidden><div class="card" id="mcard"></div></div>
 
@@ -592,6 +643,7 @@
   if (!Array.isArray(S.branches)) S.branches = [];
   if (!S.week) S.week = { id: '', served: 0, earn: 0, claimed: false };
   S.premium = !!S.premium;
+  if (!S.mg) S.mg = { day: '', n: 0, best: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
   if (!S.boost || typeof S.boost.pop !== 'number') S.boost = { pop: 1, svc: 1 };
@@ -801,13 +853,13 @@
     { id: 'home', subs: [['home', 'Bugün']] },
     { id: 'grow', subs: [['inv', 'Yükselt'], ['menu', 'Menü'], ['price', 'Fiyat'], ['mgr', 'Personel'], ['market', 'Pazar']] },
     { id: 'world', subs: [['world', 'Mülkler'], ['career', 'İşletmeler'], ['charity', 'Hayır'], ['brand', 'Marka'], ['cities', 'Şubeler']] },
-    { id: 'rew', subs: [['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
+    { id: 'rew', subs: [['game', 'Oyun'], ['wheel', 'Çark'], ['chest', 'Sandık'], ['event', 'Etkinlik'], ['ach', 'Başarım']] },
     { id: 'me', subs: [['avatar', 'Karakter'], ['skill', 'Yetenek'], ['rank', 'Sıralama'], ['settings', 'Ayarlar'], ['cafe', 'Kafem']] }
   ];
   var TABS = [];
   NAV.forEach(function (n) { n.subs.forEach(function (s) { TABS.push(s[0]); }); });
   var tab = 'home', mainTab = 'home', expanded = false;
-  var lastSub = { home: 'home', grow: 'inv', world: 'world', rew: 'wheel', me: 'avatar' };
+  var lastSub = { home: 'home', grow: 'inv', world: 'world', rew: 'game', me: 'avatar' };
   var listEl = $('list'), speedBtn = $('speed'), boostBtn = $('boost'), modal = $('modal'), mcard = $('mcard');
 
   var rows = [], menuRows = [], assetRows = [], achRows = [], priceSig = '';
@@ -910,6 +962,10 @@
       $('hmus').textContent = S.dayServed + ' / ' + S.dayLost;
       $('hevent').textContent = EVENTS[S.ev].n + ' · müşteri x' + EVENTS[S.ev].m;
       $('htitle').textContent = title();
+    } else if (tab === 'game') {
+      var gl2 = mgLeft(); $('mgplays').textContent = 'ödüllü hak: ' + gl2 + '/' + MG_FREE;
+      $('mgbest').textContent = S.mg.best ? S.mg.best + ' puan' : '-';
+      $('mgprize').textContent = '~₺' + fmt(mgPrize(60)) + ' (60 puan)';
     } else if (tab === 'market') {
       renderMarket();
     } else if (tab === 'settings') {
@@ -1060,6 +1116,7 @@
     var k = b.getAttribute('data-go');
     sfx('tick');
     if (k === 'collect') collectAll();
+    else if (k === 'game') { mgOpenUi(); }
     else if (k === 'elite') {
       enqueue(function () {
         showModal('<h2>Elite</h2><p>Kafe gelirin %25 artar ve reklam beklemezsin.</p><p>Prototip: gerçek ödeme yok.</p><div class="row"><button data-act="no">Kapat</button><button class="on" data-act="tog">' + (S.premium ? 'Elite\'i kapat' : 'Elite\'i dene') + '</button></div>',
@@ -1425,7 +1482,7 @@
     dt *= mult;
     clock += dt;
     updateParts(dt);
-    if (paused) return;
+    if (paused || mgOpen) return;
     S.dayT += dt;
     checkAudit();
     var pas = passiveDaily() / DAY_LEN * dt;
@@ -2414,11 +2471,11 @@
     ASSETS.forEach(function (a) { if (!S.assets[a.id] && S.level >= a.req && S.money >= a.cost) d.world = true; });
     MGRS.forEach(function (m) { if (canUpMgr(m)) d.grow = true; });
     if (S.brandLv < BRAND_MAX && S.brand >= contractBrand()) d.world = true;
-    d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable();
+    d.rew = claimable() > 0 || wheelReady() || chestCount() > 0 || weekClaimable() || mgLeft() > 0;
     d.me = S.pts > 0;
     var anyBal = false; BIZ.forEach(function (b) { if (bal[b.id] && bal[b.id].v) anyBal = true; });
-    var rd = { wheel: wheelReady(), chest: chestCount() > 0, event: weekClaimable(), collect: anyBal };
-    ['wheel', 'chest', 'event', 'collect'].forEach(function (k) {
+    var rd = { wheel: wheelReady(), chest: chestCount() > 0, event: weekClaimable(), collect: anyBal, game: mgLeft() > 0 };
+    ['wheel', 'chest', 'event', 'collect', 'game'].forEach(function (k) {
       var rel = document.querySelector('#rail [data-go="' + k + '"] i');
       if (rel) rel.hidden = !rd[k];
     });
@@ -2594,6 +2651,99 @@
   });
   $('back').addEventListener('click', function () { view = 'city'; setTab('home'); });
 
+  /* ---------- Mini oyun: Burger Dizme ---------- */
+  var mgOpen = false;
+  var MG_ING = [
+    { id: 'patty', n: 'Köfte', c: '#7a3b1d', h: 18 }, { id: 'cheese', n: 'Peynir', c: '#ffd23f', h: 9 }, { id: 'lettuce', n: 'Marul', c: '#5fcf4b', h: 10 },
+    { id: 'tomato', n: 'Domates', c: '#e5473b', h: 11 }, { id: 'onion', n: 'Soğan', c: '#e8d4f2', h: 8 }, { id: 'pickle', n: 'Turşu', c: '#8bbd3f', h: 8 }
+  ];
+  var MG_BY = {}; MG_ING.forEach(function (x) { MG_BY[x.id] = x; });
+  var MG = { state: 'idle', end: 0, tl: 30, score: 0, combo: 0, best: 0, done: 0, order: [], pos: 0, tmr: 0, lock: false };
+  var MG_FREE = 3;
+  function mgLeft() { var d = todayKey(); return S.mg.day === d ? Math.max(0, MG_FREE - S.mg.n) : MG_FREE; }
+  function mgPrize(score) { return Math.round(rewardBase() * (0.3 + Math.min(2.7, score / 60))); }
+  function mgOpenUi() {
+    mgOpen = true; $('mg').hidden = false; MG.state = 'ready';
+    $('mgbody').hidden = false; $('mgres').hidden = true; $('mgstack').innerHTML = ''; $('mgorder').innerHTML = '';
+    $('mgscore').textContent = '0'; $('mgcombo').textContent = ''; $('mgbar').style.width = '100%'; $('mgbar').parentNode.classList.remove('low');
+    var pad = '';
+    MG_ING.forEach(function (x) { pad += '<button data-ing="' + x.id + '"><i style="background:' + x.c + '"></i>' + x.n + '</button>'; });
+    $('mgpad').innerHTML = pad;
+    var left = mgLeft();
+    $('mgorder').innerHTML = '<span class="cur">' + (left > 0 ? 'Başlamak için bir malzemeye dokun' : 'Antrenman: bugünkü ödüllü haklar bitti') + '</span>';
+    track('mg_open', { left: left });
+  }
+  function mgNewOrder() {
+    var len = Math.min(6, 2 + Math.floor(MG.done / 2)), i, o = [];
+    for (i = 0; i < len; i++) o.push(MG_ING[Math.floor(Math.random() * MG_ING.length)].id);
+    MG.order = o; MG.pos = 0; MG.lock = false;
+    $('mgstack').innerHTML = '<div class="ly bunb" style="height:16px;background:#e1a257"></div>';
+    mgRenderOrder();
+  }
+  function mgRenderOrder() {
+    var h = '';
+    MG.order.forEach(function (id, i) { h += '<span class="' + (i < MG.pos ? 'ok' : i === MG.pos ? 'cur' : '') + '">' + MG_BY[id].n + '</span>'; });
+    $('mgorder').innerHTML = h;
+  }
+  function mgStart() {
+    MG.state = 'play'; MG.score = 0; MG.combo = 0; MG.done = 0; MG.tl = 30; MG.end = Date.now() + 30000;
+    mgNewOrder();
+    clearInterval(MG.tmr);
+    MG.tmr = setInterval(function () {
+      var left = Math.max(0, (MG.end - Date.now()) / 1000);
+      $('mgbar').style.width = (left / MG.tl * 100) + '%';
+      $('mgbar').parentNode.classList.toggle('low', left < 8);
+      if (left <= 0) mgFinish();
+    }, 100);
+  }
+  function mgTap(id) {
+    if (MG.state === 'ready') mgStart();
+    if (MG.state !== 'play' || MG.lock) return;
+    if (id === MG.order[MG.pos]) {
+      var ing = MG_BY[id], st = $('mgstack'), d = document.createElement('div');
+      d.className = 'ly'; d.style.height = ing.h + 'px'; d.style.background = ing.c; st.appendChild(d);
+      MG.pos++; sfx('tick'); buzz(10); mgRenderOrder();
+      if (MG.pos >= MG.order.length) {
+        var top = document.createElement('div'); top.className = 'ly bunt'; top.style.height = '22px'; top.style.background = '#e1a257'; st.appendChild(top);
+        var pts = Math.round((10 + 4 * MG.order.length) * (1 + Math.min(2, MG.combo * 0.25)));
+        MG.score += pts; MG.combo++; MG.done++; MG.lock = true; sfx('win');
+        $('mgscore').textContent = MG.score; $('mgcombo').textContent = MG.combo > 1 ? 'Seri x' + (1 + Math.min(2, (MG.combo - 1) * 0.25)).toFixed(2) : '';
+        setTimeout(function () { if (MG.state === 'play') mgNewOrder(); }, 380);
+      }
+    } else {
+      MG.combo = 0; MG.end -= 1500; sfx('error'); buzz([30, 30]);
+      $('mgcombo').textContent = '-1.5 sn';
+      var w = document.querySelector('.mgstackwrap'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake');
+    }
+  }
+  function mgFinish() {
+    clearInterval(MG.tmr); MG.state = 'done';
+    var d = todayKey(), rewarded = mgLeft() > 0, prize = rewarded ? mgPrize(MG.score) : 0;
+    if (S.mg.day !== d) { S.mg.day = d; S.mg.n = 0; }
+    if (rewarded) S.mg.n++;
+    var newBest = MG.score > S.mg.best; if (newBest) S.mg.best = MG.score;
+    if (prize) { S.money += prize; S.dayPassive += prize; gainXp(8); }
+    track('minigame', { score: MG.score, rewarded: rewarded });
+    persist();
+    $('mgbody').hidden = true; $('mgres').hidden = false;
+    $('mgres').innerHTML = '<h2 style="margin:0;font-family:var(--display);font-weight:400;font-size:28px;color:var(--ink)">Süre bitti!</h2><div class="big">' + MG.score + ' puan</div><p>' + MG.done + ' burger' + (newBest ? ' · <b>Yeni rekor!</b>' : ' · en iyi ' + S.mg.best) + '</p>' +
+      (rewarded ? '<p>Ödül: <b>+₺' + fmt(prize) + '</b> (kalan ödüllü hak: ' + mgLeft() + ')</p>' : '<p>Bugünkü ödüllü haklar bitti. Yarın yine gel!</p>') +
+      '<div class="row">' + (rewarded && prize ? '<button class="on" id="mg2x" style="--c1:#7fdcff;--c2:#3aaaf0;--bd:#0b5bb0">Reklamla x2</button>' : '') + '<button class="on" id="mgagain">Tekrar</button><button id="mgclose">Kapat</button></div>';
+    refresh();
+  }
+  function mgClose() {
+    clearInterval(MG.tmr); MG.state = 'idle'; mgOpen = false; $('mg').hidden = true; persist(); refresh();
+  }
+  $('mgpad').addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('button[data-ing]') : null; if (b) mgTap(b.getAttribute('data-ing')); });
+  $('mgquit').addEventListener('click', mgClose);
+  $('mgres').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
+    if (b.id === 'mgclose') mgClose();
+    else if (b.id === 'mgagain') mgOpenUi();
+    else if (b.id === 'mg2x') { b.disabled = true; var pz = mgPrize(MG.score); watchAd('minigame', function () { S.money += pz; S.dayPassive += pz; sfx('win'); persist(); b.textContent = 'x2 alındı +₺' + fmt(pz); }); }
+  });
+  $('mgplay').addEventListener('click', function () { sfx('tick'); mgOpenUi(); });
+
   /* ---------- Sıradaki adım ve ilk açılış rehberi ---------- */
   function incomePerSec() { return estPerMin().rate / 60 + passiveDaily() / DAY_LEN; }
   function etaText(need) {
@@ -2701,6 +2851,9 @@
     for (i = 0; i < cands.length; i++) {
       if (cands[i].cost <= S.money) { (function (c) { nextStep.last = { t: candText(c), hot: true, cand: c, go: function () { goCand(c); } }; })(cands[i]); return nextStep.last; }
     }
+    // alınabilecek bir şey yok: ödüllü mini oyun varsa onu öner
+    var gm = pickBuy();
+    if (!gm.cand && mgLeft() > 0) return { t: 'Mini oyunu oyna, ödül kazan', sub: mgLeft() + ' ödüllü hak', hot: true, go: function () { mgOpenUi(); } };
     // alınabilecek bir şey yok: biriktir ya da hedefe ilerle
     var g = currentGoal(), tgt = null;
     for (i = 0; i < cands.length; i++) { if (cands[i].cost > S.money) { tgt = cands[i]; break; } }
