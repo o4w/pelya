@@ -337,6 +337,7 @@
   details.cat > summary::-webkit-details-marker { display: none; }
   details.cat > summary::after { content: '▾'; transition: transform 0.2s; }
   details.cat:not([open]) > summary::after { transform: rotate(-90deg); }
+  .buy:active:not(:disabled), .big:active:not(:disabled) { filter: brightness(0.94); }
   .xbtn { color: #fff; text-shadow: 0 2px 0 var(--bd); position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: calc(20px * var(--fs)); line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -384,6 +385,7 @@
     <div class="item"><div class="info"><b>Zaman hızı</b><span>30 sn boyunca gün 2 kat hızlı akar.</span></div><button class="buy" id="speed">Reklam</button></div>
   </div>
   <div id="p-inv" hidden>
+    <div class="segs" id="bnseg" role="group" aria-label="Alım miktarı"><button data-bn="1">×1</button><button data-bn="5">×5</button><button data-bn="0">Maks</button></div>
     <div id="list"></div>
   </div>
   <div id="p-menu" hidden>
@@ -691,6 +693,7 @@
   S.premium = !!S.premium;
   if (!S.mg) S.mg = { day: '', n: 0, best: 0 };
   if (!S.dq || !Array.isArray(S.dq.q)) S.dq = { day: '', q: [], bonus: false };
+  if ([0, 1, 5].indexOf(S.settings.bn) < 0) S.settings.bn = 1;
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -1029,13 +1032,14 @@
       $('prembtn').textContent = S.premium ? 'Premium aktif (kapat)' : 'Premium\'u dene';
       [].forEach.call($('fsegs').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-fs'), 10) === S.settings.fs); });
     } else if (tab === 'inv') {
+      [].forEach.call($('bnseg').querySelectorAll('button'), function (b) { b.classList.toggle('on', parseInt(b.getAttribute('data-bn'), 10) === S.settings.bn); });
       for (i = 0; i < ITEMS.length; i++) {
         var it = ITEMS[i], r = rows[i];
         r.lv.textContent = 'Sv. ' + it.lv();
         r.d.textContent = it.d();
         if (maxed(it)) { r.b.textContent = 'Maks'; r.b.disabled = true; }
         else if (S.level < it.req()) { r.b.innerHTML = 'Seviye ' + it.req(); r.b.disabled = true; }
-        else { var c = it.cost(); buyLabel(r.b, '₺' + fmt(c), c); markRec(r.b, 'item', it.k); }
+        else { var c = it.cost(); buyLabel(r.b, '₺' + fmt(c) + (S.settings.bn === 1 ? '' : ' ×' + (S.settings.bn || 'Maks')), c); markRec(r.b, 'item', it.k); }
         if (maxed(it) || S.level < it.req()) { fundsUI(r.b, 1, false); markRec(r.b, '', ''); }
       }
     } else if (tab === 'menu') {
@@ -1188,19 +1192,47 @@
     if (b) { sfx('tick'); if (b.getAttribute('data-main') === 'home') view = 'city'; setTab(lastSub[b.getAttribute('data-main')]); }
   });
 
+  function buyItemOnce(it) {
+    if (maxed(it) || S.level < it.req()) return false;
+    var c = it.cost();
+    if (S.money < c) return false;
+    S.money -= c; S[it.k]++;
+    if (it.k === 'room') { applyRoom(); layoutCanvases(); }
+    return true;
+  }
   listEl.addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button.buy') : null;
     if (!b || b.disabled) return;
-    var it = ITEMS[parseInt(b.getAttribute('data-i'), 10)];
-    if (maxed(it) || S.level < it.req()) return;
-    var c = it.cost();
-    if (S.money < c) return;
-    S.money -= c; S[it.k]++;
-    if (it.k === 'room') { applyRoom(); layoutCanvases(); }
-    pops.push({ x: W / 2, y: 120, t: 0, text: it.n + ' alındı', c: '#6fd6a2' });
+    var it = ITEMS[parseInt(b.getAttribute('data-i'), 10)], n = S.settings.bn === 0 ? 99 : S.settings.bn, done = 0;
+    while (done < n && buyItemOnce(it)) done++;
+    if (!done) return;
+    pops.push({ x: W / 2, y: 120, t: 0, text: it.n + (done > 1 ? ' ×' + done : '') + ' alındı', c: '#6fd6a2' });
     bought();
     persist();
   });
+  $('bnseg').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-bn]') : null;
+    if (!b) return;
+    S.settings.bn = parseInt(b.getAttribute('data-bn'), 10); sfx('tick'); persist(); refresh();
+  });
+  // Basılı tutunca tekrarlı alım
+  (function () {
+    var tmr = null, iv = null, held = false;
+    function stop() { clearTimeout(tmr); clearInterval(iv); tmr = iv = null; }
+    function arm(e) {
+      var b = e.target.closest ? e.target.closest('button.buy') : null;
+      if (!b || b.disabled) return;
+      held = false; stop();
+      tmr = setTimeout(function () {
+        iv = setInterval(function () { if (b.disabled) { stop(); return; } held = true; b.click(); }, 140);
+      }, 450);
+    }
+    [listEl, $('bzup')].forEach(function (el) {
+      el.addEventListener('pointerdown', arm);
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { el.addEventListener(ev, stop); });
+      el.addEventListener('click', function (e) { if (held && e.isTrusted) { held = false; e.stopPropagation(); e.preventDefault(); } }, true);
+    });
+  })();
   $('menulist').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button.buy') : null;
     if (!b || b.disabled) return;
@@ -2700,12 +2732,13 @@
   function ensureHub() {
     if (hub || hubBusy || hubFail) return;
     if (location.protocol === 'file:') { hubFailed('Şehir için http(s) gerekli'); return; }
-    hubBusy = true;
+    hubBusy = true; { var hm = $('hubmsg'); hm.textContent = 'Şehir yükleniyor…'; hm.hidden = false; }
     import('./three-hub.js').then(function (m) {
       hub = m.createHub(hubCv, { getLots: getLots, getAssets: getAssetsInfo, getRivals: getRivalsInfo });
       hub.reduced = !!S.settings.rm;
       hub.onReady = function (ok) {
         if (!ok) { hubFailed('Şehir açılamadı'); return; }
+        { var hm2 = $('hubmsg'); if (hm2.textContent === 'Şehir yükleniyor…') hm2.hidden = true; }
         if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
       };
       hubBusy = false; layoutCanvases();
