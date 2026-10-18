@@ -2739,12 +2739,12 @@
   // İlk açılış rehberi: yumuşak (dokunmalar engellenmez), her adım hedefi vurgular
   var TUT_BOUGHT = 0;
   var TUT = [
-    { title: 'Hoş geldin!', text: 'Kafen şehirde. Ona dokun ve içeri gir.', target: function () { var q = hub && hub.screenPos('cafe'); return q ? { x: q.x - 46, y: q.y - 46, w: 92, h: 92 } : null; }, done: function () { return view !== 'city' || mainTab !== 'home'; }, ok: false },
-    { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', target: function () { return rectOf($('cv')); }, done: null, ok: true },
+    { title: 'Hoş geldin!', text: 'Kafen şehirde. Ona dokun ve içeri gir.', target: function () { var q = hub && hub.screenPos('cafe'); return q ? { x: q.x - 46, y: q.y - 46, w: 92, h: 92 } : null; }, when: function () { return hubActive(); }, done: function () { return view === 'cafe' && mainTab === 'home'; }, ok: false },
+    { title: 'Burası kafen', text: 'Müşteriler gelip kahve sipariş eder, sen para kazanırsın. Kazandığın parayı büyütmek için kullan.', when: function () { return mainTab === 'home' && view === 'cafe'; }, target: function () { return rectOf($('cv')); }, done: null, ok: true },
     { title: 'Büyüt', text: 'Parayı yatırıma çevir. Büyüt sekmesine dokun.', target: function () { return rectOf(document.querySelector('#nav [data-main="grow"]')); }, done: function () { return mainTab === 'grow'; }, ok: false },
-    { title: 'İlk yükseltme', text: 'Yeşil düğmeye basıp ilk yükseltmeni al. Parası yetmiyorsa biraz bekle, müşteriler sattıkça para birikir.', target: function () { var b = document.querySelector('#list .item button.buy:not([disabled])') || document.querySelector('#list .item button.buy'); return rectOf(b); }, done: function () { return TUT_BOUGHT > 0; }, ok: false, stay: true },
+    { title: 'İlk yükseltme', text: 'Yeşil düğmeye basıp ilk yükseltmeni al. Parası yetmiyorsa biraz bekle, müşteriler sattıkça para birikir.', target: function () { var b = document.querySelector('#list .item button.buy:not([disabled])') || document.querySelector('#list .item button.buy'); return rectOf(b); }, when: function () { return mainTab === 'grow' && tab === 'inv'; }, done: function () { return TUT_BOUGHT > 0; }, ok: false },
     { title: 'Şehre dön', text: 'Şehir sekmesiyle haritaya dönersin. Yeni işletmeler seviyeyle açılır.', target: function () { return rectOf(document.querySelector('#nav [data-main="home"]')); }, done: function () { return hubActive(); }, ok: false },
-    { title: 'Hazırsın!', text: 'Takılırsan üstteki "Sıradaki adım" çubuğuna dokun, seni doğru yere götürür.', target: function () { return rectOf($('nextbar')); }, done: null, ok: true, last: true }
+    { title: 'Hazırsın!', text: 'Takılırsan üstteki "Sıradaki adım" çubuğuna dokun, seni doğru yere götürür.', when: function () { return mainTab === 'home' && view !== 'biz'; }, target: function () { return rectOf($('nextbar')); }, done: null, ok: true, last: true }
   ];
   function rectOf(el) { if (!el || el.hidden) return null; var r = el.getBoundingClientRect(); return r.width > 0 ? { x: r.left - 4, y: r.top - 4, w: r.width + 8, h: r.height + 8 } : null; }
   var tutIdx = -1;
@@ -2760,7 +2760,8 @@
     if (modal && !modal.hidden) { box.hidden = true; return; }
     var st = TUT[S.tut];
     if (tutIdx !== S.tut) { tutIdx = S.tut; track('tut_step', { i: S.tut }); $('tuttitle').textContent = st.title; $('tuttext').textContent = st.text; $('tutok').hidden = !st.ok; $('tutok').textContent = st.last ? 'Başla' : 'Tamam'; }
-    if (st.done && st.done()) { if (st.stay) { /* adım hemen ilerler */ } S.tut++; persist(); return; }
+    if (st.done && st.done()) { S.tut++; persist(); return; }
+    if (st.when && !st.when()) { box.hidden = true; return; }
     var r = st.target();
     if (!r) { box.hidden = true; return; }
     box.hidden = false;
