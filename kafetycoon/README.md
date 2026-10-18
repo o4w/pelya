@@ -18,6 +18,12 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 ## Alım kartları ve gelir göstergesi
 Üstteki para göstergesinin yanında tahmini gelir (`+₺1.5/sn`, kafe + pasif gelir) görünür. Alım kartlarında (Kafe > Yükselt, Menü, Servet > İşletmeler) parası yetmeyen düğmenin altında **"₺X eksik"** yazar ve açıklamanın altında bir ilerleme çubuğu çıkar. Oyunun şimdi önerdiği alım (`pickBuy()`) **Önerilen** rozetiyle sarı çerçeveli işaretlenir: hedefle ilgili alınabilir olan, yoksa parası yeten en ucuz, yoksa biriktirilecek en ucuz. Liste sırası değişmez, böylece dokunurken kartlar kaymaz.
 
+## Okunabilirlik
+- **Yazı boyutu:** Ben > Ayarlar > Yazı boyutu (Normal, Büyük x1.12, Çok büyük x1.25). Tüm yazılar `--fs` çarpanıyla ölçeklenir (`calc(14px * var(--fs))`). En küçük yazı 14 px'tir (yalnızca büyük harfli "Sıradaki adım" etiketi ve "Önerilen" rozeti 12 px). En büyük boyutta üstteki gelir yazısı gizlenir, alt gezinme etiketleri büyümez.
+- **Kontrast:** parlak düğmelerde (turuncu, yeşil, mavi, pembe, mor, sarı) koyu kahverengi yazı kullanılır; beyaz yazı bu renklerde yeterli kontrast vermiyordu. Koyu yazı oranları 5:1 ile 12:1 arasındadır. Kullanılamayan düğme gri zeminde koyu gri yazıdır. Vurgu rengi (`--copper`) 5.4:1 kontrast verecek şekilde koyulaştırıldı.
+- **Şehirdeki etiketler** dünya boyutunda sabit piksel ölçeğiyle (`PX`) çizilir; metne göre genişler, telefonda yaklaşık 15 px okunur.
+- Hareket azaltma tercihi (`prefers-reduced-motion`) açıksa nabız ve parmak animasyonları durur.
+
 ## Gezinme adları
 Alt çubuk: **Şehir** (harita), **Kafe** (yükselt, menü, fiyat, personel), **Servet** (mülkler, işletmeler, hayır, marka, şubeler), **Ödüller** (çark, sandık, etkinlik, başarım), **Ben** (karakter, yetenek, sıralama, ayarlar, kafem). Kafedeki yardımcılar **personel** (kartla yükselir), şehirdeki işletmelerin yöneticisi **müdür** diye anılır.
 

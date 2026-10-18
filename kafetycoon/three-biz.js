@@ -106,7 +106,7 @@ function textSprite(text, color, size) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false }));
-  sp.renderOrder = 20; sp.scale.set(size || 2.1, (size || 2.1) / 3, 1); sp.userData.tex = t;
+  sp.renderOrder = 20; sp.scale.set(size || 3.6, (size || 3.6) / 3, 1); sp.userData.tex = t;
   return sp;
 }
 

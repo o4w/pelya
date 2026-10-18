@@ -84,27 +84,30 @@ function setGrey(o, grey) {
 }
 
 /* ---------- Yazı balonları (canvas dokulu sprite) ---------- */
+const PX = 0.0125;   // dünya birimi / piksel: etiketler telefonda okunabilir boyutta kalır
+const measure = document.createElement('canvas').getContext('2d');
 function bubble(text, opt = {}) {
-  const w = opt.w || 256, h = opt.h || 72;
+  const fs = opt.fs || 40, h = opt.h || 76, font = '700 ' + fs + 'px "Lilita One", "Fredoka", system-ui, sans-serif';
+  measure.font = font;
+  const w = Math.ceil(Math.max(opt.minW || 96, measure.measureText(text).width + 48));
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const g = c.getContext('2d');
   g.fillStyle = opt.bg || '#fff';
   g.strokeStyle = opt.edge || '#1d3f9a';
   g.lineWidth = 6;
-  g.beginPath(); g.roundRect(5, 5, w - 10, h - 22, 22); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(w / 2 - 12, h - 18); g.lineTo(w / 2, h - 4); g.lineTo(w / 2 + 12, h - 18); g.closePath(); g.fill();
+  g.beginPath(); g.roundRect(5, 5, w - 10, h - 24, 22); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(w / 2 - 12, h - 20); g.lineTo(w / 2, h - 4); g.lineTo(w / 2 + 12, h - 20); g.closePath(); g.fill();
   g.fillStyle = opt.fg || '#1e1a4d';
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  let fs = opt.fs || 34;
-  do { g.font = '700 ' + fs + 'px "Lilita One", "Fredoka", system-ui, sans-serif'; fs -= 2; } while (g.measureText(text).width > w - 36 && fs > 14);
-  g.fillText(text, w / 2, (h - 22) / 2 + 5);
+  g.font = font;
+  g.fillText(text, w / 2, (h - 24) / 2 + 5);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false }));
   sp.renderOrder = 10;
   sp.userData.tex = t;
-  sp.scale.set((opt.sw || 2.1), (opt.sw || 2.1) * h / w, 1);
+  sp.scale.set(w * PX, h * PX, 1);
   return sp;
 }
 function disposeSprite(sp) { if (sp.userData.tex) sp.userData.tex.dispose(); sp.material.dispose(); }
@@ -257,7 +260,7 @@ export function createHub(canvas, bridge) {
       if (b) setGrey(b, d.locked);
       group.userData.lotId = d.id;
       world.add(group);
-      const label = bubble(d.locked ? '🔒 Sv. ' + d.req : d.name + (d.lv ? ' ' + d.lv : '') + (d.mgr ? ' ★' : ''), { bg: d.locked ? '#d5dae3' : '#ffffff', sw: 1.95 });
+      const label = bubble(d.locked ? '🔒 Sv. ' + d.req : d.name + (d.lv ? ' ' + d.lv : '') + (d.mgr ? ' ★' : ''), { bg: d.locked ? '#d5dae3' : '#ffffff' });
       const hgt = { building_A: 1.9, building_B: 1.9, building_C: 3.2, building_D: 3.2, building_E: 2.6, building_F: 2.6, building_G: 3.2, building_H: 3.3 }[def.model] || 2.4;
       label.position.set(0, hgt + 0.55, 0);
       group.add(label);
@@ -292,7 +295,7 @@ export function createHub(canvas, bridge) {
         labelText = d.locked ? '🔒 Sv. ' + d.req : d.name; top = 0.8;
       }
       if (labelText && plots) {
-        const lb = bubble(labelText, { bg: d.lv > 0 ? '#ffffff' : d.locked ? '#d5dae3' : '#fff3c4', sw: 1.7, h: 64 });
+        const lb = bubble(labelText, { bg: d.lv > 0 ? '#ffffff' : d.locked ? '#d5dae3' : '#fff3c4' });
         lb.position.set(0, top + 0.5, 0); grp.add(lb);
       }
     });
@@ -317,7 +320,7 @@ export function createHub(canvas, bridge) {
       const cab = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 0.7), new THREE.MeshLambertMaterial({ color: 0xdff1f6 })); cab.position.set(-0.2, 0.5, 0); y.add(cab);
       y.userData.assetId = 'yacht'; y.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); g.add(y); mobiles.push({ kind: 'yacht', o: y });
     } else if (plots) {
-      const lb = bubble(by.yacht && by.yacht.locked ? '🔒 Sv. ' + by.yacht.req : 'Marina ve yat', { bg: by.yacht && by.yacht.locked ? '#d5dae3' : '#fff3c4', sw: 1.8, h: 64 });
+      const lb = bubble(by.yacht && by.yacht.locked ? '🔒 Sv. ' + by.yacht.req : 'Marina ve yat', { bg: by.yacht && by.yacht.locked ? '#d5dae3' : '#fff3c4' });
       const gp = new THREE.Group(); gp.userData.assetId = 'yacht'; gp.position.set(GRID * TILE / 2 + 2.6, -1.0, 0.5); lb.position.y = 1.2; gp.add(lb);
       const buoy = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshLambertMaterial({ color: 0xff7a66 })); buoy.position.y = 0.2; gp.add(buoy);
       g.add(gp);
@@ -342,7 +345,7 @@ export function createHub(canvas, bridge) {
         if (n.balloon) { n.group.remove(n.balloon); disposeSprite(n.balloon); n.balloon = null; }
         n.bText = txt;
         if (txt) {
-          n.balloon = bubble(txt, { bg: '#6dff74', edge: '#0c6a22', fg: '#0b3d14', sw: 1.7, w: 220 });
+          n.balloon = bubble(txt, { bg: '#6dff74', edge: '#0c6a22', fg: '#0b3d14' });
           n.balloon.userData.balloonId = d.id;
           n.group.add(n.balloon);
         }
