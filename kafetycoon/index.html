@@ -205,7 +205,7 @@
   .rail button svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
   .rail button i { position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
   /* şehir ana ekranı */
-  .hubcv { width: 100%; height: 100%; border-radius: 0; background: transparent; box-shadow: none; }
+  .hubcv { width: 100%; height: 100%; border-radius: 0; background: transparent; box-shadow: none; touch-action: none; }
   body.hubmode .grip, body.hubmode .tabs, body.hubmode .shop { display: none; }
   body.hubmode .scene { flex: 1; min-height: 0; padding: 0; }
   body.hubmode .stagebox { width: 100%; height: 100%; }
@@ -525,7 +525,7 @@
   if (!S.week) S.week = { id: '', served: 0, earn: 0, claimed: false };
   S.premium = !!S.premium;
   if (!S.boost || typeof S.boost.pop !== 'number') S.boost = { pop: 1, svc: 1 };
-  ['mgr', 'biz', 'avOwn'].forEach(function (k) { if (!S[k]) S[k] = {}; });
+  ['mgr', 'biz', 'avOwn', 'bizMgr'].forEach(function (k) { if (!S[k]) S[k] = {}; });
   var blockPersist = false;
   function persist() { if (blockPersist) return; S.last = Date.now(); try { localStorage.setItem('tycoon-v3', JSON.stringify(S)); } catch (e) {} }
 
@@ -2027,13 +2027,20 @@
   // Kariyer (yan işler)
   var BIZ = [
     { id: 'whole', n: 'Toptan kahve', d: 'Kahveni market ve ofislere toptan sat.', cost: 3000, inc: 60, req: 3 },
+    { id: 'burger', n: 'Burger Dükkânı', d: 'Izgara burger ve patates kızartması.', cost: 6000, inc: 120, req: 4 },
     { id: 'deliv', n: 'Online sipariş', d: 'Uygulamadan paket servis.', cost: 12000, inc: 220, req: 6 },
+    { id: 'sweet', n: 'Tatlıcı', d: 'Baklava, pasta ve dondurma.', cost: 25000, inc: 480, req: 8 },
     { id: 'cater', n: 'Catering', d: 'Etkinlik ve toplantılara servis.', cost: 50000, inc: 900, req: 10 },
+    { id: 'resto', n: 'Restoran', d: 'Akşam yemeği servisi olan lokanta.', cost: 100000, inc: 1900, req: 12 },
     { id: 'brand', n: 'Kahve markası', d: 'Paketli ürünlerin mağazalarda.', cost: 250000, inc: 4200, req: 15 }
   ];
   var BIZ_MAX = 10;
   function bizLv(b) { return S.biz[b.id] || 0; }
-  function bizInc(b) { return b.inc * bizLv(b); }
+  // Seviye 4 ve 8'de gelir x2; yönetici +%50
+  function bizMult(lv) { return (lv >= 4 ? 2 : 1) * (lv >= 8 ? 2 : 1); }
+  function bizIncAt(b, lv, mgr) { return b.inc * lv * bizMult(lv) * (mgr ? 1.5 : 1); }
+  function bizInc(b) { return bizIncAt(b, bizLv(b), S.bizMgr[b.id]); }
+  function bizMgrCost(b) { return b.cost * 6; }
   function bizCost(b) { return Math.round(b.cost * Math.pow(1.7, bizLv(b))); }
 
   // Hayır
@@ -2164,7 +2171,7 @@
       BIZ.forEach(function (b, k) {
         var r = bizRows[k], lv = bizLv(b);
         r.lv.textContent = 'Sv. ' + lv + '/' + BIZ_MAX;
-        r.d.textContent = b.d + ' · ₺' + fmt(b.inc * Math.max(1, lv)) + '/gün' + (lv ? '' : ' (1. seviyede)');
+        r.d.textContent = b.d + ' · ₺' + fmt(bizIncAt(b, Math.max(1, lv), S.bizMgr[b.id])) + '/gün' + (lv ? '' : ' (1. seviyede)');
         if (lv >= BIZ_MAX) { r.b.textContent = 'Maks'; r.b.disabled = true; }
         else if (!lv && S.level < b.req) { r.b.textContent = 'Seviye ' + b.req; r.b.disabled = true; }
         else { r.b.innerHTML = (lv ? 'Yükselt' : 'Kur') + '<small>₺' + fmt(bizCost(b)) + '</small>'; r.b.disabled = S.money < bizCost(b); }
@@ -2460,7 +2467,7 @@
   /* ---------- Şehir ana ekranı (izometrik 3B, three-hub.js) ---------- */
   var view = 'city';   // 'city': şehir haritası, 'cafe': kafenin içi
   var hubCv = $('hub'), hub = null, hubBusy = false, hubFail = false, bal = {}, lotsAt = 0, lotsCache = [];
-  var BIZ_SHORT = { whole: 'Toptan kahve', deliv: 'Online sipariş', cater: 'Catering', brand: 'Kahve markası' };
+  var BIZ_SHORT = { whole: 'Toptan kahve', burger: 'Burger', deliv: 'Online sipariş', sweet: 'Tatlıcı', cater: 'Catering', resto: 'Restoran', brand: 'Kahve markası' };
   function hubActive() { return view === 'city' && mainTab === 'home'; }
   function getLots() {
     var now = Date.now();
@@ -2469,7 +2476,7 @@
     var arr = [{ id: 'cafe', name: String(S.name || 'Kafe').slice(0, 12), lv: 0, locked: false, req: 1, balloon: 0 }];
     BIZ.forEach(function (b) {
       var lv = bizLv(b), bl = bal[b.id];
-      arr.push({ id: b.id, name: BIZ_SHORT[b.id] || b.n, lv: lv, locked: !lv && S.level < b.req, req: b.req,
+      arr.push({ id: b.id, name: BIZ_SHORT[b.id] || b.n, lv: lv, mgr: !!S.bizMgr[b.id], locked: !lv && S.level < b.req, req: b.req,
                  balloon: bl && bl.v ? bl.v : 0, balloonText: bl && bl.v ? '₺' + fmt(bl.v) : '' });
     });
     lotsCache = arr;
@@ -2481,7 +2488,10 @@
     hubBusy = true;
     import('./three-hub.js').then(function (m) {
       hub = m.createHub(hubCv, { getLots: getLots });
-      hub.onReady = function (ok) { if (!ok) hubFailed('Şehir açılamadı'); };
+      hub.onReady = function (ok) {
+        if (!ok) { hubFailed('Şehir açılamadı'); return; }
+        if (!S.hubHint) { S.hubHint = true; hubMsg('Kaydır ve iki parmakla yakınlaştır'); }
+      };
       hubBusy = false; layoutCanvases();
     }).catch(function () { hubFailed('Şehir açılamadı'); });
   }
@@ -2503,7 +2513,10 @@
       var o = bal[b.id] || (bal[b.id] = { t: 0, v: 0 });
       if (o.v) return;
       o.t += dt;
-      if (o.t >= 30) o.v = Math.max(1, Math.round(bizInc(b) * 30 / DAY_LEN * 0.25));
+      if (o.t >= 30) {
+        o.v = Math.max(1, Math.round(bizInc(b) * 30 / DAY_LEN * 0.25));
+        if (S.bizMgr[b.id]) { S.money += o.v; S.dayPassive += o.v; o.v = 0; o.t = 0; }   // yönetici balonu kendisi toplar
+      }
     });
   }
   function collectBalloon(id) {
@@ -2530,17 +2543,26 @@
       return;
     }
     enqueue(function () {
+      var mgr = !!S.bizMgr[biz.id], mcost = bizMgrCost(biz);
+      var nextMs = lv < 4 ? 4 : lv < 8 ? 8 : 0;
       showModal('<h2>' + esc2(biz.n) + '</h2><p>' + esc2(biz.d) + '</p><div class="stats"><span>Seviye</span><span>' + lv + '/' + BIZ_MAX + '</span><span>Günlük gelir</span><span>₺' + fmt(bizInc(biz)) + '</span>' +
-        (max ? '' : '<span>Sonraki seviye</span><span>+₺' + fmt(biz.inc) + '</span>') + '</div>' +
-        '<div class="row"><button data-act="no">Kapat</button>' + (max ? '' : '<button class="on" data-act="up"' + (S.money < cost ? ' disabled' : '') + '>' + (lv ? 'Yükselt' : 'Kur') + ' ₺' + fmt(cost) + '</button>') + '</div>',
+        (max ? '' : '<span>Sonraki seviye</span><span>+₺' + fmt(bizIncAt(biz, lv + 1, mgr) - bizInc(biz)) + '</span>') +
+        (nextMs ? '<span>Seviye ' + nextMs + '\'te</span><span>gelir x2</span>' : '') +
+        '<span>Yönetici</span><span>' + (mgr ? 'var (+%50)' : 'yok') + '</span></div>' +
+        '<div class="row col">' + (max ? '' : '<button class="on" data-act="up"' + (S.money < cost ? ' disabled' : '') + '>' + (lv ? 'Yükselt' : 'Kur') + ' ₺' + fmt(cost) + '</button>') +
+        (!mgr && lv ? '<button data-act="mgr"' + (S.money < mcost ? ' disabled' : '') + '>Yönetici işe al ₺' + fmt(mcost) + '<small>Gelir +%50, balonları kendisi toplar</small></button>' : '') +
+        '<button data-act="no">Kapat</button></div>',
         { up: function () {
           if (S.money < cost || bizLv(biz) >= BIZ_MAX) return;
           S.money -= cost; S.biz[biz.id] = bizLv(biz) + 1; lotsAt = 0; bought(); persist(); refresh();
+        }, mgr: function () {
+          if (S.bizMgr[biz.id] || !bizLv(biz) || S.money < mcost) return;
+          S.money -= mcost; S.bizMgr[biz.id] = true; lotsAt = 0; track('biz_manager', { id: biz.id }); bought(); persist(); refresh();
         } });
     });
   }
   hubCv.addEventListener('click', function (e) {
-    if (!hub) return;
+    if (!hub || hub.dragged) return;
     var r = hub.pick(e.clientX, e.clientY);
     if (!r) return;
     sfx('tick');
