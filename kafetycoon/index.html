@@ -229,7 +229,10 @@
   /* kafe ekranı: sahne altında hızlı düğmeler tek satır, sahnenin üstüne binmez */
   body:not(.hubmode) .stagebox { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; width: 100%; }
   body:not(.hubmode) .rail, body:not(.hubmode) .v3d { display: none; }
-  body:not(.hubmode) .boost { position: static; transform: none; min-width: 0; flex: 1 1 140px; order: 2; }
+  body:not(.hubmode) .boost { padding-block: 4px 5px; }
+  body:not(.hubmode) .grip { min-height: 30px; padding: 8px 0 2px; }
+  body:not(.hubmode) .tabs { padding-block: 6px 8px; }
+  body:not(.hubmode) .boost { position: static; transform: none; min-width: 0; flex: 1 1 100%; order: 2; }
   body:not(.hubmode) .boost:active:not(:disabled) { transform: translateY(3px); }
   body.bizmode .boost, body.bizmode .rail { display: none; }
   .rail .hubonly { display: none; }
@@ -785,7 +788,7 @@
     var mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', THEMES[t]);
   }
   applyTheme();
-  var APP_VER = 'v35';
+  var APP_VER = 'v36';
   if (!S.streak) S.streak = { day: '', n: 0 };
   if (!S.mkt || !S.mkt.r) S.mkt = { r: {}, prev: 0, news: [] };
   if (typeof S.tut !== 'number') S.tut = (S.level > 1 || S.life > 0 || S.daysTotal > 0 || S.runServed > 0 || S.stars > 0) ? 99 : 0;
@@ -1225,7 +1228,7 @@
   function layoutCanvases() {
     var box = document.querySelector('.scene');
     var availW = Math.min(box.clientWidth - 32, 448);
-    var maxH = window.innerHeight * (expanded ? 0.2 : 0.27);
+    var maxH = window.innerHeight * (expanded ? 0.2 : 0.32);
     var dpr = window.devicePixelRatio || 1;
     [[cv, ctx, W, H]].forEach(function (a) {
       var cw = Math.max(120, Math.min(availW, maxH * a[2] / a[3]));
