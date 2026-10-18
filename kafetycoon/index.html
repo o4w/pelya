@@ -204,6 +204,24 @@
   .rail button { width: 46px; height: 46px; padding: 0; border-radius: 14px; position: relative; display: flex; align-items: center; justify-content: center; }
   .rail button svg { width: 26px; height: 26px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
   .rail button i { position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
+  /* şehir ana ekranı */
+  .hubcv { width: 100%; height: 100%; border-radius: 0; background: transparent; box-shadow: none; }
+  body.hubmode .grip, body.hubmode .tabs, body.hubmode .shop { display: none; }
+  body.hubmode .scene { flex: 1; min-height: 0; padding: 0; }
+  body.hubmode .stagebox { width: 100%; height: 100%; }
+  body.hubmode .v3d, body.hubmode .boost, body.hubmode .rail { display: none; }
+  .hubui { position: absolute; inset: 0; pointer-events: none; line-height: 1.15; }
+  .hubui > * { pointer-events: auto; }
+  .hubgoal { position: absolute; left: 10px; right: 10px; top: 8px; background: #fff; color: var(--ink); border: 3px solid #1d3f9a; border-radius: 16px; padding: 7px 12px; font-weight: 600; font-size: 13px; box-shadow: 0 3px 0 rgba(18,40,107,0.5); }
+  .hubgoal b { font-family: var(--display); font-weight: 400; color: #b4470a; margin-right: 6px; }
+  .hubmsg { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); background: rgba(18,40,107,0.9); color: #fff; font-weight: 600; font-size: 14px; padding: 7px 14px; border-radius: 14px; pointer-events: none; white-space: nowrap; }
+  .hubbar { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; gap: 8px; align-items: flex-end; }
+  .hubbar button { position: relative; flex: 1; min-width: 0; padding: 7px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 14px; border-radius: 18px; line-height: 1.05; }
+  .hubbar button svg { width: 30px; height: 30px; fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 var(--bd)); }
+  .hubbar button small { font-family: var(--body); font-size: 11px; font-weight: 600; opacity: 0.95; text-shadow: 0 1px 0 var(--bd); }
+  .hubbar .big { flex: 1.5; padding-block: 10px 8px; font-size: 20px; }
+  .hubbar button i { position: absolute; top: -6px; right: -3px; width: 16px; height: 16px; border-radius: 50%; background: #ff3b30; border: 2px solid #fff; box-sizing: border-box; }
+  .backbtn { padding: 3px 10px; font-size: 14px; border-radius: 12px; margin-right: 8px; flex: 0 0 auto; }
   .xbtn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; border-radius: 12px; --c1: #ff6a5a; --c2: #d52c1e; --bd: #8f1a10; }
 </style>
 
@@ -217,11 +235,11 @@
     <div class="pill lvl"><span class="ico">Sv</span><b id="lvl"></b><span class="xpbar"><i id="xpbar"></i></span></div>
   </div>
   <div class="row2">
-    <span class="cafename" id="cname-hud"></span>
+    <button class="backbtn" id="back" hidden>‹ Şehir</button><span class="cafename" id="cname-hud"></span>
     <div class="day"><span id="day"></span><div class="daybar"><i id="daybar"></i></div></div>
   </div>
 </div></div>
-<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
+<div class="scene wrap"><div class="stagebox"><canvas id="cv" aria-label="Kafe sahnesi"></canvas><canvas id="wv" aria-label="Şehir haritası" hidden></canvas><canvas id="cv3" aria-label="3B sahne" hidden></canvas><canvas id="hub" class="hubcv" aria-label="Şehir haritası" hidden></canvas><div class="hubui" id="hubui" hidden><div class="hubgoal" id="hubgoal"></div><div class="hubmsg" id="hubmsg" hidden></div><div class="hubbar" id="hubbar"><button data-hb="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg>Çark<i hidden></i></button><button data-hb="boost" class="big" id="hbboost" style="--c1:#6ee0ff;--c2:#1f9bf0;--bd:#0b5bb0">Hızlan x2<small>30 sn</small></button><button data-hb="elite" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/></svg>Elite</button><button data-hb="collect" style="--c1:#62f070;--c2:#1fb83f;--bd:#0c6a22"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.5 2.5 1.6c0 2.2-5 1.2-5 3.6 0 1.1 1.1 1.6 2.5 1.6s2.5-.5 2.5-1.6"/></svg>Topla<i hidden></i></button></div></div><button id="v3d" class="v3d" aria-pressed="false" title="3B görünüm">3B</button><div class="rail" id="rail">
     <button data-go="wheel" style="--c1:#c58bff;--c2:#8a3fe0;--bd:#54228f" aria-label="Çark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></svg><i hidden></i></button>
     <button data-go="chest" style="--c1:#ffb13b;--c2:#ec6f00;--bd:#9a4300" aria-label="Sandık"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 13v3M5 9a7 7 0 0 1 14 0"/></svg><i hidden></i></button>
     <button data-go="event" style="--c1:#ff7fc4;--c2:#ec2f98;--bd:#92175f" aria-label="Etkinlik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8 6.6 19.7l1.1-6.1L3.2 9.4l6.1-.8z"/></svg><i hidden></i></button>
@@ -411,9 +429,9 @@
   <p class="note">Reklam butonları prototipte simüle edilir.</p>
 </div></div>
 <nav class="nav" id="nav" aria-label="Ana gezinme">
-  <button data-main="home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v6a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2"/><path d="M8 3v2M12 3v2"/></svg>Kafe<i hidden></i></button>
+  <button data-main="home" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Şehir<i hidden></i></button>
   <button data-main="grow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Büyüt<i hidden></i></button>
-  <button data-main="world"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Dünya<i hidden></i></button>
+  <button data-main="world"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>Servet<i hidden></i></button>
   <button data-main="rew"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 13h18"/><path d="M12 8C9 8 7 7 7 5.5S9.5 3 12 8c2.5-5 5-3.5 5-2.5S15 8 12 8z"/></svg>Ödüller<i hidden></i></button>
   <button data-main="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Ben<i hidden></i></button>
 </nav>
@@ -742,6 +760,13 @@
     speedBtn.disabled = left > 0;
     speedBtn.textContent = left > 0 ? Math.ceil(left / 1000) + ' sn' : (S.premium ? 'Başlat' : 'Reklam');
     boostBtn.disabled = left > 0;
+    var hbb = $('hbboost'); hbb.disabled = left > 0;
+    hbb.innerHTML = left > 0 ? 'x2 hız<small>' + Math.ceil(left / 1000) + ' sn</small>' : 'Hızlan x2<small>' + (S.premium ? 'ücretsiz' : 'reklam izle') + ' · 30 sn</small>';
+    $('back').hidden = !(mainTab === 'home' && view === 'cafe');
+    var gl = currentGoal(); $('hubgoal').innerHTML = '<b>Hedef</b>' + esc2(gl.text) + ' (+₺' + fmt(gl.r) + ')';
+    var anyBal = false; BIZ.forEach(function (b) { if (bal[b.id] && bal[b.id].v) anyBal = true; });
+    var cdot = document.querySelector('#hubbar [data-hb="collect"] i'); if (cdot) cdot.hidden = !anyBal;
+    var wdot = document.querySelector('#hubbar [data-hb="wheel"] i'); if (wdot) wdot.hidden = !wheelReady();
     boostBtn.innerHTML = left > 0 ? 'x2 hız<small>' + Math.ceil(left / 1000) + ' sn</small>' : 'Hızlan x2<small>' + (S.premium ? 'ücretsiz' : 'reklam izle') + ' · 30 sn</small>';
   }
 
@@ -875,6 +900,7 @@
     var ah = mainTab === 'world' ? WH : H, cw3 = Math.max(120, Math.min(availW, maxH * W / ah)), d3 = Math.min(dpr, 2);
     cv3.style.width = cw3 + 'px'; cv3.style.height = (cw3 * ah / W) + 'px';
     if (v3) v3.resize(Math.round(cw3 * d3), Math.round(cw3 * ah / W * d3));
+    if (hub && !hubCv.hidden) { var hr = hubCv.getBoundingClientRect(); if (hr.width > 0 && hr.height > 0) hub.resize(Math.round(hr.width * d3), Math.round(hr.height * d3)); }
   }
 
   function mainOf(sub) {
@@ -913,7 +939,7 @@
   });
   $('nav').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-main]') : null;
-    if (b) { sfx('tick'); setTab(lastSub[b.getAttribute('data-main')]); }
+    if (b) { sfx('tick'); if (b.getAttribute('data-main') === 'home') view = 'city'; setTab(lastSub[b.getAttribute('data-main')]); }
   });
 
   listEl.addEventListener('click', function (e) {
@@ -1267,6 +1293,7 @@
     checkAudit();
     var pas = passiveDaily() / DAY_LEN * dt;
     S.money += pas; S.dayPassive += pas;
+    tickBalloons(dt);
     spawnAcc += dt * spawnRate();
     while (spawnAcc >= 1) { spawnAcc -= 1; spawn(); }
     updateCustomers(dt);
@@ -2430,12 +2457,122 @@
     if (dy < -30) setExpanded(true); else if (dy > 30) setExpanded(false);
   });
 
+  /* ---------- Şehir ana ekranı (izometrik 3B, three-hub.js) ---------- */
+  var view = 'city';   // 'city': şehir haritası, 'cafe': kafenin içi
+  var hubCv = $('hub'), hub = null, hubBusy = false, hubFail = false, bal = {}, lotsAt = 0, lotsCache = [];
+  var BIZ_SHORT = { whole: 'Toptan kahve', deliv: 'Online sipariş', cater: 'Catering', brand: 'Kahve markası' };
+  function hubActive() { return view === 'city' && mainTab === 'home'; }
+  function getLots() {
+    var now = Date.now();
+    if (now - lotsAt < 150) return lotsCache;
+    lotsAt = now;
+    var arr = [{ id: 'cafe', name: String(S.name || 'Kafe').slice(0, 12), lv: 0, locked: false, req: 1, balloon: 0 }];
+    BIZ.forEach(function (b) {
+      var lv = bizLv(b), bl = bal[b.id];
+      arr.push({ id: b.id, name: BIZ_SHORT[b.id] || b.n, lv: lv, locked: !lv && S.level < b.req, req: b.req,
+                 balloon: bl && bl.v ? bl.v : 0, balloonText: bl && bl.v ? '₺' + fmt(bl.v) : '' });
+    });
+    lotsCache = arr;
+    return arr;
+  }
+  function ensureHub() {
+    if (hub || hubBusy || hubFail) return;
+    if (location.protocol === 'file:') { hubFailed('Şehir için http(s) gerekli'); return; }
+    hubBusy = true;
+    import('./three-hub.js').then(function (m) {
+      hub = m.createHub(hubCv, { getLots: getLots });
+      hub.onReady = function (ok) { if (!ok) hubFailed('Şehir açılamadı'); };
+      hubBusy = false; layoutCanvases();
+    }).catch(function () { hubFailed('Şehir açılamadı'); });
+  }
+  function hubFailed(msg) {
+    hubFail = true; hubBusy = false;
+    if (hub) { try { hub.dispose(); } catch (e) {} hub = null; }
+    view = 'cafe';
+    applyViews(); layoutCanvases(); refresh();
+    pops.push({ x: W / 2, y: 150, t: 0, text: msg + ', kafe görünümü', c: '#ffd23f' });
+  }
+  hubCv.addEventListener('webglcontextlost', function (e) { e.preventDefault(); hubFailed('Şehir durdu'); });
+  function hubMsg(t) {
+    var el = $('hubmsg'); el.textContent = t; el.hidden = false;
+    clearTimeout(hubMsg.t); hubMsg.t = setTimeout(function () { el.hidden = true; }, 1800);
+  }
+  function tickBalloons(dt) {
+    BIZ.forEach(function (b) {
+      if (!bizLv(b)) { delete bal[b.id]; return; }
+      var o = bal[b.id] || (bal[b.id] = { t: 0, v: 0 });
+      if (o.v) return;
+      o.t += dt;
+      if (o.t >= 30) o.v = Math.max(1, Math.round(bizInc(b) * 30 / DAY_LEN * 0.25));
+    });
+  }
+  function collectBalloon(id) {
+    var o = bal[id];
+    if (!o || !o.v) return 0;
+    var v = o.v; o.v = 0; o.t = 0;
+    S.money += v; S.dayPassive += v; lotsAt = 0;
+    sfx('win'); buzz(20); track('balloon', { id: id });
+    return v;
+  }
+  function collectAll() {
+    var sum = 0;
+    BIZ.forEach(function (b) { sum += collectBalloon(b.id); });
+    if (sum > 0) { hubMsg('+₺' + fmt(sum) + ' toplandı'); persist(); } else { sfx('error'); hubMsg('Toplanacak para yok'); }
+  }
+  function enterCafe() { view = 'cafe'; setTab('home'); }
+  function openLot(id) {
+    if (id === 'cafe') { enterCafe(); return; }
+    var biz = null; BIZ.forEach(function (x) { if (x.id === id) biz = x; });
+    if (!biz) return;
+    var lv = bizLv(biz), cost = bizCost(biz), max = lv >= BIZ_MAX;
+    if (!lv && S.level < biz.req) {
+      enqueue(function () { showModal('<h2>' + esc2(biz.n) + '</h2><p>' + esc2(biz.d) + '</p><p>Seviye ' + biz.req + ' olunca açılır.</p><div class="row"><button class="on" data-act="ok">Tamam</button></div>', {}); });
+      return;
+    }
+    enqueue(function () {
+      showModal('<h2>' + esc2(biz.n) + '</h2><p>' + esc2(biz.d) + '</p><div class="stats"><span>Seviye</span><span>' + lv + '/' + BIZ_MAX + '</span><span>Günlük gelir</span><span>₺' + fmt(bizInc(biz)) + '</span>' +
+        (max ? '' : '<span>Sonraki seviye</span><span>+₺' + fmt(biz.inc) + '</span>') + '</div>' +
+        '<div class="row"><button data-act="no">Kapat</button>' + (max ? '' : '<button class="on" data-act="up"' + (S.money < cost ? ' disabled' : '') + '>' + (lv ? 'Yükselt' : 'Kur') + ' ₺' + fmt(cost) + '</button>') + '</div>',
+        { up: function () {
+          if (S.money < cost || bizLv(biz) >= BIZ_MAX) return;
+          S.money -= cost; S.biz[biz.id] = bizLv(biz) + 1; lotsAt = 0; bought(); persist(); refresh();
+        } });
+    });
+  }
+  hubCv.addEventListener('click', function (e) {
+    if (!hub) return;
+    var r = hub.pick(e.clientX, e.clientY);
+    if (!r) return;
+    sfx('tick');
+    if (r.kind === 'balloon') { var v = collectBalloon(r.id); if (v) hubMsg('+₺' + fmt(v)); } else openLot(r.id);
+  });
+  $('back').addEventListener('click', function () { view = 'city'; setTab('home'); });
+  $('hubbar').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-hb]') : null;
+    if (!b || b.disabled) return;
+    var k = b.getAttribute('data-hb');
+    sfx('tick');
+    if (k === 'wheel') setTab('wheel');
+    else if (k === 'boost') startBoost();
+    else if (k === 'collect') collectAll();
+    else if (k === 'elite') {
+      enqueue(function () {
+        showModal('<h2>Elite</h2><p>Kafe gelirin %25 artar ve reklam beklemezsin.</p><p>Prototip: gerçek ödeme yok.</p><div class="row"><button data-act="no">Kapat</button><button class="on" data-act="tog">' + (S.premium ? 'Elite\'i kapat' : 'Elite\'i dene') + '</button></div>',
+          { tog: function () { S.premium = !S.premium; track('premium', { on: S.premium }); sfx(S.premium ? 'level' : 'tick'); persist(); refresh(); } });
+      });
+    }
+  });
+
   /* ---------- 3B görünüm (Three.js, depodaki sabit sürüm; yalnızca isteyince yüklenir) ---------- */
   var cv3 = $('cv3'), v3 = null, v3on = false, v3busy = false;
   function applyViews() {
-    cv.hidden = v3on || mainTab === 'world';
-    wv.hidden = v3on || mainTab !== 'world';
-    cv3.hidden = !v3on;
+    var hubOn = hubActive();
+    document.body.classList.toggle('hubmode', hubOn);
+    hubCv.hidden = !hubOn; $('hubui').hidden = !hubOn;
+    if (hubOn) ensureHub();
+    cv.hidden = hubOn || v3on || mainTab === 'world';
+    wv.hidden = hubOn || v3on || mainTab !== 'world';
+    cv3.hidden = hubOn || !v3on;
     $('v3d').classList.toggle('on', v3on);
     $('v3d').setAttribute('aria-pressed', v3on ? 'true' : 'false');
   }
@@ -2687,7 +2824,8 @@
     prev = now;
     update(dt);
     wheelTick(now);
-    if (v3on && v3) { try { v3.update(dt, mainTab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
+    if (hubActive()) { if (hub) { try { hub.update(dt); } catch (e) { hubFailed('Şehir hatası'); } } else ensureHub(); }
+    else if (v3on && v3) { try { v3.update(dt, mainTab === 'world' ? 'city' : 'cafe'); } catch (e) { stop3d(); v3msg('3B hata'); } }
     else if (mainTab === 'world') drawWorld(); else draw();
     uiAcc += dt; saveAcc += dt;
     var dm = S.money - shownMoney;

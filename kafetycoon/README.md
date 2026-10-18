@@ -18,6 +18,15 @@ Derleme veya kurulum gerektirmez: `index.html` ve yanındaki dosyalar yeterlidir
 ## Arayüz teması
 Arayüz parlak, kalın ve oyuncak tarzında: üstte hap biçimli göstergeler (para, itibar, seviye), altta renkli kalın ikon düğmeleri, açık renkli kartlar ve pencereler. Düğmeler basınca aşağı çöker. İptal edilebilen pencerelerde sağ üstte kırmızı çarpı çıkar. Sahnenin altındaki mavi **Hızlan x2** düğmesi (Dünya haritası dışında) 30 saniyelik hız artışını başlatır. Zemin gökyüzü mavisi. Her sekme kendi renginde çerçeveli bir paneldir (`#p-...` kuralları, `--pf` çerçeve, `--pd` koyu kenar, `--pi` iç zemin). Düğme renkleri `--c1`, `--c2`, `--bd` değişkenleriyle verilir. Pencerelerde renkli başlık bandı vardır, renk içeriğe göre seçilir (gün sonu turuncu, denetim kırmızı vb.). Menü, yönetici ve kariyer listeleri iki sütunlu kart ızgarasıdır. Sahnenin sağındaki kısayol sütunu çark, sandık ve etkinliğe götürür, hazır olanlarda kırmızı nokta yanar. Yeni hafta başlayınca etkinlik penceresi çıkar. Renkler ve kalınlık `:root` içindeki değişkenlerle ayarlanır. Yazı tipi Fredoka (Google Fonts), yüklenemezse sistemin yuvarlak yazı tipi kullanılır.
 
+## Şehir ana ekranı
+Oyun artık izometrik bir şehir haritasıyla açılır (`three-hub.js`, Three.js, ortografik kamera). Binalar işletmelerdir: Köşe Kafe, Toptan kahve, Online sipariş, Catering, Kahve markası. Seviyesi yetmeyenler gri ve kilitli görünür.
+- **Kafe binası:** dokununca kafenin içine girersin (müşteri, fiyat, menü, gün sonu kararı aynen çalışır). Üstteki **‹ Şehir** düğmesi veya alttaki Şehir sekmesi haritaya döndürür. Sen şehirdeyken kafe arka planda çalışmaya devam eder.
+- **Diğer işletmeler:** dokununca kart açılır (seviye, günlük gelir, kur/yükselt). Bu işletmeler Servet > Kariyer ile aynı sistemdir.
+- **Para balonları:** kurulu her işletmenin üstünde yaklaşık her 30 oyun saniyesinde bir yeşil balon çıkar. Dokununca ya da alttaki **Topla** düğmesiyle toplanır. Değeri o süredeki gelirin %25'idir (ek bonus). Balonlar kaydedilmez.
+- **Alt çubuk:** Çark, Hızlan x2, Elite (premium simülasyonu), Topla.
+- Modeller `assets/kaykit-city/` içindedir (KayKit City Builder Bits, CC0, yaklaşık 1.8 MB disk, tek doku). Kaynak ve özetler `SOURCE.md` ve `SHA256SUMS` dosyalarında. WebGL yoksa veya modeller yüklenemezse oyun kafe görünümüne düşer.
+- Ekran 3B çizimi pil için en çok yaklaşık 30 kare/sn ile sınırlıdır.
+
 ## Ekranlar
 
 Altta 5 ana sekme vardır. Her birinin altında alt sekmeler bulunur. Sahne ile panel arasındaki tutamaçla paneli büyütüp sahneyi küçültebilirsin. Kırmızı noktalar yapılabilecek bir şey olduğunu gösterir.

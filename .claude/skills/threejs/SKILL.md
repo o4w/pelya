@@ -6,11 +6,12 @@ description: Köşe Kafe Tycoon projesinde Three.js (3B) kodu yazarken veya değ
 # Three.js kuralları (Köşe Kafe Tycoon)
 
 3B kod `kafetycoon/three-view.js` içindedir. Oyun (`index.html`) ve demo (`3d-demo.html`) aynı modülü kullanır.
+Şehir ana ekranı ayrı modüldür: `kafetycoon/three-hub.js` (izometrik, ortografik kamera, `assets/kaykit-city`). Aynı kuralları izler: yalnızca depodaki modeller, ortak malzeme, `dispose`, yedek yol (yüklenemezse oyun kafe görünümüne düşer).
 
 ## Kaynak ve güvenlik
 - Three.js **yalnızca** `kafetycoon/vendor/three/` içinden yüklenir (importmap ile `three` adı buraya bağlanır). CDN kullanma.
 - Sürümü değiştirmek için `kafetycoon/vendor/VENDOR.md` içindeki adımları izle: npm bütünlük değerini doğrula, SHA-256'ları güncelle.
-- Dışarıdan (çalışma anında) model, doku, font veya betik yükleme yok: URL'den GLTF, HDR, uzak görsel kullanma. Modeller yalnızca depodaki `kafetycoon/assets/` altından yüklenir. Şu an `assets/kaykit-restaurant` (KayKit Restaurant Bits, CC0) var; kaynak, lisans ve SHA-256 değerleri orada `SOURCE.md` ve `SHA256SUMS` içinde. Yeni model paketi eklemeden önce kullanıcıdan onay al, lisansın CC0 (veya eşdeğeri) olduğunu resmi kaynaktan doğrula, boyutu söyle ve aynı belgeleri yaz. Modeller yüklenemezse kafe kodla üretilen şekillerle çizilmelidir (yedek yol kalsın). Diğer görseller kodla üretilir (basit geometri, `CanvasTexture`).
+- Dışarıdan (çalışma anında) model, doku, font veya betik yükleme yok: URL'den GLTF, HDR, uzak görsel kullanma. Modeller yalnızca depodaki `kafetycoon/assets/` altından yüklenir. Şu an `assets/kaykit-restaurant` ve `assets/kaykit-city` (KayKit Restaurant Bits ve City Builder Bits, CC0) var; kaynak, lisans ve SHA-256 değerleri orada `SOURCE.md` ve `SHA256SUMS` içinde. Yeni model paketi eklemeden önce kullanıcıdan onay al, lisansın CC0 (veya eşdeğeri) olduğunu resmi kaynaktan doğrula, boyutu söyle ve aynı belgeleri yaz. Modeller yüklenemezse kafe kodla üretilen şekillerle çizilmelidir (yedek yol kalsın). Diğer görseller kodla üretilir (basit geometri, `CanvasTexture`).
 - Kullanıcıdan gelen metin (kafe adı vb.) yalnızca canvas'a `fillText` ile çizilir. Hiçbir zaman `innerHTML` ile sayfaya yazılmaz.
 - `eval`, `new Function`, `setTimeout(string)` kullanma.
 - 3B modül oyun durumunu **salt okunur** köprü (`bridge`) üzerinden okur: `S`, `customers`, `lanes`, `ROOMS`, `LANES_X`, `tablePos`, `getH()`, `clock()`. 3B kod oyun durumunu değiştirmez.
