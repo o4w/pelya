@@ -230,6 +230,14 @@ Reklam ve ödeme **gerçek değildir**, prototip içindir:
 - Giriş serisi: art arda her gün +%10 ödül (en çok +%50). Üç görev de bitince bronz sandık verilir.
 - Ödül miktarı `rewardBase()` ile ekonomiye ölçeklenir. Para, ödül alınırken ve balon/çevrimdışı kazançta üst çubuktaki paraya uçar (Hareketi azalt açıksa uçmaz).
 
+## Bulut kaydı güvenliği (ilerleme kaybı düzeltmesi)
+Sorun: oturum geri yüklenince `user` hemen atanıyor, bulut kaydı okunmadan önce sayfa gizlenirse (`visibilitychange`) `upload()` çalışıp bulutaki kaydın üzerine bu cihazdaki boş/taze oyunu yazıyordu ("Kartal Kafe" → "Köşe Kafe"). Eski senkron izi (`tycoon-sync-v1`) varken yerel kayıt boşsa `decide()` de 'upload' diyordu.
+- Giriş kararı verilene kadar yükleme yok (`syncReady`).
+- Yerel ilerleme (`life`) bulutun gerisindeyse `decide()` asla yukarı yazmaz; boş yerel kayıt buluttan iner. Boş sayılan oyun (`life<5` ve seviye 1) buluta yazılmaz. Bulut okunamazsa yazılmaz.
+- Üzerine yazılmadan önce yerel güvenlik yedeği (son 3): Ben > Ayarlar > Kayıt yedeği > "Otomatik yedek".
+- "Oyunu sıfırla" artık senkron izini siler ve oturumu kapatır; bulut kaydı silinmez. İçe aktarma da izi siler.
+- `supabase/migrations/20261020000000_saves_history.sql`: `saves` güncellenirken eski hâl `saves_history` tablosuna (kullanıcı başına son 20) kopyalanır, `updated_at` güncellenir. Veritabanında çalıştırılmalıdır.
+
 ## Ekonomi dengesi (zorluk)
 Tüm ayarlar kaynakta tek satırdadır: `var ECO = { rev, cost, rentPass, stock, off, offCap, bal, rw, goal }`.
 - `rev: 0.7` müşteri geliri %30 düştü, `cost: 1.3` tüm alımlar (eşya, menü, mülk, işletme, şube) %30 pahalı, işletme seviye maliyeti çarpanı 1.7'den 1.8'e çıktı.
